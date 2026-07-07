@@ -3,10 +3,10 @@ import { PublicLegalDataPipeline } from "./index";
 import {
   LawGoKrStatuteSearchDownloader,
   LawGoKrStatuteSearchParser,
+  assertLawGoKrConfig,
   createLawGoKrConfigFromEnv,
   createLawGoKrSource,
 } from "./source";
-import { assertLawGoKrConfig } from "./source/LawGoKrConfigFactory";
 
 const QUERY = "개인정보";
 
