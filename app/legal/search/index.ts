@@ -11,3 +11,4 @@ export type { OpenSearchClient } from "./opensearch/OpenSearchClient";
 export { OpenSearchIndexManager } from "./opensearch/OpenSearchIndexManager";
 export { OpenSearchLegalDocumentIndexer } from "./opensearch/OpenSearchLegalDocumentIndexer";
 export { buildOpenSearchKeywordSearchBody } from "./opensearch/OpenSearchSearchBodyBuilder";
+export { OpenSearchSearchEngine } from "./opensearch/OpenSearchSearchEngine";
