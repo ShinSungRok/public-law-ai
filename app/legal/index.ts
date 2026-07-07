@@ -3,7 +3,9 @@ import { JsonFileLegalDocumentRepository } from "./repository/json/JsonFileLegal
 import { JsonFileStatuteRepository } from "./repository/json/JsonFileStatuteRepository";
 import type { LegalDocumentRepository } from "./repository/LegalDocumentRepository";
 import { KeywordRetriever } from "./retrieval/KeywordRetriever";
+import { SearchEngineRetriever } from "./retrieval/SearchEngineRetriever";
 import type { Retriever } from "./retrieval/Retriever";
+import { KeywordSearchEngine } from "./search/KeywordSearchEngine";
 
 export function createLegalDocumentRepository(): LegalDocumentRepository {
   const statuteRepository = new JsonFileStatuteRepository();
@@ -16,7 +18,9 @@ export function createLegalDocumentRepository(): LegalDocumentRepository {
 
 export function createKeywordRetriever(): Retriever {
   const repository = createLegalDocumentRepository();
-  return new KeywordRetriever(repository);
+  const keywordRetriever = new KeywordRetriever(repository);
+  const searchEngine = new KeywordSearchEngine(keywordRetriever);
+  return new SearchEngineRetriever(searchEngine);
 }
 
 export type {
