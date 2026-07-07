@@ -6,3 +6,4 @@ export { toRetrievalResult } from "./SearchResultMapper";
 export type { OpenSearchConfig } from "./opensearch/OpenSearchConfig";
 export type { OpenSearchLegalDocument } from "./opensearch/OpenSearchLegalDocument";
 export { toOpenSearchLegalDocument } from "./opensearch/OpenSearchLegalDocumentMapper";
+export { OPEN_SEARCH_LEGAL_INDEX_MAPPING } from "./opensearch/OpenSearchLegalIndexMapping";
