@@ -2,10 +2,13 @@ import { JsonFileCourtCaseRepository } from "./repository/json/JsonFileCourtCase
 import { JsonFileLegalDocumentRepository } from "./repository/json/JsonFileLegalDocumentRepository";
 import { JsonFileStatuteRepository } from "./repository/json/JsonFileStatuteRepository";
 import type { LegalDocumentRepository } from "./repository/LegalDocumentRepository";
-import { KeywordRetriever } from "./retrieval/KeywordRetriever";
 import { SearchEngineRetriever } from "./retrieval/SearchEngineRetriever";
 import type { Retriever } from "./retrieval/Retriever";
-import { KeywordSearchEngine } from "./search/KeywordSearchEngine";
+import { FakeOpenSearchClient } from "./search/opensearch/FakeOpenSearchClient";
+import type { OpenSearchConfig } from "./search/opensearch/OpenSearchConfig";
+import { OpenSearchIndexManager } from "./search/opensearch/OpenSearchIndexManager";
+import { OpenSearchLegalDocumentIndexer } from "./search/opensearch/OpenSearchLegalDocumentIndexer";
+import { OpenSearchSearchEngine } from "./search/opensearch/OpenSearchSearchEngine";
 
 export function createLegalDocumentRepository(): LegalDocumentRepository {
   const statuteRepository = new JsonFileStatuteRepository();
@@ -16,10 +19,42 @@ export function createLegalDocumentRepository(): LegalDocumentRepository {
   );
 }
 
+const FAKE_OPEN_SEARCH_CONFIG: OpenSearchConfig = {
+  node: "fake://local-opensearch",
+  indexName: "legal-documents",
+};
+
+async function indexAllDocuments(
+  repository: LegalDocumentRepository,
+  indexManager: OpenSearchIndexManager,
+  indexer: OpenSearchLegalDocumentIndexer,
+): Promise<void> {
+  await indexManager.ensureLegalIndex();
+  const documents = await repository.listAll();
+  for (const document of documents) {
+    await indexer.index(document);
+  }
+}
+
 export function createKeywordRetriever(): Retriever {
   const repository = createLegalDocumentRepository();
-  const keywordRetriever = new KeywordRetriever(repository);
-  const searchEngine = new KeywordSearchEngine(keywordRetriever);
+
+  const openSearchClient = new FakeOpenSearchClient();
+  const indexManager = new OpenSearchIndexManager(
+    openSearchClient,
+    FAKE_OPEN_SEARCH_CONFIG,
+  );
+  const indexer = new OpenSearchLegalDocumentIndexer(
+    openSearchClient,
+    FAKE_OPEN_SEARCH_CONFIG,
+  );
+  const searchEngine = new OpenSearchSearchEngine(
+    openSearchClient,
+    FAKE_OPEN_SEARCH_CONFIG,
+  );
+
+  void indexAllDocuments(repository, indexManager, indexer);
+
   return new SearchEngineRetriever(searchEngine);
 }
 
