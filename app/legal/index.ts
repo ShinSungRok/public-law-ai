@@ -39,3 +39,7 @@ export type {
 } from "./repository";
 export type { RetrievalResult, RetrievedDocument } from "./retrieval/RetrievalResult";
 export type { Retriever } from "./retrieval/Retriever";
+export {
+  buildCitation,
+  buildCitationsFromRetrievedDocuments,
+} from "./citation/CitationBuilder";
