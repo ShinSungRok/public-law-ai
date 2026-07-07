@@ -43,3 +43,6 @@ export {
   buildCitation,
   buildCitationsFromRetrievedDocuments,
 } from "./citation/CitationBuilder";
+export type { ContextDocument } from "./context/ContextDocument";
+export type { PromptContext } from "./context/PromptContext";
+export { buildPromptContext } from "./context/PromptContextBuilder";
