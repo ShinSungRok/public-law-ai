@@ -11,3 +11,4 @@ export {
 export { createLawGoKrSource } from "./source";
 export type { LawGoKrConfig } from "./source";
 export { createLawGoKrConfigFromEnv } from "./source";
+export { buildLawGoKrStatuteSearchUrl } from "./source";
