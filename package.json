@@ -9,7 +9,8 @@
     "lint": "eslint",
     "pipeline:fake": "tsx app/legal/pipeline/runFakePipeline.ts",
     "pipeline:fake:index": "tsx app/legal/pipeline/runFakePipelineWithIndexing.ts",
-    "pipeline:law:search": "tsx app/legal/pipeline/runLawGoKrStatuteSearchPipeline.ts"
+    "pipeline:law:search": "tsx app/legal/pipeline/runLawGoKrStatuteSearchPipeline.ts",
+    "pipeline:law:search:index": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithIndexing.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
