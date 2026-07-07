@@ -1,5 +1,6 @@
+import type { SearchQuery } from "./SearchQuery";
 import type { SearchResult } from "./SearchResult";
 
 export interface SearchEngine {
-  search(query: string): Promise<SearchResult[]>;
+  search(query: SearchQuery): Promise<SearchResult[]>;
 }
