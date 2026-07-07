@@ -11,6 +11,7 @@ export class KeywordSearchEngine implements SearchEngine {
 
     return retrievalResult.documents.map((retrievedDocument) => ({
       id: retrievedDocument.document.id,
+      document: retrievedDocument.document,
       score: retrievedDocument.score,
       highlights: [],
       matchedFields: retrievedDocument.matchedTerms,
