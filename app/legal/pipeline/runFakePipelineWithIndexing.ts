@@ -1,3 +1,4 @@
+import { ImportStatutesUseCase } from "../application/ImportStatutesUseCase";
 import { FakeOpenSearchClient } from "../search/opensearch/FakeOpenSearchClient";
 import type { OpenSearchConfig } from "../search/opensearch/OpenSearchConfig";
 import { OpenSearchIndexManager } from "../search/opensearch/OpenSearchIndexManager";
@@ -21,7 +22,6 @@ async function main(): Promise<void> {
     new FakePublicLegalDataDownloader(),
     new FakePublicLegalDataParser(),
   );
-  const parsedResults = await pipeline.run(source);
 
   const config: OpenSearchConfig = {
     node: "fake://local-opensearch",
@@ -32,9 +32,9 @@ async function main(): Promise<void> {
   const indexer = new OpenSearchLegalDocumentIndexer(client, config);
 
   await indexManager.ensureLegalIndex();
-  for (const parsed of parsedResults) {
-    await indexer.index(parsed.document);
-  }
+
+  const useCase = new ImportStatutesUseCase(pipeline, indexer);
+  const parsedResults = await useCase.execute(source);
 
   const searchEngine = new OpenSearchSearchEngine(client, config);
   const searchResults = await searchEngine.search({ text: "Fake" });
