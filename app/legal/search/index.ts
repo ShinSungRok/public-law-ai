@@ -16,3 +16,5 @@ export type {
   OpenSearchHit,
   OpenSearchSearchResponse,
 } from "./opensearch/OpenSearchSearchResponse";
+export { FakeOpenSearchClient } from "./opensearch/FakeOpenSearchClient";
+export { toSearchResults } from "./opensearch/OpenSearchSearchResponseMapper";

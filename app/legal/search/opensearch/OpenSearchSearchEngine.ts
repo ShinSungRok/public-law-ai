@@ -3,7 +3,21 @@ import type { SearchQuery } from "../SearchQuery";
 import type { SearchResult } from "../SearchResult";
 import type { OpenSearchClient } from "./OpenSearchClient";
 import type { OpenSearchConfig } from "./OpenSearchConfig";
+import type { OpenSearchSearchResponse } from "./OpenSearchSearchResponse";
 import { buildOpenSearchKeywordSearchBody } from "./OpenSearchSearchBodyBuilder";
+import { toSearchResults } from "./OpenSearchSearchResponseMapper";
+
+function isOpenSearchSearchResponse(
+  value: unknown,
+): value is OpenSearchSearchResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "hits" in value &&
+    typeof (value as { hits: unknown }).hits === "object" &&
+    (value as { hits: unknown }).hits !== null
+  );
+}
 
 export class OpenSearchSearchEngine implements SearchEngine {
   constructor(
@@ -13,8 +27,12 @@ export class OpenSearchSearchEngine implements SearchEngine {
 
   async search(query: SearchQuery): Promise<SearchResult[]> {
     const body = buildOpenSearchKeywordSearchBody(query);
-    await this.client.search(this.config.indexName, body);
+    const response = await this.client.search(this.config.indexName, body);
 
-    return [];
+    if (!isOpenSearchSearchResponse(response)) {
+      return [];
+    }
+
+    return toSearchResults(response);
   }
 }
