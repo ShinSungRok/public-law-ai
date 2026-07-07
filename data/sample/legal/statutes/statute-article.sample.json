@@ -1,14 +1,19 @@
 {
-  "id": "",
-  "statuteId": "",
-  "articleNo": "",
-  "articleTitle": "",
-  "paragraphs": [],
-  "effectiveDate": "",
+  "id": "stat_minbeop_art_750",
+  "statuteId": "stat_minbeop",
+  "articleNo": "750",
+  "articleTitle": "불법행위의 내용",
+  "paragraphs": [
+    {
+      "no": "1",
+      "text": "고의 또는 과실로 인한 위법행위로 타인에게 손해를 가한 자는 그 손해를 배상할 책임이 있다."
+    }
+  ],
+  "effectiveDate": "2016-01-06",
   "metadata": {
     "sourceSystem": "law.go.kr",
-    "sourceId": "",
-    "sourceUrl": "",
-    "retrievedAt": ""
+    "sourceId": "075000",
+    "sourceUrl": "https://www.law.go.kr/lsLinkProc.do?lsClsCd=L&lsNm=%EB%AF%BC%EB%B2%95&lsId=prec20160628&joNo=075000&efYd=20160628&mode=11&lnkJoNo=undefined",
+    "retrievedAt": "2026-07-07T00:00:00Z"
   }
 }

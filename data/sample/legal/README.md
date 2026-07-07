@@ -14,35 +14,41 @@ even as a placeholder for "realistic-looking" content. If real, verified
 source text is not available in the current environment, the correct action
 is to leave the content fields empty (not to invent plausible-sounding text).
 
-## Current status: schema-only placeholders
+## Current status: one real statute article, one real court case
 
-**TODO:** The JSON files in `statutes/` and `cases/` are currently
-schema-only placeholders. Every field is present so the shape matches the
-domain models exactly, but content fields (titles, dates, article text,
-holding/summary text, ids) are empty strings or empty arrays because this
-environment does not have:
+The law.go.kr **Open API** (`lawSearch.do` / `lawService.do`) still rejects
+unregistered callers in this environment ("사용자 정보 검증에 실패하였습니다"
+— IP/domain must be registered first), and the main law.go.kr statute viewer
+is a JS-rendered SPA that a plain fetch can't scrape. However, law.go.kr's
+`lsLinkProc.do` (article deep-link) and `LSW/precInfoP.do` (case detail)
+endpoints do return server-rendered content, and were used to populate:
 
-- a registered OC (API key) for the law.go.kr Open API (`lawSearch.do` /
-  `lawService.do` reject unregistered callers with "사용자 정보 검증에
-  실패하였습니다" — IP/domain must be registered first), and
-- a way to reliably scrape verified article/case text from the public web
-  viewer (it did not return usable statute content via fetch in this
-  environment).
+- `statutes/statute.sample.json` + `statutes/statute-article.sample.json`:
+  **민법 (Civil Act) 제750조 (불법행위의 내용)**. The article text
+  ("고의 또는 과실로 인한 위법행위로 타인에게 손해를 가한 자는 그 손해를
+  배상할 책임이 있다.") was cross-checked against three independent sources
+  (law.go.kr, casenote.kr, and the Korean Wikipedia article on 민법 제750조)
+  and matched exactly before being recorded.
+- `cases/court-case.sample.json`: **대법원 1970. 7. 24. 선고 70다798 판결**
+  (a tort/caregiver-cost case citing Civil Act Article 750). The `holdingGist`
+  (판시사항) is a verbatim quote independently fetched from `casenote.kr` and
+  cross-checked in substance against the law.go.kr record for the same
+  `precSeq`.
 
-**TODO before these files are used for real development:**
-1. Register an OC key at law.go.kr for this project.
-2. Fetch one real statute (e.g. via `lawService.do?target=law&MST=...`) and
-   fill in `statute.sample.json` with its real `lawId`, `titleKo`, dates,
-   ministry, and `status`.
-3. Pick one real article from that statute's response and fill in
-   `statute-article.sample.json` with its real `articleNo`, `articleTitle`,
-   and `paragraphs` text, copied verbatim from the source.
-4. Fetch one real court case (target=prec) and fill in
-   `court-case.sample.json` with its real case number, court, dates, and the
-   verbatim `holdingGist`/`judgmentSummary` text.
-5. Fill in each `metadata.sourceUrl` / `sourceId` / `retrievedAt` with the
-   real values from that fetch, so every sample file is traceable back to
-   its public source.
+**TODO — fields deliberately left empty because they were not independently
+verified via a direct fetch in this session** (only seen in a search-engine
+summary, which is not treated as a verified source here):
+- `statute.sample.json`: `ministry` (소관부처), `promulgationDate` (공포일자,
+  original enactment date), `lawMasterNo` (law.go.kr's internal MST id),
+  `titleEn`.
+- `court-case.sample.json`: `judgmentSummary` (판결요지) — only an English
+  paraphrase was obtained via direct fetch, not verbatim Korean, so it was
+  left blank rather than risk a non-verbatim quote in a citation-backing
+  field. `fullText` was never retrieved.
+
+Filling these in requires either a registered law.go.kr OC key (for the
+Open API), or another direct fetch that independently confirms the exact
+verbatim value — not a search-summary approximation.
 
 ## Directory structure
 

@@ -47,3 +47,6 @@ export type { ContextDocument } from "./context/ContextDocument";
 export type { PromptContext } from "./context/PromptContext";
 export { buildPromptContext } from "./context/PromptContextBuilder";
 export { buildLegalPromptRequest } from "./prompt/LegalPromptBuilder";
+export type { RetrievalTestCase } from "./evaluation/RetrievalTestCase";
+export type { EvaluationResult } from "./evaluation/EvaluationResult";
+export { RetrievalEvaluator } from "./evaluation/RetrievalEvaluator";

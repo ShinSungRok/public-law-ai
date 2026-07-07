@@ -1,19 +1,19 @@
 {
-  "id": "",
-  "caseSerialNo": "",
-  "caseNumber": "",
-  "court": "",
-  "decisionDate": "",
-  "caseName": "",
-  "holdingGist": "",
+  "id": "case_70da798",
+  "caseSerialNo": "155638",
+  "caseNumber": "70다798",
+  "court": "대법원",
+  "decisionDate": "1970-07-24",
+  "caseName": "손해배상",
+  "holdingGist": "부상으로 인하여 타인의 조력 없이는 일상생활을 영위할 수 없는 경우에 조력인에게 지급될 비용을 배척한 위법이 있는 실례.",
   "judgmentSummary": "",
   "fullText": "",
-  "referencedStatuteIds": [],
+  "referencedStatuteIds": ["stat_minbeop_art_750"],
   "referencedCaseIds": [],
   "metadata": {
     "sourceSystem": "law.go.kr",
-    "sourceId": "",
-    "sourceUrl": "",
-    "retrievedAt": ""
+    "sourceId": "155638",
+    "sourceUrl": "https://www.law.go.kr/LSW/precInfoP.do?precSeq=155638",
+    "retrievedAt": "2026-07-07T00:00:00Z"
   }
 }
