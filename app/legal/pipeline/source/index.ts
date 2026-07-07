@@ -1,0 +1,1 @@
+export { createLawGoKrSource } from "./LawGoKrSource";

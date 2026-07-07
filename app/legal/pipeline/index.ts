@@ -8,3 +8,4 @@ export {
   FakePublicLegalDataDownloader,
   FakePublicLegalDataParser,
 } from "./fake";
+export { createLawGoKrSource } from "./source";
