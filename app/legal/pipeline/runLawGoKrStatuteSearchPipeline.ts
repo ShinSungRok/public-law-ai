@@ -6,11 +6,13 @@ import {
   createLawGoKrConfigFromEnv,
   createLawGoKrSource,
 } from "./source";
+import { assertLawGoKrConfig } from "./source/LawGoKrConfigFactory";
 
 const QUERY = "개인정보";
 
 async function main(): Promise<void> {
   const config = createLawGoKrConfigFromEnv();
+  assertLawGoKrConfig(config);
   const source = createLawGoKrSource();
   const httpClient = new FetchHttpClient();
 

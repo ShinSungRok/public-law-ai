@@ -9,3 +9,9 @@ export function createLawGoKrConfigFromEnv(): LawGoKrConfig {
     oc: process.env.LAW_GO_KR_OC || DEFAULT_OC,
   };
 }
+
+export function assertLawGoKrConfig(config: LawGoKrConfig): void {
+  if (!config.oc) {
+    throw new Error("LAW_GO_KR_OC is required to run law.go.kr pipeline");
+  }
+}
