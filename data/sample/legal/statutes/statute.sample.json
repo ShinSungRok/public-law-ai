@@ -1,0 +1,19 @@
+{
+  "id": "",
+  "lawId": "",
+  "lawMasterNo": "",
+  "titleKo": "",
+  "titleEn": "",
+  "ministry": "",
+  "promulgationDate": "",
+  "enforcementDate": "",
+  "lawType": "",
+  "status": "",
+  "metadata": {
+    "sourceSystem": "law.go.kr",
+    "sourceId": "",
+    "sourceUrl": "",
+    "retrievedAt": ""
+  },
+  "articleIds": []
+}
