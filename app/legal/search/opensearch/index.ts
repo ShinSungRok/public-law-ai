@@ -13,3 +13,4 @@ export type {
 } from "./OpenSearchSearchResponse";
 export { FakeOpenSearchClient } from "./FakeOpenSearchClient";
 export { toSearchResults } from "./OpenSearchSearchResponseMapper";
+export { OpenSearchSdkClient } from "./OpenSearchSdkClient";
