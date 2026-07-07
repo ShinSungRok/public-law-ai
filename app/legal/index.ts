@@ -6,9 +6,12 @@ import { SearchEngineRetriever } from "./retrieval/SearchEngineRetriever";
 import type { RetrievalResult } from "./retrieval/RetrievalResult";
 import type { Retriever } from "./retrieval/Retriever";
 import { FakeOpenSearchClient } from "./search/opensearch/FakeOpenSearchClient";
+import type { OpenSearchClient } from "./search/opensearch/OpenSearchClient";
 import type { OpenSearchConfig } from "./search/opensearch/OpenSearchConfig";
+import { createOpenSearchConfigFromEnv } from "./search/opensearch/OpenSearchConfigFactory";
 import { OpenSearchIndexManager } from "./search/opensearch/OpenSearchIndexManager";
 import { OpenSearchLegalDocumentIndexer } from "./search/opensearch/OpenSearchLegalDocumentIndexer";
+import { OpenSearchSdkClient } from "./search/opensearch/OpenSearchSdkClient";
 import { OpenSearchSearchEngine } from "./search/opensearch/OpenSearchSearchEngine";
 
 export function createLegalDocumentRepository(): LegalDocumentRepository {
@@ -20,10 +23,11 @@ export function createLegalDocumentRepository(): LegalDocumentRepository {
   );
 }
 
-const FAKE_OPEN_SEARCH_CONFIG: OpenSearchConfig = {
-  node: "fake://local-opensearch",
-  indexName: "legal-documents",
-};
+function createOpenSearchClient(config: OpenSearchConfig): OpenSearchClient {
+  return process.env.OPENSEARCH_MODE === "sdk"
+    ? new OpenSearchSdkClient(config)
+    : new FakeOpenSearchClient();
+}
 
 async function indexAllDocuments(
   repository: LegalDocumentRepository,
@@ -52,18 +56,19 @@ class ReadyOnceRetriever implements Retriever {
 export function createKeywordRetriever(): Retriever {
   const repository = createLegalDocumentRepository();
 
-  const openSearchClient = new FakeOpenSearchClient();
+  const openSearchConfig = createOpenSearchConfigFromEnv();
+  const openSearchClient = createOpenSearchClient(openSearchConfig);
   const indexManager = new OpenSearchIndexManager(
     openSearchClient,
-    FAKE_OPEN_SEARCH_CONFIG,
+    openSearchConfig,
   );
   const indexer = new OpenSearchLegalDocumentIndexer(
     openSearchClient,
-    FAKE_OPEN_SEARCH_CONFIG,
+    openSearchConfig,
   );
   const searchEngine = new OpenSearchSearchEngine(
     openSearchClient,
-    FAKE_OPEN_SEARCH_CONFIG,
+    openSearchConfig,
   );
 
   const ready = indexAllDocuments(repository, indexManager, indexer);
