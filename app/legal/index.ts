@@ -3,6 +3,7 @@ import { JsonFileLegalDocumentRepository } from "./repository/json/JsonFileLegal
 import { JsonFileStatuteRepository } from "./repository/json/JsonFileStatuteRepository";
 import type { LegalDocumentRepository } from "./repository/LegalDocumentRepository";
 import { SearchEngineRetriever } from "./retrieval/SearchEngineRetriever";
+import type { RetrievalResult } from "./retrieval/RetrievalResult";
 import type { Retriever } from "./retrieval/Retriever";
 import { FakeOpenSearchClient } from "./search/opensearch/FakeOpenSearchClient";
 import type { OpenSearchConfig } from "./search/opensearch/OpenSearchConfig";
@@ -36,6 +37,18 @@ async function indexAllDocuments(
   }
 }
 
+class ReadyOnceRetriever implements Retriever {
+  constructor(
+    private readonly ready: Promise<void>,
+    private readonly retriever: Retriever,
+  ) {}
+
+  async retrieve(query: string): Promise<RetrievalResult> {
+    await this.ready;
+    return this.retriever.retrieve(query);
+  }
+}
+
 export function createKeywordRetriever(): Retriever {
   const repository = createLegalDocumentRepository();
 
@@ -53,9 +66,10 @@ export function createKeywordRetriever(): Retriever {
     FAKE_OPEN_SEARCH_CONFIG,
   );
 
-  void indexAllDocuments(repository, indexManager, indexer);
+  const ready = indexAllDocuments(repository, indexManager, indexer);
+  const retriever = new SearchEngineRetriever(searchEngine);
 
-  return new SearchEngineRetriever(searchEngine);
+  return new ReadyOnceRetriever(ready, retriever);
 }
 
 export type {
