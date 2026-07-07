@@ -12,3 +12,7 @@ export { OpenSearchIndexManager } from "./opensearch/OpenSearchIndexManager";
 export { OpenSearchLegalDocumentIndexer } from "./opensearch/OpenSearchLegalDocumentIndexer";
 export { buildOpenSearchKeywordSearchBody } from "./opensearch/OpenSearchSearchBodyBuilder";
 export { OpenSearchSearchEngine } from "./opensearch/OpenSearchSearchEngine";
+export type {
+  OpenSearchHit,
+  OpenSearchSearchResponse,
+} from "./opensearch/OpenSearchSearchResponse";
