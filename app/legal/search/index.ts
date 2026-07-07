@@ -9,3 +9,4 @@ export { toOpenSearchLegalDocument } from "./opensearch/OpenSearchLegalDocumentM
 export { OPEN_SEARCH_LEGAL_INDEX_MAPPING } from "./opensearch/OpenSearchLegalIndexMapping";
 export type { OpenSearchClient } from "./opensearch/OpenSearchClient";
 export { OpenSearchIndexManager } from "./opensearch/OpenSearchIndexManager";
+export { OpenSearchLegalDocumentIndexer } from "./opensearch/OpenSearchLegalDocumentIndexer";
