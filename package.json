@@ -38,7 +38,8 @@
     "validate:composition:context": "tsx app/legal/composition/runApplicationContextValidation.ts",
     "validate:composition:factory": "tsx app/legal/composition/runApplicationContextFactoryValidation.ts",
     "validate:composition:bootstrap": "tsx app/legal/composition/runApplicationBootstrapValidation.ts",
-    "validate:composition:runtime": "tsx app/legal/composition/runApplicationRuntimeValidation.ts"
+    "validate:composition:runtime": "tsx app/legal/composition/runApplicationRuntimeValidation.ts",
+    "validate:composition": "tsx app/legal/composition/runCompositionMilestoneValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
