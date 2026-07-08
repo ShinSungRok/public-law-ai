@@ -46,6 +46,7 @@
     "validate:ai:provider": "tsx app/legal/ai/runAiProviderContractValidation.ts",
     "validate:ai:factory": "tsx app/legal/ai/runAiProviderFactoryValidation.ts",
     "validate:ai:prompt-executor": "tsx app/legal/ai/runAiPromptExecutorValidation.ts",
+    "validate:ai:llm-config": "tsx app/legal/ai/runLlmConfigurationValidation.ts",
     "validate:ai": "tsx app/legal/ai/runAiMilestoneValidation.ts"
   },
   "dependencies": {

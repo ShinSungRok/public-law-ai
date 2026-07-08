@@ -12,3 +12,5 @@ export type { AiPromptExecutionRequest } from "./AiPromptExecutionRequest";
 export type { AiPromptExecutionResponse } from "./AiPromptExecutionResponse";
 export type { AiPromptExecutor } from "./AiPromptExecutor";
 export { DefaultAiPromptExecutor } from "./DefaultAiPromptExecutor";
+export type { LlmProviderType } from "./LlmProviderType";
+export type { LlmConfiguration } from "./LlmConfiguration";
