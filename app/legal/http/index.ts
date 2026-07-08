@@ -19,3 +19,5 @@ export type { FastifyLikeServer } from "./FastifyLikeServer";
 export { FastifyHttpAdapter } from "./FastifyHttpAdapter";
 export { HealthHttpHandler } from "./HealthHttpHandler";
 export { createHealthHttpRoute } from "./HealthHttpRouteFactory";
+export { RagHttpHandler } from "./RagHttpHandler";
+export { createRagHttpRoute } from "./RagHttpRouteFactory";
