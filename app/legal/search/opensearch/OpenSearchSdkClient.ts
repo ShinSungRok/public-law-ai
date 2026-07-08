@@ -39,8 +39,27 @@ export class OpenSearchSdkClient implements OpenSearchClient {
     indexName: string,
     documents: OpenSearchLegalDocument[],
   ): Promise<void> {
+    if (documents.length === 0) {
+      return;
+    }
+
+    const body: Record<string, unknown>[] = [];
     for (const document of documents) {
-      await this.indexDocument(indexName, document.id, document);
+      body.push({ index: { _id: document.id } });
+      body.push(document as unknown as Record<string, unknown>);
+    }
+
+    const response = await this.client.bulk({ index: indexName, body });
+
+    if (response.body.errors) {
+      const failedDocumentIds = response.body.items
+        .map((item) => item.index)
+        .filter((result) => result !== undefined && result.error !== undefined)
+        .map((result) => result._id ?? "unknown");
+
+      throw new Error(
+        `OpenSearch bulk index failed for documents: ${failedDocumentIds.join(", ")}`,
+      );
     }
   }
 
