@@ -5,3 +5,6 @@ export type { AiProviderMessage } from "./AiProviderMessage";
 export type { AiProviderRole } from "./AiProviderRole";
 export { AiProviderError } from "./AiProviderError";
 export { FakeAiProvider } from "./FakeAiProvider";
+export type { AiProviderType } from "./AiProviderType";
+export type { AiProviderFactory } from "./AiProviderFactory";
+export { DefaultAiProviderFactory } from "./DefaultAiProviderFactory";
