@@ -21,7 +21,8 @@
     "db:legal:reindex": "tsx app/legal/pipeline/runPostgreSQLLegalDocumentReindex.ts",
     "db:legal:init:all": "tsx app/legal/pipeline/runPostgreSQLLegalSchemaInitAll.ts",
     "legal:embedding:validate": "tsx app/legal/pipeline/runEmbeddingPipelineValidation.ts",
-    "validate:rag": "tsx app/legal/pipeline/runRagAnswerValidation.ts"
+    "validate:rag": "tsx app/legal/pipeline/runRagAnswerValidation.ts",
+    "validate:rag:api": "tsx app/legal/pipeline/runRagApiValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
