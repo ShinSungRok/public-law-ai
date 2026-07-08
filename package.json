@@ -28,7 +28,8 @@
     "validate:api:config": "tsx app/legal/pipeline/runApiConfigurationValidation.ts",
     "validate:http:abstraction": "tsx app/legal/http/runHttpAbstractionValidation.ts",
     "validate:http:route": "tsx app/legal/http/runHttpRouteValidation.ts",
-    "validate:http:request": "tsx app/legal/http/runHttpRequestMapperValidation.ts"
+    "validate:http:request": "tsx app/legal/http/runHttpRequestMapperValidation.ts",
+    "validate:http:response": "tsx app/legal/http/runHttpResponseMapperValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

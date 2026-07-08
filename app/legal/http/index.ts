@@ -9,3 +9,6 @@ export type { RawHttpRequest } from "./RawHttpRequest";
 export type { HttpRequestMapper } from "./HttpRequestMapper";
 export { UnsupportedHttpMethodError } from "./UnsupportedHttpMethodError";
 export { DefaultHttpRequestMapper } from "./DefaultHttpRequestMapper";
+export type { RawHttpResponse } from "./RawHttpResponse";
+export type { HttpResponseMapper } from "./HttpResponseMapper";
+export { DefaultHttpResponseMapper } from "./DefaultHttpResponseMapper";
