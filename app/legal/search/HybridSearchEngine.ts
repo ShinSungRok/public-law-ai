@@ -3,10 +3,12 @@ import { DefaultSearchResultFilter } from "./DefaultSearchResultFilter";
 import { toSearchResult } from "./model/SearchHitMapper";
 import type { SearchResult } from "./model/SearchResult";
 import type { SearchSource } from "./model/SearchSource";
+import { ScoreDescendingSearchResultSorter } from "./ScoreDescendingSearchResultSorter";
 import type { ScoreFusionStrategy } from "./ScoreFusionStrategy";
 import type { SearchEngine } from "./SearchEngine";
 import type { SearchQuery } from "./SearchQuery";
 import type { SearchResultFilter } from "./SearchResultFilter";
+import type { SearchResultSorter } from "./SearchResultSorter";
 
 export interface HybridSearchEngineSource {
   engine: SearchEngine;
@@ -18,6 +20,7 @@ export class HybridSearchEngine {
     private readonly sources: HybridSearchEngineSource[],
     private readonly filter: SearchResultFilter = new DefaultSearchResultFilter(),
     private readonly fusionStrategy: ScoreFusionStrategy = new DefaultScoreFusionStrategy(),
+    private readonly sorter: SearchResultSorter = new ScoreDescendingSearchResultSorter(),
   ) {}
 
   async search(query: SearchQuery): Promise<SearchResult[]> {
@@ -30,7 +33,8 @@ export class HybridSearchEngine {
 
     const fused = this.fusionStrategy.fuse(resultsBySource);
     const deduplicated = this.deduplicate(fused);
-    return this.filter.filter(deduplicated);
+    const filtered = this.filter.filter(deduplicated);
+    return this.sorter.sort(filtered);
   }
 
   private deduplicate(results: SearchResult[]): SearchResult[] {
