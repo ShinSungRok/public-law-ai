@@ -8,6 +8,7 @@ export {
 } from "./HybridSearchEngine";
 export type { ScoreFusionStrategy } from "./ScoreFusionStrategy";
 export { DefaultScoreFusionStrategy } from "./DefaultScoreFusionStrategy";
+export { ReciprocalRankFusionStrategy } from "./ReciprocalRankFusionStrategy";
 export type { SearchResultFilter } from "./SearchResultFilter";
 export { DefaultSearchResultFilter } from "./DefaultSearchResultFilter";
 export { toRetrievalResult } from "./SearchResultMapper";
