@@ -11,6 +11,8 @@ export { DefaultScoreFusionStrategy } from "./DefaultScoreFusionStrategy";
 export { ReciprocalRankFusionStrategy } from "./ReciprocalRankFusionStrategy";
 export type { SearchResultFilter } from "./SearchResultFilter";
 export { DefaultSearchResultFilter } from "./DefaultSearchResultFilter";
+export type { SearchResultSorter } from "./SearchResultSorter";
+export { ScoreDescendingSearchResultSorter } from "./ScoreDescendingSearchResultSorter";
 export { toRetrievalResult } from "./SearchResultMapper";
 export type {
   OpenSearchConfig,
