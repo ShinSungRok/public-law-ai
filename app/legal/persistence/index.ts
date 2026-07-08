@@ -13,3 +13,4 @@ export type {
   PostgreSQLQueryResult,
 } from "./PostgreSQLClient";
 export { PgPostgreSQLClient } from "./PgPostgreSQLClient";
+export { PostgreSQLLegalDocumentSchemaInitializer } from "./PostgreSQLLegalDocumentSchemaInitializer";
