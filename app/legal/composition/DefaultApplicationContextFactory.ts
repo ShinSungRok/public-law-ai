@@ -3,6 +3,7 @@ import { RagApplicationService } from "../application/RagApplicationService";
 import type { LLMCompletionRequest } from "../../ai/provider/LLMProvider";
 import type { LLMProvider } from "../../ai/provider/LLMProvider";
 import type { AIResponseStream } from "../../ai/model/AIResponse";
+import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -93,6 +94,8 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     );
     const openApiGenerator = new OpenApiGenerator();
 
+    const aiProvider = new DefaultAiProviderFactory().create("fake");
+
     return {
       healthController,
       ragController,
@@ -101,6 +104,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       responseMapper,
       httpAdapter,
       openApiGenerator,
+      aiProvider,
     };
   }
 }

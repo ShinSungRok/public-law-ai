@@ -40,6 +40,7 @@
     "validate:composition:bootstrap": "tsx app/legal/composition/runApplicationBootstrapValidation.ts",
     "validate:composition:runtime": "tsx app/legal/composition/runApplicationRuntimeValidation.ts",
     "validate:composition": "tsx app/legal/composition/runCompositionMilestoneValidation.ts",
+    "validate:composition:ai-provider": "tsx app/legal/composition/runApplicationContextAiProviderValidation.ts",
     "validate:ai:provider": "tsx app/legal/ai/runAiProviderContractValidation.ts",
     "validate:ai:factory": "tsx app/legal/ai/runAiProviderFactoryValidation.ts"
   },

@@ -3,6 +3,7 @@ import { RagApplicationService } from "../application/RagApplicationService";
 import type { LLMCompletionRequest } from "../../ai/provider/LLMProvider";
 import type { LLMProvider } from "../../ai/provider/LLMProvider";
 import type { AIResponseStream } from "../../ai/model/AIResponse";
+import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -106,6 +107,8 @@ function buildApplicationContext(): ApplicationContext {
   );
   const openApiGenerator = new OpenApiGenerator();
 
+  const aiProvider = new DefaultAiProviderFactory().create("fake");
+
   return {
     healthController,
     ragController,
@@ -114,6 +117,7 @@ function buildApplicationContext(): ApplicationContext {
     responseMapper,
     httpAdapter,
     openApiGenerator,
+    aiProvider,
   };
 }
 
@@ -127,6 +131,7 @@ async function main(): Promise<void> {
   assertTruthy(context.responseMapper, "responseMapper missing");
   assertTruthy(context.httpAdapter, "httpAdapter missing");
   assertTruthy(context.openApiGenerator, "openApiGenerator missing");
+  assertTruthy(context.aiProvider, "aiProvider missing");
 
   const initialRoutes = context.routeRegistry.getRoutes();
   assertEqual(initialRoutes.length, 2, "routeRegistry route count mismatch");

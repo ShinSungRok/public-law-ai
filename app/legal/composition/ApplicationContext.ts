@@ -1,3 +1,4 @@
+import type { AiProvider } from "../ai";
 import type { HealthController } from "../api/HealthController";
 import type { RagController } from "../api/RagController";
 import type { FastifyHttpAdapter } from "../http/FastifyHttpAdapter";
@@ -14,4 +15,5 @@ export interface ApplicationContext {
   responseMapper: HttpResponseMapper;
   httpAdapter: FastifyHttpAdapter;
   openApiGenerator: OpenApiGenerator;
+  aiProvider: AiProvider;
 }
