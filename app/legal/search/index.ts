@@ -2,6 +2,10 @@ export type { SearchEngine } from "./SearchEngine";
 export type { SearchHit } from "./SearchHit";
 export type { SearchQuery } from "./SearchQuery";
 export { KeywordSearchEngine } from "./KeywordSearchEngine";
+export {
+  HybridSearchEngine,
+  type HybridSearchEngineSource,
+} from "./HybridSearchEngine";
 export { toRetrievalResult } from "./SearchResultMapper";
 export type {
   OpenSearchConfig,
