@@ -15,3 +15,7 @@ export type {
 export { PgPostgreSQLClient } from "./PgPostgreSQLClient";
 export { PostgreSQLLegalDocumentSchemaInitializer } from "./PostgreSQLLegalDocumentSchemaInitializer";
 export { PostgreSQLLegalDocumentRepository } from "./PostgreSQLLegalDocumentRepository";
+export type { ImportHistoryEntity } from "./ImportHistoryEntity";
+export type { ImportHistoryRepository } from "./ImportHistoryRepository";
+export { PostgreSQLImportHistorySchemaInitializer } from "./PostgreSQLImportHistorySchemaInitializer";
+export { PostgreSQLImportHistoryRepository } from "./PostgreSQLImportHistoryRepository";
