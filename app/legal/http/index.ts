@@ -5,3 +5,7 @@ export type { HttpHandler } from "./HttpHandler";
 export type { HttpRoute } from "./HttpRoute";
 export type { HttpRouteRegistry } from "./HttpRouteRegistry";
 export { InMemoryHttpRouteRegistry } from "./InMemoryHttpRouteRegistry";
+export type { RawHttpRequest } from "./RawHttpRequest";
+export type { HttpRequestMapper } from "./HttpRequestMapper";
+export { UnsupportedHttpMethodError } from "./UnsupportedHttpMethodError";
+export { DefaultHttpRequestMapper } from "./DefaultHttpRequestMapper";
