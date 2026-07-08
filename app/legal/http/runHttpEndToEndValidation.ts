@@ -1,0 +1,199 @@
+import { GenerateRagAnswerUseCase } from "../application/GenerateRagAnswerUseCase";
+import { RagApplicationService } from "../application/RagApplicationService";
+import type { LLMCompletionRequest } from "../../ai/provider/LLMProvider";
+import type { LLMProvider } from "../../ai/provider/LLMProvider";
+import type { AIResponseStream } from "../../ai/model/AIResponse";
+import type { LegalDocument } from "../domain";
+import { HealthController } from "../api/HealthController";
+import { RagController } from "../api/RagController";
+import { DefaultCitationExtractor } from "../rag/DefaultCitationExtractor";
+import { RagAnswerBuilder } from "../rag/RagAnswerBuilder";
+import { KeywordRetriever } from "../retrieval/KeywordRetriever";
+import type { LegalDocumentRepository } from "../repository/LegalDocumentRepository";
+import { DefaultApiConfigurationFactory } from "../server/DefaultApiConfigurationFactory";
+import { DefaultHttpRequestMapper } from "./DefaultHttpRequestMapper";
+import { DefaultHttpResponseMapper } from "./DefaultHttpResponseMapper";
+import { FastifyHttpAdapter } from "./FastifyHttpAdapter";
+import type { FastifyLikeReply } from "./FastifyLikeReply";
+import type { FastifyLikeRequest } from "./FastifyLikeRequest";
+import type { FastifyLikeRouteOptions } from "./FastifyLikeRouteOptions";
+import type { FastifyLikeServer } from "./FastifyLikeServer";
+import { createHealthHttpRoute } from "./HealthHttpRouteFactory";
+import { InMemoryHttpRouteRegistry } from "./InMemoryHttpRouteRegistry";
+import { createRagHttpRoute } from "./RagHttpRouteFactory";
+
+const SAMPLE_QUERY = "개인정보 보호";
+
+const SAMPLE_DOCUMENTS: LegalDocument[] = [
+  {
+    id: "fake-statute-article-1",
+    documentType: "STATUTE_ARTICLE",
+    title: "개인정보 보호법 제1조",
+    text: "이 법은 개인정보의 처리 및 보호에 관한 사항을 정함으로써 개인의 자유와 권리를 보호한다.",
+    metadata: {
+      sourceSystem: "fake-source",
+      sourceId: "fake-statute-article-1",
+      sourceUrl: "https://fake.local/statutes/1",
+      retrievedAt: new Date().toISOString(),
+    },
+    sourceRef: {
+      sourceType: "statute_article",
+      sourceId: "fake-statute-article-1",
+    },
+  },
+];
+
+class InMemoryLegalDocumentRepository implements LegalDocumentRepository {
+  constructor(private readonly documents: LegalDocument[]) {}
+
+  async getById(id: string): Promise<LegalDocument | null> {
+    return this.documents.find((document) => document.id === id) ?? null;
+  }
+
+  async listAll(): Promise<LegalDocument[]> {
+    return this.documents;
+  }
+}
+
+class FakeLLMProvider implements LLMProvider {
+  streamCompletion(request: LLMCompletionRequest): AIResponseStream {
+    return (async function* (): AIResponseStream {
+      yield { text: "This is a fake generated answer based on the retrieved legal context." };
+      yield { text: ` Prompt length: ${request.prompt.length}.` };
+    })();
+  }
+}
+
+class FakeFastifyReply implements FastifyLikeReply {
+  statusCode: number | undefined;
+  headers: Record<string, string> = {};
+  sentBody: unknown;
+
+  status(statusCode: number): FastifyLikeReply {
+    this.statusCode = statusCode;
+    return this;
+  }
+
+  header(name: string, value: string): FastifyLikeReply {
+    this.headers[name] = value;
+    return this;
+  }
+
+  send(body: unknown): void {
+    this.sentBody = body;
+  }
+}
+
+class FakeFastifyServer implements FastifyLikeServer {
+  readonly registeredRoutes: FastifyLikeRouteOptions[] = [];
+
+  route(options: FastifyLikeRouteOptions): void {
+    this.registeredRoutes.push(options);
+  }
+}
+
+function assertEqual(actual: unknown, expected: unknown, message: string): void {
+  if (actual !== expected) {
+    throw new Error(
+      `${message}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
+  }
+}
+
+function findRegisteredRoute(
+  server: FakeFastifyServer,
+  method: string,
+  url: string,
+): FastifyLikeRouteOptions {
+  const found = server.registeredRoutes.find(
+    (route) => route.method === method && route.url === url,
+  );
+  if (!found) {
+    throw new Error(`Route not found: ${method} ${url}`);
+  }
+  return found;
+}
+
+async function main(): Promise<void> {
+  const registry = new InMemoryHttpRouteRegistry();
+
+  const apiConfiguration = new DefaultApiConfigurationFactory().create();
+  const healthController = new HealthController(apiConfiguration);
+  registry.register(createHealthHttpRoute(healthController));
+
+  const repository = new InMemoryLegalDocumentRepository(SAMPLE_DOCUMENTS);
+  const retriever = new KeywordRetriever(repository);
+  const llmProvider = new FakeLLMProvider();
+  const ragAnswerBuilder = new RagAnswerBuilder(new DefaultCitationExtractor());
+  const generateRagAnswerUseCase = new GenerateRagAnswerUseCase(
+    retriever,
+    llmProvider,
+    ragAnswerBuilder,
+  );
+  const ragApplicationService = new RagApplicationService(
+    generateRagAnswerUseCase,
+  );
+  const ragController = new RagController(ragApplicationService);
+  registry.register(createRagHttpRoute(ragController));
+
+  const requestMapper = new DefaultHttpRequestMapper();
+  const responseMapper = new DefaultHttpResponseMapper();
+  const adapter = new FastifyHttpAdapter(registry, requestMapper, responseMapper);
+
+  const server = new FakeFastifyServer();
+  adapter.registerRoutes(server);
+
+  assertEqual(server.registeredRoutes.length, 2, "expected exactly two routes");
+
+  const healthRoute = findRegisteredRoute(server, "GET", "/health");
+  const ragRoute = findRegisteredRoute(server, "POST", "/rag/answer");
+
+  const healthFastifyRequest: FastifyLikeRequest = {
+    method: "GET",
+    url: "/health",
+    headers: {},
+    query: {},
+    body: null,
+  };
+  const healthReply = new FakeFastifyReply();
+  await healthRoute.handler(healthFastifyRequest, healthReply);
+
+  assertEqual(healthReply.statusCode, 200, "health status code mismatch");
+  const healthBody = healthReply.sentBody as {
+    status: string;
+    service: string;
+  };
+  assertEqual(healthBody.status, "UP", "health status field mismatch");
+  assertEqual(
+    healthBody.service,
+    apiConfiguration.serviceName,
+    "health service field mismatch",
+  );
+
+  const ragFastifyRequest: FastifyLikeRequest = {
+    method: "POST",
+    url: "/rag/answer",
+    headers: { "content-type": "application/json" },
+    query: {},
+    body: { query: SAMPLE_QUERY },
+  };
+  const ragReply = new FakeFastifyReply();
+  await ragRoute.handler(ragFastifyRequest, ragReply);
+
+  assertEqual(ragReply.statusCode, 200, "rag status code mismatch");
+  const ragBody = ragReply.sentBody as {
+    answer: string;
+    citations: unknown[];
+  };
+  if (typeof ragBody.answer !== "string" || ragBody.answer.length === 0) {
+    throw new Error("rag response body missing non-empty answer field");
+  }
+  if (!Array.isArray(ragBody.citations)) {
+    throw new Error("rag response body missing citations array");
+  }
+  assertEqual(ragBody.citations.length, 1, "rag citation count mismatch");
+
+  console.log("HTTP end-to-end validation succeeded.");
+}
+
+main();

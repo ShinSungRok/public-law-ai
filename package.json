@@ -32,7 +32,8 @@
     "validate:http:response": "tsx app/legal/http/runHttpResponseMapperValidation.ts",
     "validate:http:fastify": "tsx app/legal/http/runFastifyHttpAdapterValidation.ts",
     "validate:http:health": "tsx app/legal/http/runHealthHttpRouteValidation.ts",
-    "validate:http:rag": "tsx app/legal/http/runRagHttpRouteValidation.ts"
+    "validate:http:rag": "tsx app/legal/http/runRagHttpRouteValidation.ts",
+    "validate:http:e2e": "tsx app/legal/http/runHttpEndToEndValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
