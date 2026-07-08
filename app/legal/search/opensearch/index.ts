@@ -1,5 +1,6 @@
 export type { OpenSearchBatchIndexOptions } from "./OpenSearchBatchIndexOptions";
 export type { OpenSearchBatchIndexResult } from "./OpenSearchBatchIndexResult";
+export { OpenSearchBulkIndexError } from "./OpenSearchBulkIndexError";
 export type { OpenSearchConfig } from "./OpenSearchConfig";
 export { createOpenSearchConfigFromEnv } from "./OpenSearchConfigFactory";
 export type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";

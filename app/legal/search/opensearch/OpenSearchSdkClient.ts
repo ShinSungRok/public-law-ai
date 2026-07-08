@@ -1,4 +1,5 @@
 import { Client } from "@opensearch-project/opensearch";
+import { OpenSearchBulkIndexError } from "./OpenSearchBulkIndexError";
 import type { OpenSearchClient } from "./OpenSearchClient";
 import type { OpenSearchConfig } from "./OpenSearchConfig";
 import type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
@@ -57,9 +58,7 @@ export class OpenSearchSdkClient implements OpenSearchClient {
         .filter((result) => result !== undefined && result.error !== undefined)
         .map((result) => result._id ?? "unknown");
 
-      throw new Error(
-        `OpenSearch bulk index failed for documents: ${failedDocumentIds.join(", ")}`,
-      );
+      throw new OpenSearchBulkIndexError(failedDocumentIds);
     }
   }
 
