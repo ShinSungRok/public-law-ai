@@ -19,7 +19,8 @@
     "pipeline:law:search:postgres": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithPostgreSQLPersistence.ts",
     "db:legal:init": "tsx app/legal/pipeline/runPostgreSQLLegalDocumentSchemaInit.ts",
     "db:legal:reindex": "tsx app/legal/pipeline/runPostgreSQLLegalDocumentReindex.ts",
-    "db:legal:init:all": "tsx app/legal/pipeline/runPostgreSQLLegalSchemaInitAll.ts"
+    "db:legal:init:all": "tsx app/legal/pipeline/runPostgreSQLLegalSchemaInitAll.ts",
+    "legal:embedding:validate": "tsx app/legal/pipeline/runEmbeddingPipelineValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
