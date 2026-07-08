@@ -36,6 +36,10 @@ const VALIDATION_STEPS: CompositionValidationStep[] = [
     scriptPath:
       "app/legal/composition/runApplicationContextAiPromptExecutorValidation.ts",
   },
+  {
+    name: "AiRuntime",
+    scriptPath: "app/legal/composition/runAiRuntimeValidation.ts",
+  },
 ];
 
 async function main(): Promise<void> {
