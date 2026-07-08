@@ -16,6 +16,7 @@
     "pipeline:law:search:index": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithIndexing.ts",
     "pipeline:law:search:persist": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithJsonPersistence.ts",
     "pipeline:law:search:persist:index": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithJsonPersistenceAndIndexing.ts",
+    "pipeline:law:search:postgres": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithPostgreSQLPersistence.ts",
     "db:legal:init": "tsx app/legal/pipeline/runPostgreSQLLegalDocumentSchemaInit.ts"
   },
   "dependencies": {
