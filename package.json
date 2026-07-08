@@ -42,6 +42,7 @@
     "validate:composition": "tsx app/legal/composition/runCompositionMilestoneValidation.ts",
     "validate:composition:ai-provider": "tsx app/legal/composition/runApplicationContextAiProviderValidation.ts",
     "validate:composition:ai-prompt-executor": "tsx app/legal/composition/runApplicationContextAiPromptExecutorValidation.ts",
+    "validate:composition:ai-runtime": "tsx app/legal/composition/runAiRuntimeValidation.ts",
     "validate:ai:provider": "tsx app/legal/ai/runAiProviderContractValidation.ts",
     "validate:ai:factory": "tsx app/legal/ai/runAiProviderFactoryValidation.ts",
     "validate:ai:prompt-executor": "tsx app/legal/ai/runAiPromptExecutorValidation.ts",
