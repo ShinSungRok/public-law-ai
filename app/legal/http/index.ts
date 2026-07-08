@@ -12,3 +12,8 @@ export { DefaultHttpRequestMapper } from "./DefaultHttpRequestMapper";
 export type { RawHttpResponse } from "./RawHttpResponse";
 export type { HttpResponseMapper } from "./HttpResponseMapper";
 export { DefaultHttpResponseMapper } from "./DefaultHttpResponseMapper";
+export type { FastifyLikeRequest } from "./FastifyLikeRequest";
+export type { FastifyLikeReply } from "./FastifyLikeReply";
+export type { FastifyLikeRouteOptions } from "./FastifyLikeRouteOptions";
+export type { FastifyLikeServer } from "./FastifyLikeServer";
+export { FastifyHttpAdapter } from "./FastifyHttpAdapter";
