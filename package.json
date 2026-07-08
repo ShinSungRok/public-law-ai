@@ -36,7 +36,8 @@
     "validate:http:e2e": "tsx app/legal/http/runHttpEndToEndValidation.ts",
     "validate:http:openapi": "tsx app/legal/http/runOpenApiGenerationValidation.ts",
     "validate:composition:context": "tsx app/legal/composition/runApplicationContextValidation.ts",
-    "validate:composition:factory": "tsx app/legal/composition/runApplicationContextFactoryValidation.ts"
+    "validate:composition:factory": "tsx app/legal/composition/runApplicationContextFactoryValidation.ts",
+    "validate:composition:bootstrap": "tsx app/legal/composition/runApplicationBootstrapValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
