@@ -17,4 +17,10 @@ export class OpenSearchLegalDocumentIndexer {
       converted,
     );
   }
+
+  async indexAll(documents: LegalDocument[]): Promise<void> {
+    for (const document of documents) {
+      await this.index(document);
+    }
+  }
 }

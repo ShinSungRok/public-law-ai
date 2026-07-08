@@ -38,12 +38,11 @@ async function main(): Promise<void> {
 
   await indexManager.ensureLegalIndex();
 
-  let indexedCount = 0;
-  for (const entity of entities) {
-    const document = JSON.parse(entity.rawData) as LegalDocument;
-    await indexer.index(document);
-    indexedCount += 1;
-  }
+  const documents = entities.map(
+    (entity) => JSON.parse(entity.rawData) as LegalDocument,
+  );
+  await indexer.indexAll(documents);
+  const indexedCount = documents.length;
 
   const searchEngine = new OpenSearchSearchEngine(
     openSearchClient,
