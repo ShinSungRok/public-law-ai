@@ -5,3 +5,4 @@ export { BatchEmbeddingService } from "./BatchEmbeddingService";
 export type { ChunkingService } from "./ChunkingService";
 export { SingleChunkChunkingService } from "./SingleChunkChunkingService";
 export { ChunkEmbeddingPipeline } from "./ChunkEmbeddingPipeline";
+export { BatchChunkEmbeddingPipeline } from "./BatchChunkEmbeddingPipeline";
