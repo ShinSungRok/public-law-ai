@@ -41,6 +41,7 @@ async function main(): Promise<void> {
   const documents = entities.map(
     (entity) => JSON.parse(entity.rawData) as LegalDocument,
   );
+  console.log(`[reindex] Starting batch indexing for ${documents.length} documents`);
   const batchIndexResult = await indexer.indexAll(documents, {
     batchSize: 100,
     maxRetries: 2,

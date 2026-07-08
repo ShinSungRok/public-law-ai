@@ -25,9 +25,15 @@ export class OpenSearchLegalDocumentIndexer {
     options: OpenSearchBatchIndexOptions = {},
   ): Promise<OpenSearchBatchIndexResult> {
     const { batchSize = 100, maxRetries = 0 } = options;
+    const totalBatchCount = Math.ceil(documents.length / batchSize);
+    console.log(`[indexAll] Total documents: ${documents.length}`);
+
     let indexedCount = 0;
     const failedDocumentIds: string[] = [];
     for (let offset = 0; offset < documents.length; offset += batchSize) {
+      const batchNumber = offset / batchSize + 1;
+      console.log(`[indexAll] Batch ${batchNumber}/${totalBatchCount}`);
+
       const chunk = documents.slice(offset, offset + batchSize);
       for (const document of chunk) {
         let succeeded = false;
@@ -46,12 +52,19 @@ export class OpenSearchLegalDocumentIndexer {
           failedDocumentIds.push(document.id);
         }
       }
+
+      console.log(
+        `[indexAll] Batch ${batchNumber}/${totalBatchCount} done. indexedCount: ${indexedCount}, failedCount: ${failedDocumentIds.length}`,
+      );
     }
-    return {
+
+    const result: OpenSearchBatchIndexResult = {
       totalCount: documents.length,
       indexedCount,
       failedCount: failedDocumentIds.length,
       failedDocumentIds,
     };
+    console.log("[indexAll] Final result:", result);
+    return result;
   }
 }
