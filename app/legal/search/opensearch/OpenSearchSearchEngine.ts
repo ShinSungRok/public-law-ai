@@ -1,6 +1,6 @@
 import type { SearchEngine } from "../SearchEngine";
+import type { SearchHit } from "../SearchHit";
 import type { SearchQuery } from "../SearchQuery";
-import type { SearchResult } from "../SearchResult";
 import type { OpenSearchClient } from "./OpenSearchClient";
 import type { OpenSearchConfig } from "./OpenSearchConfig";
 import type { OpenSearchSearchResponse } from "./OpenSearchSearchResponse";
@@ -25,7 +25,7 @@ export class OpenSearchSearchEngine implements SearchEngine {
     private readonly config: OpenSearchConfig,
   ) {}
 
-  async search(query: SearchQuery): Promise<SearchResult[]> {
+  async search(query: SearchQuery): Promise<SearchHit[]> {
     const body = buildOpenSearchKeywordSearchBody(query);
     const response = await this.client.search(this.config.indexName, body);
 

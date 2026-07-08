@@ -1,6 +1,6 @@
 import type { LegalDocument } from "../domain/LegalDocument";
 
-export interface SearchResult {
+export interface SearchHit {
   id: string;
   document: LegalDocument;
   score: number;

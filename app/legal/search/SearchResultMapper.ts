@@ -2,12 +2,12 @@ import type {
   RetrievalResult,
   RetrievedDocument,
 } from "../retrieval/RetrievalResult";
-import type { SearchResult } from "./SearchResult";
+import type { SearchHit } from "./SearchHit";
 
-export function toRetrievalResult(searchResult: SearchResult): RetrievalResult {
+export function toRetrievalResult(searchHit: SearchHit): RetrievalResult {
   const retrievedDocument: RetrievedDocument = {
-    document: searchResult.document,
-    score: searchResult.score,
+    document: searchHit.document,
+    score: searchHit.score,
     matchedTerms: [],
   };
 

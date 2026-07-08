@@ -1,6 +1,6 @@
 import type { LegalDocument, LegalSourceRefType } from "../../domain/LegalDocument";
 import type { LegalDocumentType } from "../../domain/LegalDocumentType";
-import type { SearchResult } from "../SearchResult";
+import type { SearchHit } from "../SearchHit";
 import type { OpenSearchHit, OpenSearchSearchResponse } from "./OpenSearchSearchResponse";
 import type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
 
@@ -23,7 +23,7 @@ function toLegalDocument(source: OpenSearchLegalDocument): LegalDocument {
   };
 }
 
-function toSearchResult(hit: OpenSearchHit): SearchResult | null {
+function toSearchResult(hit: OpenSearchHit): SearchHit | null {
   if (!hit._source) {
     return null;
   }
@@ -40,8 +40,8 @@ function toSearchResult(hit: OpenSearchHit): SearchResult | null {
 
 export function toSearchResults(
   response: OpenSearchSearchResponse,
-): SearchResult[] {
+): SearchHit[] {
   return response.hits.hits
     .map(toSearchResult)
-    .filter((result): result is SearchResult => result !== null);
+    .filter((result): result is SearchHit => result !== null);
 }
