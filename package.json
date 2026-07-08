@@ -11,6 +11,7 @@
     "pipeline:fake:index": "tsx app/legal/pipeline/runFakePipelineWithIndexing.ts",
     "pipeline:fake:persist": "tsx app/legal/pipeline/runFakePipelineWithJsonPersistence.ts",
     "pipeline:fake:persist:index": "tsx app/legal/pipeline/runFakePipelineWithJsonPersistenceAndIndexing.ts",
+    "pipeline:fake:postgres": "tsx app/legal/pipeline/runFakePipelineWithPostgreSQLPersistence.ts",
     "pipeline:law:search": "tsx app/legal/pipeline/runLawGoKrStatuteSearchPipeline.ts",
     "pipeline:law:search:index": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithIndexing.ts",
     "pipeline:law:search:persist": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithJsonPersistence.ts",
