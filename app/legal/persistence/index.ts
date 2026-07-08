@@ -8,3 +8,8 @@ export {
   createPostgreSQLConfigFromEnv,
   assertPostgreSQLConfig,
 } from "./PostgreSQLConfigFactory";
+export type {
+  PostgreSQLClient,
+  PostgreSQLQueryResult,
+} from "./PostgreSQLClient";
+export { PgPostgreSQLClient } from "./PgPostgreSQLClient";
