@@ -41,7 +41,10 @@ async function main(): Promise<void> {
   const documents = entities.map(
     (entity) => JSON.parse(entity.rawData) as LegalDocument,
   );
-  const batchIndexResult = await indexer.indexAll(documents, 100);
+  const batchIndexResult = await indexer.indexAll(documents, {
+    batchSize: 100,
+    maxRetries: 2,
+  });
 
   const searchEngine = new OpenSearchSearchEngine(
     openSearchClient,

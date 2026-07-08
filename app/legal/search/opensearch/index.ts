@@ -1,3 +1,4 @@
+export type { OpenSearchBatchIndexOptions } from "./OpenSearchBatchIndexOptions";
 export type { OpenSearchBatchIndexResult } from "./OpenSearchBatchIndexResult";
 export type { OpenSearchConfig } from "./OpenSearchConfig";
 export { createOpenSearchConfigFromEnv } from "./OpenSearchConfigFactory";
