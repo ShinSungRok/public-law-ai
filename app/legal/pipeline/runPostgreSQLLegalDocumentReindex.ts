@@ -41,8 +41,7 @@ async function main(): Promise<void> {
   const documents = entities.map(
     (entity) => JSON.parse(entity.rawData) as LegalDocument,
   );
-  await indexer.indexAll(documents, 100);
-  const indexedCount = documents.length;
+  const batchIndexResult = await indexer.indexAll(documents, 100);
 
   const searchEngine = new OpenSearchSearchEngine(
     openSearchClient,
@@ -51,7 +50,9 @@ async function main(): Promise<void> {
   const searchResults = await searchEngine.search({ text: QUERY });
 
   console.log(`Loaded count: ${entities.length}`);
-  console.log(`Indexed count: ${indexedCount}`);
+  console.log(`Total count: ${batchIndexResult.totalCount}`);
+  console.log(`Indexed count: ${batchIndexResult.indexedCount}`);
+  console.log(`Failed count: ${batchIndexResult.failedCount}`);
   console.log(`Search result count: ${searchResults.length}`);
 }
 

@@ -1,4 +1,5 @@
 import type { LegalDocument } from "../../domain/LegalDocument";
+import type { OpenSearchBatchIndexResult } from "./OpenSearchBatchIndexResult";
 import type { OpenSearchClient } from "./OpenSearchClient";
 import type { OpenSearchConfig } from "./OpenSearchConfig";
 import { toOpenSearchLegalDocument } from "./OpenSearchLegalDocumentMapper";
@@ -21,12 +22,19 @@ export class OpenSearchLegalDocumentIndexer {
   async indexAll(
     documents: LegalDocument[],
     batchSize: number = 100,
-  ): Promise<void> {
+  ): Promise<OpenSearchBatchIndexResult> {
+    let indexedCount = 0;
     for (let offset = 0; offset < documents.length; offset += batchSize) {
       const chunk = documents.slice(offset, offset + batchSize);
       for (const document of chunk) {
         await this.index(document);
+        indexedCount += 1;
       }
     }
+    return {
+      totalCount: documents.length,
+      indexedCount,
+      failedCount: 0,
+    };
   }
 }
