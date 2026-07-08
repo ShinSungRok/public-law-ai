@@ -17,3 +17,5 @@ export type { FastifyLikeReply } from "./FastifyLikeReply";
 export type { FastifyLikeRouteOptions } from "./FastifyLikeRouteOptions";
 export type { FastifyLikeServer } from "./FastifyLikeServer";
 export { FastifyHttpAdapter } from "./FastifyHttpAdapter";
+export { HealthHttpHandler } from "./HealthHttpHandler";
+export { createHealthHttpRoute } from "./HealthHttpRouteFactory";
