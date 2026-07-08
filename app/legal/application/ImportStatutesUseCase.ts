@@ -43,11 +43,11 @@ export class ImportStatutesUseCase {
 
       if (this.repository) {
         const entities = parsedResults.map(toLegalDocumentEntity);
-        const documentsToSave =
+        const { documentsToSave, result } =
           await this.importPolicy.selectDocumentsToSave(entities);
 
         await this.repository.saveAll(documentsToSave);
-        importedCount = documentsToSave.length;
+        importedCount = result.savedCount;
       }
 
       if (this.historyRepository) {

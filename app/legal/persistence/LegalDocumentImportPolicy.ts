@@ -1,14 +1,27 @@
 import type { LegalDocumentEntity } from "./LegalDocumentEntity";
+import type { LegalDocumentImportResult } from "./LegalDocumentImportResult";
 import type { LegalDocumentRepository } from "./LegalDocumentRepository";
+
+export interface LegalDocumentImportSelection {
+  documentsToSave: LegalDocumentEntity[];
+  result: LegalDocumentImportResult;
+}
 
 export class LegalDocumentImportPolicy {
   constructor(private readonly repository?: LegalDocumentRepository) {}
 
   async selectDocumentsToSave(
     entities: LegalDocumentEntity[],
-  ): Promise<LegalDocumentEntity[]> {
+  ): Promise<LegalDocumentImportSelection> {
     if (!this.repository) {
-      return [];
+      return {
+        documentsToSave: [],
+        result: {
+          totalCount: entities.length,
+          savedCount: 0,
+          skippedCount: entities.length,
+        },
+      };
     }
 
     const documentsToSave: LegalDocumentEntity[] = [];
@@ -21,6 +34,13 @@ export class LegalDocumentImportPolicy {
       }
     }
 
-    return documentsToSave;
+    return {
+      documentsToSave,
+      result: {
+        totalCount: entities.length,
+        savedCount: documentsToSave.length,
+        skippedCount: entities.length - documentsToSave.length,
+      },
+    };
   }
 }
