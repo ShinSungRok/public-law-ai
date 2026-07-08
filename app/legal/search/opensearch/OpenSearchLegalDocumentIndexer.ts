@@ -35,22 +35,22 @@ export class OpenSearchLegalDocumentIndexer {
       console.log(`[indexAll] Batch ${batchNumber}/${totalBatchCount}`);
 
       const chunk = documents.slice(offset, offset + batchSize);
-      for (const document of chunk) {
-        let succeeded = false;
-        for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
-          try {
-            await this.index(document);
-            succeeded = true;
-            break;
-          } catch {
-            // retry until maxRetries is exhausted
-          }
+      const convertedChunk = chunk.map(toOpenSearchLegalDocument);
+
+      let succeeded = false;
+      for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+        try {
+          await this.client.bulkIndex(this.config.indexName, convertedChunk);
+          succeeded = true;
+          break;
+        } catch {
+          // retry until maxRetries is exhausted
         }
-        if (succeeded) {
-          indexedCount += 1;
-        } else {
-          failedDocumentIds.push(document.id);
-        }
+      }
+      if (succeeded) {
+        indexedCount += chunk.length;
+      } else {
+        failedDocumentIds.push(...chunk.map((document) => document.id));
       }
 
       console.log(

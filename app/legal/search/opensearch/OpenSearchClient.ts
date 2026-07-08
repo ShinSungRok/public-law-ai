@@ -7,5 +7,9 @@ export interface OpenSearchClient {
     id: string,
     document: OpenSearchLegalDocument,
   ): Promise<void>;
+  bulkIndex(
+    indexName: string,
+    documents: OpenSearchLegalDocument[],
+  ): Promise<void>;
   search(indexName: string, body: unknown): Promise<unknown>;
 }

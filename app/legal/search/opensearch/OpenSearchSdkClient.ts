@@ -35,6 +35,15 @@ export class OpenSearchSdkClient implements OpenSearchClient {
     });
   }
 
+  async bulkIndex(
+    indexName: string,
+    documents: OpenSearchLegalDocument[],
+  ): Promise<void> {
+    for (const document of documents) {
+      await this.indexDocument(indexName, document.id, document);
+    }
+  }
+
   async search(indexName: string, body: unknown): Promise<unknown> {
     const response = await this.client.search({
       index: indexName,
