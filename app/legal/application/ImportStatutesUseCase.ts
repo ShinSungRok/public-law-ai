@@ -4,6 +4,7 @@ import type { ParsedLegalData } from "../pipeline/ParsedLegalData";
 import type { PublicDataSource } from "../pipeline/PublicDataSource";
 import type { PublicLegalDataPipeline } from "../pipeline/PublicLegalDataPipeline";
 import type { ImportHistoryRepository } from "../persistence/ImportHistoryRepository";
+import type { LegalDocumentEntity } from "../persistence/LegalDocumentEntity";
 import type { LegalDocumentRepository } from "../persistence/LegalDocumentRepository";
 import { toLegalDocumentEntity } from "../persistence/ParsedLegalDataToEntityMapper";
 import type { OpenSearchLegalDocumentIndexer } from "../search/opensearch/OpenSearchLegalDocumentIndexer";
@@ -34,9 +35,22 @@ export class ImportStatutesUseCase {
         }
       }
 
+      let importedCount = parsedResults.length;
+
       if (this.repository) {
         const entities = parsedResults.map(toLegalDocumentEntity);
-        await this.repository.saveAll(entities);
+        const newEntities: LegalDocumentEntity[] = [];
+        for (const entity of entities) {
+          const alreadyExists = await this.repository.existsByDocumentId(
+            entity.documentId,
+          );
+          if (!alreadyExists) {
+            newEntities.push(entity);
+          }
+        }
+
+        await this.repository.saveAll(newEntities);
+        importedCount = newEntities.length;
       }
 
       if (this.historyRepository) {
@@ -44,7 +58,7 @@ export class ImportStatutesUseCase {
           id: randomUUID(),
           source: source.sourceSystem,
           query,
-          importedCount: parsedResults.length,
+          importedCount,
           status: "SUCCESS",
           startedAt,
           finishedAt: new Date().toISOString(),
