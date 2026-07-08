@@ -6,16 +6,26 @@ const DEFAULT_K = 60;
 export class ReciprocalRankFusionStrategy implements ScoreFusionStrategy {
   constructor(private readonly k: number = DEFAULT_K) {}
 
-  fuse(results: SearchResult[]): SearchResult[] {
-    const ranked = [...results].sort((a, b) => b.score - a.score);
+  fuse(resultGroups: SearchResult[][]): SearchResult[] {
+    const fusedScoreByDocumentId = new Map<string, number>();
 
-    const fused = ranked.map((result, index) => {
-      const rank = index + 1;
-      return {
-        ...result,
-        score: 1 / (this.k + rank),
-      };
-    });
+    for (const group of resultGroups) {
+      const ranked = [...group].sort((a, b) => b.score - a.score);
+      ranked.forEach((result, index) => {
+        const rank = index + 1;
+        const contribution = 1 / (this.k + rank);
+        const currentScore = fusedScoreByDocumentId.get(result.document.id) ?? 0;
+        fusedScoreByDocumentId.set(
+          result.document.id,
+          currentScore + contribution,
+        );
+      });
+    }
+
+    const fused = resultGroups.flat().map((result) => ({
+      ...result,
+      score: fusedScoreByDocumentId.get(result.document.id) ?? 0,
+    }));
 
     return fused.sort((a, b) => b.score - a.score);
   }

@@ -28,9 +28,9 @@ export class HybridSearchEngine {
       }),
     );
 
-    const deduplicated = this.deduplicate(resultsBySource.flat());
-    const filtered = this.filter.filter(deduplicated);
-    return this.fusionStrategy.fuse(filtered);
+    const fused = this.fusionStrategy.fuse(resultsBySource);
+    const deduplicated = this.deduplicate(fused);
+    return this.filter.filter(deduplicated);
   }
 
   private deduplicate(results: SearchResult[]): SearchResult[] {
