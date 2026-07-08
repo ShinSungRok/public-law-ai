@@ -4,6 +4,7 @@ import type { LLMCompletionRequest } from "../../ai/provider/LLMProvider";
 import type { LLMProvider } from "../../ai/provider/LLMProvider";
 import type { AIResponseStream } from "../../ai/model/AIResponse";
 import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
+import { DefaultAiPromptExecutor } from "../ai/DefaultAiPromptExecutor";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -95,6 +96,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     const openApiGenerator = new OpenApiGenerator();
 
     const aiProvider = new DefaultAiProviderFactory().create("fake");
+    const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
     return {
       healthController,
@@ -105,6 +107,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       httpAdapter,
       openApiGenerator,
       aiProvider,
+      aiPromptExecutor,
     };
   }
 }
