@@ -20,6 +20,19 @@ export class HybridSearchEngine {
       }),
     );
 
-    return resultsBySource.flat();
+    return this.deduplicate(resultsBySource.flat());
+  }
+
+  private deduplicate(results: SearchResult[]): SearchResult[] {
+    const byDocumentId = new Map<string, SearchResult>();
+
+    for (const result of results) {
+      const existing = byDocumentId.get(result.document.id);
+      if (!existing || result.score > existing.score) {
+        byDocumentId.set(result.document.id, result);
+      }
+    }
+
+    return Array.from(byDocumentId.values());
   }
 }
