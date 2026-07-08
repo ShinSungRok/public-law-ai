@@ -24,17 +24,23 @@ export class OpenSearchLegalDocumentIndexer {
     batchSize: number = 100,
   ): Promise<OpenSearchBatchIndexResult> {
     let indexedCount = 0;
+    const failedDocumentIds: string[] = [];
     for (let offset = 0; offset < documents.length; offset += batchSize) {
       const chunk = documents.slice(offset, offset + batchSize);
       for (const document of chunk) {
-        await this.index(document);
-        indexedCount += 1;
+        try {
+          await this.index(document);
+          indexedCount += 1;
+        } catch {
+          failedDocumentIds.push(document.id);
+        }
       }
     }
     return {
       totalCount: documents.length,
       indexedCount,
-      failedCount: 0,
+      failedCount: failedDocumentIds.length,
+      failedDocumentIds,
     };
   }
 }

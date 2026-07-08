@@ -53,6 +53,9 @@ async function main(): Promise<void> {
   console.log(`Total count: ${batchIndexResult.totalCount}`);
   console.log(`Indexed count: ${batchIndexResult.indexedCount}`);
   console.log(`Failed count: ${batchIndexResult.failedCount}`);
+  console.log(
+    `Failed document ids: ${batchIndexResult.failedDocumentIds.join(", ")}`,
+  );
   console.log(`Search result count: ${searchResults.length}`);
 }
 
