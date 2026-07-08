@@ -61,8 +61,11 @@ export class PostgreSQLLegalDocumentRepository
 {
   constructor(private readonly client: PostgreSQLClient) {}
 
-  async save(entity: LegalDocumentEntity): Promise<void> {
-    await this.client.query(UPSERT_SQL, [
+  async save(
+    entity: LegalDocumentEntity,
+    client: PostgreSQLClient = this.client,
+  ): Promise<void> {
+    await client.query(UPSERT_SQL, [
       entity.id,
       entity.source,
       entity.documentId,
@@ -75,9 +78,11 @@ export class PostgreSQLLegalDocumentRepository
   }
 
   async saveAll(entities: LegalDocumentEntity[]): Promise<void> {
-    for (const entity of entities) {
-      await this.save(entity);
-    }
+    await this.client.transaction(async (transactionClient) => {
+      for (const entity of entities) {
+        await this.save(entity, transactionClient);
+      }
+    });
   }
 
   async findByDocumentId(
