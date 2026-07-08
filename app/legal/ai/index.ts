@@ -8,3 +8,7 @@ export { FakeAiProvider } from "./FakeAiProvider";
 export type { AiProviderType } from "./AiProviderType";
 export type { AiProviderFactory } from "./AiProviderFactory";
 export { DefaultAiProviderFactory } from "./DefaultAiProviderFactory";
+export type { AiPromptExecutionRequest } from "./AiPromptExecutionRequest";
+export type { AiPromptExecutionResponse } from "./AiPromptExecutionResponse";
+export type { AiPromptExecutor } from "./AiPromptExecutor";
+export { DefaultAiPromptExecutor } from "./DefaultAiPromptExecutor";
