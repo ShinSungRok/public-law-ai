@@ -1,6 +1,7 @@
 import type { LegalDocument } from "../../domain/LegalDocument";
 import type { OpenSearchBatchIndexOptions } from "./OpenSearchBatchIndexOptions";
 import type { OpenSearchBatchIndexResult } from "./OpenSearchBatchIndexResult";
+import { OpenSearchBulkIndexError } from "./OpenSearchBulkIndexError";
 import type { OpenSearchClient } from "./OpenSearchClient";
 import type { OpenSearchConfig } from "./OpenSearchConfig";
 import { toOpenSearchLegalDocument } from "./OpenSearchLegalDocumentMapper";
@@ -35,23 +36,31 @@ export class OpenSearchLegalDocumentIndexer {
       console.log(`[indexAll] Batch ${batchNumber}/${totalBatchCount}`);
 
       const chunk = documents.slice(offset, offset + batchSize);
-      const convertedChunk = chunk.map(toOpenSearchLegalDocument);
+      let remaining = chunk.map(toOpenSearchLegalDocument);
 
-      let succeeded = false;
       for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
-        try {
-          await this.client.bulkIndex(this.config.indexName, convertedChunk);
-          succeeded = true;
+        if (remaining.length === 0) {
           break;
-        } catch {
-          // retry until maxRetries is exhausted
+        }
+        try {
+          await this.client.bulkIndex(this.config.indexName, remaining);
+          indexedCount += remaining.length;
+          remaining = [];
+        } catch (error) {
+          if (error instanceof OpenSearchBulkIndexError) {
+            const failedIds = new Set(error.failedDocumentIds);
+            const succeeded = remaining.filter(
+              (document) => !failedIds.has(document.id),
+            );
+            indexedCount += succeeded.length;
+            remaining = remaining.filter((document) =>
+              failedIds.has(document.id),
+            );
+          }
+          // non-bulk-index errors: retry the whole remaining set as-is
         }
       }
-      if (succeeded) {
-        indexedCount += chunk.length;
-      } else {
-        failedDocumentIds.push(...chunk.map((document) => document.id));
-      }
+      failedDocumentIds.push(...remaining.map((document) => document.id));
 
       console.log(
         `[indexAll] Batch ${batchNumber}/${totalBatchCount} done. indexedCount: ${indexedCount}, failedCount: ${failedDocumentIds.length}`,
