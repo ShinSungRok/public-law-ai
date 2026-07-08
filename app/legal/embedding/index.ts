@@ -8,3 +8,4 @@ export { SingleChunkChunkingService } from "./SingleChunkChunkingService";
 export { ChunkEmbeddingPipeline } from "./ChunkEmbeddingPipeline";
 export { BatchChunkEmbeddingPipeline } from "./BatchChunkEmbeddingPipeline";
 export type { VectorIndexer } from "./VectorIndexer";
+export { FakeVectorIndexer } from "./FakeVectorIndexer";
