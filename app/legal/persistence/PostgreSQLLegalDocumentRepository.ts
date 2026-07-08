@@ -51,6 +51,11 @@ const EXISTS_BY_DOCUMENT_ID_SQL = `
 SELECT 1 FROM legal_documents WHERE document_id = $1;
 `;
 
+const FIND_ALL_SQL = `
+SELECT id, source, document_id, title, content, raw_data, created_at, updated_at
+FROM legal_documents;
+`;
+
 export class PostgreSQLLegalDocumentRepository
   implements LegalDocumentRepository
 {
@@ -91,5 +96,10 @@ export class PostgreSQLLegalDocumentRepository
       documentId,
     ]);
     return result.rowCount > 0;
+  }
+
+  async findAll(): Promise<LegalDocumentEntity[]> {
+    const result = await this.client.query<LegalDocumentRow>(FIND_ALL_SQL);
+    return result.rows.map(toEntity);
   }
 }

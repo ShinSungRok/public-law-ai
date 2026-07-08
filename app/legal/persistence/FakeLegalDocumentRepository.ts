@@ -23,4 +23,8 @@ export class FakeLegalDocumentRepository implements LegalDocumentRepository {
   async existsByDocumentId(documentId: string): Promise<boolean> {
     return this.entitiesByDocumentId.has(documentId);
   }
+
+  async findAll(): Promise<LegalDocumentEntity[]> {
+    return Array.from(this.entitiesByDocumentId.values());
+  }
 }

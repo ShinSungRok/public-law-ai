@@ -1,4 +1,4 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { LegalDocumentEntity } from "./LegalDocumentEntity";
@@ -40,6 +40,29 @@ export class JsonLegalDocumentRepository implements LegalDocumentRepository {
     } catch {
       return false;
     }
+  }
+
+  async findAll(): Promise<LegalDocumentEntity[]> {
+    let fileNames: string[];
+    try {
+      fileNames = await readdir(this.directory);
+    } catch {
+      return [];
+    }
+
+    const entities: LegalDocumentEntity[] = [];
+    for (const fileName of fileNames) {
+      if (!fileName.endsWith(".json")) {
+        continue;
+      }
+      const raw = await readFile(
+        path.join(this.directory, fileName),
+        "utf-8",
+      );
+      entities.push(JSON.parse(raw) as LegalDocumentEntity);
+    }
+
+    return entities;
   }
 
   private filePathFor(documentId: string): string {

@@ -5,4 +5,5 @@ export interface LegalDocumentRepository {
   saveAll(entities: LegalDocumentEntity[]): Promise<void>;
   findByDocumentId(documentId: string): Promise<LegalDocumentEntity | null>;
   existsByDocumentId(documentId: string): Promise<boolean>;
+  findAll(): Promise<LegalDocumentEntity[]>;
 }
