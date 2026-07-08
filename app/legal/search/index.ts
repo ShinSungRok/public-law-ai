@@ -1,4 +1,5 @@
 export type { SearchEngine } from "./SearchEngine";
+export type { VectorSearchEngine } from "./VectorSearchEngine";
 export type { SearchHit } from "./SearchHit";
 export type { SearchQuery } from "./SearchQuery";
 export { KeywordSearchEngine } from "./KeywordSearchEngine";
