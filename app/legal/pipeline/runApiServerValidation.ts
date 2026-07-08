@@ -10,6 +10,7 @@ import { DefaultCitationExtractor } from "../rag/DefaultCitationExtractor";
 import { RagAnswerBuilder } from "../rag/RagAnswerBuilder";
 import { KeywordRetriever } from "../retrieval/KeywordRetriever";
 import type { LegalDocumentRepository } from "../repository/LegalDocumentRepository";
+import { DefaultApiConfigurationFactory } from "../server/DefaultApiConfigurationFactory";
 import { FakeApiRouter } from "../server/FakeApiRouter";
 import { FakeApiServer } from "../server/FakeApiServer";
 
@@ -68,7 +69,8 @@ async function main(): Promise<void> {
     generateRagAnswerUseCase,
   );
   const ragController = new RagController(ragApplicationService);
-  const healthController = new HealthController();
+  const apiConfiguration = new DefaultApiConfigurationFactory().create();
+  const healthController = new HealthController(apiConfiguration);
 
   const apiRouter = new FakeApiRouter(ragController, healthController);
   const apiServer = new FakeApiServer(apiRouter);

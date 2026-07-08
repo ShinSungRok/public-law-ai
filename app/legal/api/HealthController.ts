@@ -1,12 +1,13 @@
+import type { ApiConfiguration } from "../server/ApiConfiguration";
 import type { HealthStatusDto } from "./HealthStatusDto";
 
-const SERVICE_NAME = "public-law-ai";
-
 export class HealthController {
+  constructor(private readonly configuration: ApiConfiguration) {}
+
   async check(): Promise<HealthStatusDto> {
     return {
       status: "UP",
-      service: SERVICE_NAME,
+      service: this.configuration.serviceName,
     };
   }
 }
