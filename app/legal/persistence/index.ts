@@ -19,3 +19,4 @@ export type { ImportHistoryEntity } from "./ImportHistoryEntity";
 export type { ImportHistoryRepository } from "./ImportHistoryRepository";
 export { PostgreSQLImportHistorySchemaInitializer } from "./PostgreSQLImportHistorySchemaInitializer";
 export { PostgreSQLImportHistoryRepository } from "./PostgreSQLImportHistoryRepository";
+export { LegalDocumentImportPolicy } from "./LegalDocumentImportPolicy";

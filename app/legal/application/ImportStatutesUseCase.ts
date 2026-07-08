@@ -4,7 +4,7 @@ import type { ParsedLegalData } from "../pipeline/ParsedLegalData";
 import type { PublicDataSource } from "../pipeline/PublicDataSource";
 import type { PublicLegalDataPipeline } from "../pipeline/PublicLegalDataPipeline";
 import type { ImportHistoryRepository } from "../persistence/ImportHistoryRepository";
-import type { LegalDocumentEntity } from "../persistence/LegalDocumentEntity";
+import { LegalDocumentImportPolicy } from "../persistence/LegalDocumentImportPolicy";
 import type { LegalDocumentRepository } from "../persistence/LegalDocumentRepository";
 import { toLegalDocumentEntity } from "../persistence/ParsedLegalDataToEntityMapper";
 import type { OpenSearchLegalDocumentIndexer } from "../search/opensearch/OpenSearchLegalDocumentIndexer";
@@ -15,12 +15,16 @@ function deriveQuery(source: PublicDataSource): string {
 }
 
 export class ImportStatutesUseCase {
+  private readonly importPolicy: LegalDocumentImportPolicy;
+
   constructor(
     private readonly pipeline: PublicLegalDataPipeline,
     private readonly indexer?: OpenSearchLegalDocumentIndexer,
     private readonly repository?: LegalDocumentRepository,
     private readonly historyRepository?: ImportHistoryRepository,
-  ) {}
+  ) {
+    this.importPolicy = new LegalDocumentImportPolicy(repository);
+  }
 
   async execute(source: PublicDataSource): Promise<ParsedLegalData[]> {
     const startedAt = new Date().toISOString();
@@ -39,18 +43,11 @@ export class ImportStatutesUseCase {
 
       if (this.repository) {
         const entities = parsedResults.map(toLegalDocumentEntity);
-        const newEntities: LegalDocumentEntity[] = [];
-        for (const entity of entities) {
-          const alreadyExists = await this.repository.existsByDocumentId(
-            entity.documentId,
-          );
-          if (!alreadyExists) {
-            newEntities.push(entity);
-          }
-        }
+        const documentsToSave =
+          await this.importPolicy.selectDocumentsToSave(entities);
 
-        await this.repository.saveAll(newEntities);
-        importedCount = newEntities.length;
+        await this.repository.saveAll(documentsToSave);
+        importedCount = documentsToSave.length;
       }
 
       if (this.historyRepository) {
