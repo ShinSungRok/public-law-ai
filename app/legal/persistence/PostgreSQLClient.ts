@@ -8,4 +8,7 @@ export interface PostgreSQLClient {
     text: string,
     params?: unknown[],
   ): Promise<PostgreSQLQueryResult<T>>;
+  transaction<T>(
+    callback: (client: PostgreSQLClient) => Promise<T>,
+  ): Promise<T>;
 }
