@@ -44,7 +44,8 @@
     "validate:composition:ai-prompt-executor": "tsx app/legal/composition/runApplicationContextAiPromptExecutorValidation.ts",
     "validate:ai:provider": "tsx app/legal/ai/runAiProviderContractValidation.ts",
     "validate:ai:factory": "tsx app/legal/ai/runAiProviderFactoryValidation.ts",
-    "validate:ai:prompt-executor": "tsx app/legal/ai/runAiPromptExecutorValidation.ts"
+    "validate:ai:prompt-executor": "tsx app/legal/ai/runAiPromptExecutorValidation.ts",
+    "validate:ai": "tsx app/legal/ai/runAiMilestoneValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
