@@ -25,7 +25,8 @@
     "validate:rag:api": "tsx app/legal/pipeline/runRagApiValidation.ts",
     "validate:api:server": "tsx app/legal/pipeline/runApiServerValidation.ts",
     "validate:api:error": "tsx app/legal/pipeline/runApiErrorMapperValidation.ts",
-    "validate:api:config": "tsx app/legal/pipeline/runApiConfigurationValidation.ts"
+    "validate:api:config": "tsx app/legal/pipeline/runApiConfigurationValidation.ts",
+    "validate:http:abstraction": "tsx app/legal/http/runHttpAbstractionValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
