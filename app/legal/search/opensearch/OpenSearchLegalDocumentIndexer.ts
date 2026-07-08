@@ -18,9 +18,15 @@ export class OpenSearchLegalDocumentIndexer {
     );
   }
 
-  async indexAll(documents: LegalDocument[]): Promise<void> {
-    for (const document of documents) {
-      await this.index(document);
+  async indexAll(
+    documents: LegalDocument[],
+    batchSize: number = 100,
+  ): Promise<void> {
+    for (let offset = 0; offset < documents.length; offset += batchSize) {
+      const chunk = documents.slice(offset, offset + batchSize);
+      for (const document of chunk) {
+        await this.index(document);
+      }
     }
   }
 }

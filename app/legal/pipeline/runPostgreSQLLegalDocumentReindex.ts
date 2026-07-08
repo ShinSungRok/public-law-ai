@@ -41,7 +41,7 @@ async function main(): Promise<void> {
   const documents = entities.map(
     (entity) => JSON.parse(entity.rawData) as LegalDocument,
   );
-  await indexer.indexAll(documents);
+  await indexer.indexAll(documents, 100);
   const indexedCount = documents.length;
 
   const searchEngine = new OpenSearchSearchEngine(
