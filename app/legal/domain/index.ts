@@ -12,3 +12,4 @@ export type {
 } from "./StatuteArticle";
 export type { CourtCaseDocument } from "./CourtCaseDocument";
 export type { Citation } from "./Citation";
+export type { DocumentChunk } from "./DocumentChunk";
