@@ -9,6 +9,7 @@
     "lint": "eslint",
     "pipeline:fake": "tsx app/legal/pipeline/runFakePipeline.ts",
     "pipeline:fake:index": "tsx app/legal/pipeline/runFakePipelineWithIndexing.ts",
+    "pipeline:fake:persist": "tsx app/legal/pipeline/runFakePipelineWithJsonPersistence.ts",
     "pipeline:law:search": "tsx app/legal/pipeline/runLawGoKrStatuteSearchPipeline.ts",
     "pipeline:law:search:index": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithIndexing.ts",
     "pipeline:law:search:persist": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithJsonPersistence.ts"
