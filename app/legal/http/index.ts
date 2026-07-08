@@ -21,3 +21,7 @@ export { HealthHttpHandler } from "./HealthHttpHandler";
 export { createHealthHttpRoute } from "./HealthHttpRouteFactory";
 export { RagHttpHandler } from "./RagHttpHandler";
 export { createRagHttpRoute } from "./RagHttpRouteFactory";
+export type { OpenApiOperation } from "./OpenApiOperation";
+export type { OpenApiPathItem } from "./OpenApiPathItem";
+export type { OpenApiDocument } from "./OpenApiDocument";
+export { OpenApiGenerator } from "./OpenApiGenerator";
