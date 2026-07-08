@@ -6,6 +6,8 @@ export {
   HybridSearchEngine,
   type HybridSearchEngineSource,
 } from "./HybridSearchEngine";
+export type { ScoreFusionStrategy } from "./ScoreFusionStrategy";
+export { DefaultScoreFusionStrategy } from "./DefaultScoreFusionStrategy";
 export { toRetrievalResult } from "./SearchResultMapper";
 export type {
   OpenSearchConfig,
