@@ -23,7 +23,8 @@
     "legal:embedding:validate": "tsx app/legal/pipeline/runEmbeddingPipelineValidation.ts",
     "validate:rag": "tsx app/legal/pipeline/runRagAnswerValidation.ts",
     "validate:rag:api": "tsx app/legal/pipeline/runRagApiValidation.ts",
-    "validate:api:server": "tsx app/legal/pipeline/runApiServerValidation.ts"
+    "validate:api:server": "tsx app/legal/pipeline/runApiServerValidation.ts",
+    "validate:api:error": "tsx app/legal/pipeline/runApiErrorMapperValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
