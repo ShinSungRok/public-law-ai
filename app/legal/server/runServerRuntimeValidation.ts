@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 interface ServerValidationStep {
@@ -35,6 +35,7 @@ const REQUIRED_PACKAGE_JSON_SCRIPTS = [
   "validate:server:entrypoint",
   "validate:server:lifecycle",
   "validate:server:shutdown",
+  "validate:server",
 ];
 
 function assertTruthy(value: unknown, message: string): void {
@@ -85,6 +86,17 @@ async function main(): Promise<void> {
   assertTruthy(
     productionServerRuntimeSource.includes("ApplicationBootstrap"),
     "ProductionServerRuntime does not use ApplicationBootstrap",
+  );
+
+  assertTruthy(
+    runProductionServerSource.includes("applicationConfiguration"),
+    "runProductionServer.ts does not use the validated ApplicationConfiguration",
+  );
+
+  console.log("[server] Checking docs/server-runtime.md exists...");
+  assertTruthy(
+    existsSync(path.resolve(process.cwd(), "docs/server-runtime.md")),
+    "docs/server-runtime.md does not exist",
   );
 
   console.log("[server] Checking for direct process.env access...");
