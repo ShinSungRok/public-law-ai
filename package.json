@@ -53,7 +53,8 @@
     "validate:ai:openai-provider": "tsx app/legal/ai/runOpenAiProviderValidation.ts",
     "validate:ai:anthropic-provider": "tsx app/legal/ai/runAnthropicProviderValidation.ts",
     "validate:ai:real-provider-factory": "tsx app/legal/ai/runRealLlmProviderFactoryValidation.ts",
-    "validate:ai": "tsx app/legal/ai/runAiMilestoneValidation.ts"
+    "validate:ai": "tsx app/legal/ai/runAiMilestoneValidation.ts",
+    "validate:config:contract": "tsx app/legal/config/runApplicationConfigurationValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
