@@ -5,3 +5,5 @@ export type { SearchConfiguration } from "./SearchConfiguration";
 export type { AiConfiguration } from "./AiConfiguration";
 export type { ApplicationConfigurationFactory } from "./ApplicationConfigurationFactory";
 export { EnvironmentApplicationConfigurationFactory } from "./EnvironmentApplicationConfigurationFactory";
+export type { ApplicationConfigurationValidator } from "./ApplicationConfigurationValidator";
+export { DefaultApplicationConfigurationValidator } from "./DefaultApplicationConfigurationValidator";
