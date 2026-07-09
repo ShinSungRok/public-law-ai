@@ -1,4 +1,9 @@
-import type { AiPromptExecutor, AiProvider } from "../ai";
+import type {
+  AiPromptExecutor,
+  AiProvider,
+  LlmConfiguration,
+  LlmConfigurationFactory,
+} from "../ai";
 import type { HealthController } from "../api/HealthController";
 import type { RagController } from "../api/RagController";
 import type { FastifyHttpAdapter } from "../http/FastifyHttpAdapter";
@@ -17,4 +22,6 @@ export interface ApplicationContext {
   openApiGenerator: OpenApiGenerator;
   aiProvider: AiProvider;
   aiPromptExecutor: AiPromptExecutor;
+  llmConfiguration: LlmConfiguration;
+  llmConfigurationFactory: LlmConfigurationFactory;
 }

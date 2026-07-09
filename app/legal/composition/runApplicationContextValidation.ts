@@ -5,6 +5,7 @@ import type { LLMProvider } from "../../ai/provider/LLMProvider";
 import type { AIResponseStream } from "../../ai/model/AIResponse";
 import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import { DefaultAiPromptExecutor } from "../ai/DefaultAiPromptExecutor";
+import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigurationFactory";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -108,7 +109,12 @@ function buildApplicationContext(): ApplicationContext {
   );
   const openApiGenerator = new OpenApiGenerator();
 
-  const aiProvider = new DefaultAiProviderFactory().create("fake");
+  const llmConfigurationFactory = new EnvironmentLlmConfigurationFactory();
+  const llmConfiguration = llmConfigurationFactory.create();
+  const aiProvider = new DefaultAiProviderFactory().create(
+    llmConfiguration.provider,
+    llmConfiguration,
+  );
   const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
   return {
@@ -121,6 +127,8 @@ function buildApplicationContext(): ApplicationContext {
     openApiGenerator,
     aiProvider,
     aiPromptExecutor,
+    llmConfiguration,
+    llmConfigurationFactory,
   };
 }
 
@@ -136,6 +144,8 @@ async function main(): Promise<void> {
   assertTruthy(context.openApiGenerator, "openApiGenerator missing");
   assertTruthy(context.aiProvider, "aiProvider missing");
   assertTruthy(context.aiPromptExecutor, "aiPromptExecutor missing");
+  assertTruthy(context.llmConfiguration, "llmConfiguration missing");
+  assertTruthy(context.llmConfigurationFactory, "llmConfigurationFactory missing");
 
   const initialRoutes = context.routeRegistry.getRoutes();
   assertEqual(initialRoutes.length, 2, "routeRegistry route count mismatch");
