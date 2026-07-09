@@ -60,7 +60,12 @@
     "validate:config:env": "tsx app/legal/config/runEnvironmentApplicationConfigurationFactoryValidation.ts",
     "validate:config:validator": "tsx app/legal/config/runApplicationConfigurationValidatorValidation.ts",
     "validate:config": "tsx app/legal/config/runConfigMilestoneValidation.ts",
-    "validate:infra:local": "tsx app/legal/infra/runLocalInfrastructureValidation.ts"
+    "validate:infra:local": "tsx app/legal/infra/runLocalInfrastructureValidation.ts",
+    "infra:config": "docker compose config",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:logs": "docker compose logs -f",
+    "infra:ps": "docker compose ps"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
