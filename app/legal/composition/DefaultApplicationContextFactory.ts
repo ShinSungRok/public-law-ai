@@ -6,6 +6,8 @@ import type { AIResponseStream } from "../../ai/model/AIResponse";
 import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import { DefaultAiPromptExecutor } from "../ai/DefaultAiPromptExecutor";
 import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigurationFactory";
+import { DefaultApplicationConfigurationValidator } from "../config/DefaultApplicationConfigurationValidator";
+import { EnvironmentApplicationConfigurationFactory } from "../config/EnvironmentApplicationConfigurationFactory";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -66,6 +68,9 @@ class FakeLLMProvider implements LLMProvider {
 
 export class DefaultApplicationContextFactory implements ApplicationContextFactory {
   create(): ApplicationContext {
+    const applicationConfiguration = new EnvironmentApplicationConfigurationFactory().create();
+    new DefaultApplicationConfigurationValidator().validate(applicationConfiguration);
+
     const apiConfiguration = new DefaultApiConfigurationFactory().create();
     const healthController = new HealthController(apiConfiguration);
 

@@ -45,6 +45,7 @@
     "validate:composition:ai-runtime": "tsx app/legal/composition/runAiRuntimeValidation.ts",
     "validate:composition:llm-config": "tsx app/legal/composition/runApplicationContextLlmConfigurationValidation.ts",
     "validate:composition:llm-runtime": "tsx app/legal/composition/runLlmRuntimeValidation.ts",
+    "validate:composition:config": "tsx app/legal/composition/runApplicationConfigurationCompositionValidation.ts",
     "validate:ai:provider": "tsx app/legal/ai/runAiProviderContractValidation.ts",
     "validate:ai:factory": "tsx app/legal/ai/runAiProviderFactoryValidation.ts",
     "validate:ai:prompt-executor": "tsx app/legal/ai/runAiPromptExecutorValidation.ts",
