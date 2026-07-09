@@ -155,11 +155,66 @@ own quality signal.
 exact/partial/no-match queries as `runRetrievalEvaluationValidation.ts`,
 run through `KeywordSearchEngine` instead of `KeywordRetriever` directly.
 
-## 8. Current limitations
+## 8. RAG Answer Quality Evaluation (Task 4)
 
-- No concrete scoring logic exists yet for `rag-answer` or `citation`
-  targets — only `retrieval` and `search` are implemented so far.
-- **Ranking metrics are deferred.** Both `RetrievalEvaluationRunner` and
+`RagAnswerEvaluationRunner` (`app/legal/evaluation/RagAnswerEvaluationRunner.ts`)
+implements the `rag-answer` target by invoking the existing, unmodified
+`GenerateRagAnswerUseCase` end-to-end (retrieval → prompt → AI provider →
+citation extraction → `RagAnswer`) with fake/in-memory dependencies, then
+scores the resulting `RagAnswer` with four deterministic metrics:
+
+- **`answer-not-empty`** — passes when `RagAnswer.answer.trim()` is
+  non-empty.
+- **`contains-expected-keywords`** — reuses `EvaluationCase.expectedAnswerKeywords`;
+  score is the fraction of keywords found (case-insensitive substring match)
+  in the answer text, `passed` only at a perfect `1`. With no keywords
+  specified the check trivially passes (nothing to check), mirroring how
+  `computeRecall` treats an empty expected set.
+- **`citation-present`** — passes when `RagAnswer.citations.length > 0`.
+- **`expected-citation-document-present`** — reuses
+  `EvaluationCase.expectedCitationDocumentIds`; score is the fraction of
+  expected document ids found among `citations[].sourceId`, `passed` only at
+  a perfect `1`, and trivially passes with none specified.
+
+An `EvaluationResult` is `passed` only when **all four** metrics pass.
+`runMany(evaluationCases)` aggregates results into an `EvaluationSummary`,
+same as the other runners.
+
+### Citation Quality Evaluation
+
+Citation quality is folded into `RagAnswerEvaluationRunner` rather than a
+separate runner: `citation-present` and `expected-citation-document-present`
+score the citations that came out of the same `GenerateRagAnswerUseCase` run
+being evaluated, reusing `RagAnswer.citations` (built by the existing
+`RagAnswerBuilder`/`DefaultCitationExtractor` — untouched by this task). A
+deeper, standalone citation evaluator (exercising `CitationExtractor`
+directly against arbitrary `SearchResult[]`, independent of a full RAG run)
+remains a future task — see below.
+
+### Why semantic evaluation is deferred
+
+Both keyword and citation checks are exact/substring string matching, not
+semantic similarity (e.g. embedding cosine similarity between the answer and
+a reference answer). Semantic similarity needs a scoring model and a
+similarity threshold — another dependency and another tunable that this
+phase deliberately avoids until deterministic, dependency-free checks prove
+insufficient.
+
+### Why LLM-as-a-Judge is deferred
+
+Using an LLM to grade another LLM's answer is powerful but non-deterministic,
+requires a real AI provider (violating "no external services required" for
+this validation suite), and introduces its own prompt-engineering and cost
+surface. Task 4 intentionally sticks to plain deterministic checks that run
+anywhere with no network access or credentials, consistent with every other
+evaluator in this framework.
+
+## 9. Current limitations
+
+- No concrete scoring logic exists yet for the `citation` target as its own
+  standalone evaluator (only the RAG-answer-level citation checks above) or
+  for `regression`.
+- **Ranking metrics are deferred.** `RetrievalEvaluationRunner` and
   `SearchEvaluationRunner` only report precision and recall, which treat the
   retrieved set as unordered. Neither implements MRR (Mean Reciprocal Rank),
   NDCG (Normalized Discounted Cumulative Gain), or hybrid-weighting
@@ -168,28 +223,32 @@ run through `KeywordSearchEngine` instead of `KeywordRetriever` directly.
   than "did the expected documents come back" — better addressed as a
   dedicated future improvement once precision/recall are proven useful in
   practice, rather than speculatively built now.
+- Answer/citation quality checks are deliberately deterministic string
+  matching — no semantic similarity, no LLM-as-a-Judge, no AI-based scoring
+  (see above).
 - `runEvaluationFrameworkValidation.ts`, `runRetrievalEvaluationValidation.ts`,
-  and `runSearchEvaluationValidation.ts` only use in-memory sample objects and
-  `KeywordRetriever`/`KeywordSearchEngine`/an in-memory
-  `LegalDocumentRepository` — no PostgreSQL, OpenSearch, Docker, OpenAI, or
-  Anthropic is required.
+  `runSearchEvaluationValidation.ts`, and `runRagAnswerEvaluationValidation.ts`
+  only use in-memory sample objects and `KeywordRetriever`/`KeywordSearchEngine`/
+  a fake `LLMProvider`/an in-memory `LegalDocumentRepository` — no
+  PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is required.
 
-## 9. Future tasks
+## 10. Future tasks
 
-- **RAG Answer Quality Evaluation** — a concrete `EvaluationRunner` for the
-  `rag-answer` target, built on `GenerateRagAnswerUseCase`.
-- **Citation Accuracy Evaluation** — a concrete `EvaluationRunner` for the
-  `citation` target, built on `CitationExtractor`.
+- **Citation Accuracy Evaluation** — a concrete, standalone `EvaluationRunner`
+  for the `citation` target built directly on `CitationExtractor` (not
+  routed through a full RAG run), for deeper checks than the RAG-answer-level
+  presence checks above.
 - **Regression Runner** — a runner that executes a fixed suite of
   `EvaluationCase`s across all targets and produces an `EvaluationSummary`.
 - **Milestone Validation** — a milestone runner (mirroring
   `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
   `runRagEndToEndValidation.ts`) that sequences all evaluation validators.
 
-## 10. Scripts
+## 11. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:evaluation:framework` | `tsx app/legal/evaluation/runEvaluationFrameworkValidation.ts` | Structural validation of the evaluation framework types using in-memory sample objects only. |
 | `pnpm validate:evaluation:retrieval` | `tsx app/legal/evaluation/runRetrievalEvaluationValidation.ts` | Validates `RetrievalEvaluator` precision/recall computation and `RetrievalEvaluationRunner` result/summary aggregation against an in-memory exact/partial/no-match dataset. |
 | `pnpm validate:evaluation:search` | `tsx app/legal/evaluation/runSearchEvaluationValidation.ts` | Validates `SearchEvaluationRunner` precision/recall computation and summary aggregation against the `SearchEngine` abstraction, using the same in-memory exact/partial/no-match dataset. |
+| `pnpm validate:evaluation:rag` | `tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts` | Validates `RagAnswerEvaluationRunner`'s answer/citation metrics and summary aggregation against `GenerateRagAnswerUseCase` running on fake/in-memory dependencies. |
