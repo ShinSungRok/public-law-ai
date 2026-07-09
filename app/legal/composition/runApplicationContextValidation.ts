@@ -6,6 +6,9 @@ import type { AIResponseStream } from "../../ai/model/AIResponse";
 import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import { DefaultAiPromptExecutor } from "../ai/DefaultAiPromptExecutor";
 import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigurationFactory";
+import type { LlmConfiguration } from "../ai/LlmConfiguration";
+import { DefaultApplicationConfigurationValidator } from "../config/DefaultApplicationConfigurationValidator";
+import { EnvironmentApplicationConfigurationFactory } from "../config/EnvironmentApplicationConfigurationFactory";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -79,6 +82,9 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
 }
 
 function buildApplicationContext(): ApplicationContext {
+  const applicationConfiguration = new EnvironmentApplicationConfigurationFactory().create();
+  new DefaultApplicationConfigurationValidator().validate(applicationConfiguration);
+
   const apiConfiguration = new DefaultApiConfigurationFactory().create();
   const healthController = new HealthController(apiConfiguration);
 
@@ -110,7 +116,7 @@ function buildApplicationContext(): ApplicationContext {
   const openApiGenerator = new OpenApiGenerator();
 
   const llmConfigurationFactory = new EnvironmentLlmConfigurationFactory();
-  const llmConfiguration = llmConfigurationFactory.create();
+  const llmConfiguration: LlmConfiguration = applicationConfiguration.ai;
   const aiProvider = new DefaultAiProviderFactory().create(
     llmConfiguration.provider,
     llmConfiguration,

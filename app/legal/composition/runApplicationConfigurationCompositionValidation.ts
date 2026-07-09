@@ -6,6 +6,14 @@ function assertTruthy(value: unknown, message: string): void {
   }
 }
 
+function assertEqual(actual: unknown, expected: unknown, message: string): void {
+  if (actual !== expected) {
+    throw new Error(
+      `${message}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
+  }
+}
+
 async function main(): Promise<void> {
   delete process.env.APP_ENVIRONMENT;
   delete process.env.LOG_LEVEL;
@@ -31,6 +39,24 @@ async function main(): Promise<void> {
   assertTruthy(context.ragController, "ragController missing");
   assertTruthy(context.aiProvider, "aiProvider missing");
   assertTruthy(context.aiPromptExecutor, "aiPromptExecutor missing");
+
+  process.env.LLM_MODEL = "centralized-config-model";
+  const centralizedContext = new DefaultApplicationContextFactory().create();
+  assertEqual(
+    centralizedContext.llmConfiguration.model,
+    "centralized-config-model",
+    "runtime aiProvider/llmConfiguration did not derive from the single validated ApplicationConfiguration",
+  );
+  const centralizedResponse = await centralizedContext.aiProvider.complete({
+    model: centralizedContext.llmConfiguration.model,
+    messages: [{ role: "user", content: "ping" }],
+  });
+  assertEqual(
+    centralizedResponse.metadata.model,
+    "centralized-config-model",
+    "aiProvider response metadata did not reflect centralized configuration",
+  );
+  delete process.env.LLM_MODEL;
 
   process.env.SERVER_PORT = "0";
   let invalidConfigurationThrew = false;

@@ -6,6 +6,7 @@ import type { AIResponseStream } from "../../ai/model/AIResponse";
 import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import { DefaultAiPromptExecutor } from "../ai/DefaultAiPromptExecutor";
 import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigurationFactory";
+import type { LlmConfiguration } from "../ai/LlmConfiguration";
 import { DefaultApplicationConfigurationValidator } from "../config/DefaultApplicationConfigurationValidator";
 import { EnvironmentApplicationConfigurationFactory } from "../config/EnvironmentApplicationConfigurationFactory";
 import type { LegalDocument } from "../domain";
@@ -102,7 +103,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     const openApiGenerator = new OpenApiGenerator();
 
     const llmConfigurationFactory = new EnvironmentLlmConfigurationFactory();
-    const llmConfiguration = llmConfigurationFactory.create();
+    const llmConfiguration: LlmConfiguration = applicationConfiguration.ai;
     const aiProvider = new DefaultAiProviderFactory().create(
       llmConfiguration.provider,
       llmConfiguration,
