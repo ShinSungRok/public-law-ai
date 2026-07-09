@@ -14,3 +14,5 @@ export type { AiPromptExecutor } from "./AiPromptExecutor";
 export { DefaultAiPromptExecutor } from "./DefaultAiPromptExecutor";
 export type { LlmProviderType } from "./LlmProviderType";
 export type { LlmConfiguration } from "./LlmConfiguration";
+export type { LlmConfigurationFactory } from "./LlmConfigurationFactory";
+export { EnvironmentLlmConfigurationFactory } from "./EnvironmentLlmConfigurationFactory";
