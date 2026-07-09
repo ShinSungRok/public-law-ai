@@ -8,3 +8,4 @@ export type { EvaluationResult } from "./EvaluationResult";
 export type { EvaluationSummary } from "./EvaluationSummary";
 export type { EvaluationRunner } from "./EvaluationRunner";
 export { RetrievalEvaluationRunner } from "./RetrievalEvaluationRunner";
+export { SearchEvaluationRunner } from "./SearchEvaluationRunner";

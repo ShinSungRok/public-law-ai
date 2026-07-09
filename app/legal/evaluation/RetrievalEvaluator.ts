@@ -1,26 +1,7 @@
 import type { Retriever } from "../retrieval/Retriever";
+import { computePrecision, computeRecall } from "./PrecisionRecallCalculator";
 import type { RetrievalEvaluationResult } from "./RetrievalEvaluationResult";
 import type { RetrievalTestCase } from "./RetrievalTestCase";
-
-function computePrecision(expected: string[], retrieved: string[]): number {
-  if (retrieved.length === 0) {
-    return 0;
-  }
-
-  const expectedIds = new Set(expected);
-  const relevantRetrieved = retrieved.filter((id) => expectedIds.has(id));
-  return relevantRetrieved.length / retrieved.length;
-}
-
-function computeRecall(expected: string[], retrieved: string[]): number {
-  if (expected.length === 0) {
-    return 1;
-  }
-
-  const retrievedIds = new Set(retrieved);
-  const foundExpected = expected.filter((id) => retrievedIds.has(id));
-  return foundExpected.length / expected.length;
-}
 
 export class RetrievalEvaluator {
   constructor(private readonly retriever: Retriever) {}

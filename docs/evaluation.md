@@ -118,27 +118,64 @@ definition rather than inventing a new one.
 document, so precision = 0.5 while recall stays 1), and a **no match** (query
 matches nothing, so precision = recall = 0 and the case fails).
 
-## 7. Current limitations
+## 7. Search Quality Evaluation (Task 3)
 
-- No concrete scoring logic exists yet for `search`, `rag-answer`, or
-  `citation` targets — only `retrieval` is implemented so far.
-- **Ranking metrics are deferred.** `RetrievalEvaluationRunner` only reports
-  precision and recall, which treat the retrieved set as unordered. It does
-  not implement MRR (Mean Reciprocal Rank) or NDCG (Normalized Discounted
-  Cumulative Gain). Those require deciding on a relevance-grading and
+`SearchEvaluationRunner` (`app/legal/evaluation/SearchEvaluationRunner.ts`)
+implements the `search` target directly on top of the existing `SearchEngine`
+abstraction (`search(query: SearchQuery): Promise<SearchHit[]>`) — unlike
+`RetrievalEvaluationRunner`, there is no pre-existing "SearchEvaluator" to
+delegate to, so it computes precision/recall itself using the same
+`computePrecision`/`computeRecall` functions `RetrievalEvaluator` uses. Those
+two pure functions were extracted into
+`app/legal/evaluation/PrecisionRecallCalculator.ts` (a pure refactor — same
+formulas, same results) specifically so the two runners would not each carry
+their own copy. `SearchEvaluationRunner` follows the same shape as
+`RetrievalEvaluationRunner`: `run(evaluationCase)` produces one
+`EvaluationResult` with `precision`/`recall` metrics, and
+`runMany(evaluationCases)` aggregates an `EvaluationSummary`.
+
+**Precision** and **Recall** are defined identically to retrieval evaluation
+(see above) — same formulas, same `passed`-at-`1` thresholds, same overall
+case `passed` (recall `=== 1`).
+
+**Retrieval Evaluation vs. Search Evaluation** — these exercise different
+layers of the same stack. `RetrievalEvaluationRunner` evaluates the
+`Retriever` abstraction (`KeywordRetriever` or `SearchEngineRetriever`), the
+layer `GenerateRagAnswerUseCase` actually depends on. `SearchEvaluationRunner`
+evaluates the lower-level `SearchEngine` abstraction (`KeywordSearchEngine`
+or `OpenSearchSearchEngine`) that `SearchEngineRetriever` wraps. In today's
+in-memory validation they produce identical numbers (`KeywordSearchEngine` is
+just a thin wrapper over `KeywordRetriever`), but the two evaluators exist
+separately because a real deployment can swap the `SearchEngine`
+implementation (e.g. OpenSearch relevance tuning) independently of how
+`Retriever` composes/falls back across search engines — each layer needs its
+own quality signal.
+
+`runSearchEvaluationValidation.ts` reuses the same in-memory dataset and
+exact/partial/no-match queries as `runRetrievalEvaluationValidation.ts`,
+run through `KeywordSearchEngine` instead of `KeywordRetriever` directly.
+
+## 8. Current limitations
+
+- No concrete scoring logic exists yet for `rag-answer` or `citation`
+  targets — only `retrieval` and `search` are implemented so far.
+- **Ranking metrics are deferred.** Both `RetrievalEvaluationRunner` and
+  `SearchEvaluationRunner` only report precision and recall, which treat the
+  retrieved set as unordered. Neither implements MRR (Mean Reciprocal Rank),
+  NDCG (Normalized Discounted Cumulative Gain), or hybrid-weighting
+  evaluation. Those require deciding on a relevance-grading and
   position-discounting model, which is a meaningfully bigger design surface
   than "did the expected documents come back" — better addressed as a
   dedicated future improvement once precision/recall are proven useful in
   practice, rather than speculatively built now.
-- `runEvaluationFrameworkValidation.ts` and `runRetrievalEvaluationValidation.ts`
-  only use in-memory sample objects and `KeywordRetriever`/an in-memory
+- `runEvaluationFrameworkValidation.ts`, `runRetrievalEvaluationValidation.ts`,
+  and `runSearchEvaluationValidation.ts` only use in-memory sample objects and
+  `KeywordRetriever`/`KeywordSearchEngine`/an in-memory
   `LegalDocumentRepository` — no PostgreSQL, OpenSearch, Docker, OpenAI, or
   Anthropic is required.
 
-## 8. Future tasks
+## 9. Future tasks
 
-- **Search Quality Evaluation** — a concrete `EvaluationRunner` for the
-  `search` target, built on the existing `SearchEngine` abstraction.
 - **RAG Answer Quality Evaluation** — a concrete `EvaluationRunner` for the
   `rag-answer` target, built on `GenerateRagAnswerUseCase`.
 - **Citation Accuracy Evaluation** — a concrete `EvaluationRunner` for the
@@ -149,9 +186,10 @@ matches nothing, so precision = recall = 0 and the case fails).
   `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
   `runRagEndToEndValidation.ts`) that sequences all evaluation validators.
 
-## 9. Scripts
+## 10. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:evaluation:framework` | `tsx app/legal/evaluation/runEvaluationFrameworkValidation.ts` | Structural validation of the evaluation framework types using in-memory sample objects only. |
 | `pnpm validate:evaluation:retrieval` | `tsx app/legal/evaluation/runRetrievalEvaluationValidation.ts` | Validates `RetrievalEvaluator` precision/recall computation and `RetrievalEvaluationRunner` result/summary aggregation against an in-memory exact/partial/no-match dataset. |
+| `pnpm validate:evaluation:search` | `tsx app/legal/evaluation/runSearchEvaluationValidation.ts` | Validates `SearchEvaluationRunner` precision/recall computation and summary aggregation against the `SearchEngine` abstraction, using the same in-memory exact/partial/no-match dataset. |
