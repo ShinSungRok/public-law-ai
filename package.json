@@ -24,6 +24,7 @@
     "validate:rag": "tsx app/legal/pipeline/runRagAnswerValidation.ts",
     "validate:rag:api": "tsx app/legal/pipeline/runRagApiValidation.ts",
     "validate:rag:runtime-flow": "tsx app/legal/rag/runRagRuntimeFlowValidation.ts",
+    "validate:rag:search-integration": "tsx app/legal/rag/runSearchToRagIntegrationValidation.ts",
     "validate:api:server": "tsx app/legal/pipeline/runApiServerValidation.ts",
     "validate:api:error": "tsx app/legal/pipeline/runApiErrorMapperValidation.ts",
     "validate:api:config": "tsx app/legal/pipeline/runApiConfigurationValidation.ts",
