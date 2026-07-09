@@ -21,6 +21,26 @@ const VALIDATION_STEPS: AiValidationStep[] = [
     name: "AiPromptExecutor",
     scriptPath: "app/legal/ai/runAiPromptExecutorValidation.ts",
   },
+  {
+    name: "LlmConfiguration",
+    scriptPath: "app/legal/ai/runLlmConfigurationValidation.ts",
+  },
+  {
+    name: "LlmConfigurationFactory",
+    scriptPath: "app/legal/ai/runLlmConfigurationFactoryValidation.ts",
+  },
+  {
+    name: "OpenAiProvider",
+    scriptPath: "app/legal/ai/runOpenAiProviderValidation.ts",
+  },
+  {
+    name: "AnthropicProvider",
+    scriptPath: "app/legal/ai/runAnthropicProviderValidation.ts",
+  },
+  {
+    name: "RealLlmProviderFactory",
+    scriptPath: "app/legal/ai/runRealLlmProviderFactoryValidation.ts",
+  },
 ];
 
 async function main(): Promise<void> {
