@@ -17,3 +17,4 @@ export type { LlmConfiguration } from "./LlmConfiguration";
 export type { LlmConfigurationFactory } from "./LlmConfigurationFactory";
 export { EnvironmentLlmConfigurationFactory } from "./EnvironmentLlmConfigurationFactory";
 export { OpenAiProvider } from "./OpenAiProvider";
+export { AnthropicProvider } from "./AnthropicProvider";
