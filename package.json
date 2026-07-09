@@ -68,7 +68,8 @@
     "infra:logs": "docker compose logs -f",
     "infra:ps": "docker compose ps",
     "server:start": "tsx app/legal/server/runProductionServer.ts",
-    "validate:server:entrypoint": "tsx app/legal/server/runProductionServerEntrypointValidation.ts"
+    "validate:server:entrypoint": "tsx app/legal/server/runProductionServerEntrypointValidation.ts",
+    "validate:server:lifecycle": "tsx app/legal/server/runServerRuntimeLifecycleValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
