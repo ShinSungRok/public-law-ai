@@ -66,7 +66,9 @@
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:logs": "docker compose logs -f",
-    "infra:ps": "docker compose ps"
+    "infra:ps": "docker compose ps",
+    "server:start": "tsx app/legal/server/runProductionServer.ts",
+    "validate:server:entrypoint": "tsx app/legal/server/runProductionServerEntrypointValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
