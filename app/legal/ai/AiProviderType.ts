@@ -1,1 +1,1 @@
-export type AiProviderType = "fake";
+export type AiProviderType = "fake" | "openai" | "anthropic";

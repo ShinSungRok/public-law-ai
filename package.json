@@ -50,6 +50,7 @@
     "validate:ai:llm-config-factory": "tsx app/legal/ai/runLlmConfigurationFactoryValidation.ts",
     "validate:ai:openai-provider": "tsx app/legal/ai/runOpenAiProviderValidation.ts",
     "validate:ai:anthropic-provider": "tsx app/legal/ai/runAnthropicProviderValidation.ts",
+    "validate:ai:real-provider-factory": "tsx app/legal/ai/runRealLlmProviderFactoryValidation.ts",
     "validate:ai": "tsx app/legal/ai/runAiMilestoneValidation.ts"
   },
   "dependencies": {
