@@ -49,3 +49,27 @@ pnpm infra:ps
 pnpm infra:logs
 pnpm infra:down
 ```
+
+## 5. Application Dockerfile
+
+The `Dockerfile` at the project root builds the Next.js application itself
+(separately from `docker-compose.yml`, which only provisions postgres and
+opensearch). It is a multi-stage build:
+
+1. **base** — `node:22-alpine`, with pnpm activated via corepack.
+2. **deps** — installs dependencies with `pnpm install --frozen-lockfile`.
+3. **builder** — copies the source and runs `pnpm build` (`next build`).
+   This requires no real AI provider credentials — the build never calls
+   OpenAI/Anthropic, and the runtime defaults to the fake AI provider unless
+   `LLM_PROVIDER`/`LLM_API_KEY` are overridden (see `docs/configuration.md`).
+4. **runner** — copies only the built `.next` output, `public/`, and
+   `node_modules` into a slim final image, and runs `pnpm start`
+   (`next start`) on port `3000`.
+
+The application service is **not** yet wired into `docker-compose.yml` — for
+now, build and run the image independently:
+
+```bash
+docker build -t public-ai-platform:local .
+docker run --rm -p 3000:3000 public-ai-platform:local
+```

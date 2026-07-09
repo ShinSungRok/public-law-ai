@@ -1,0 +1,21 @@
+# Dependencies and build artifacts
+node_modules
+.next
+.pnpm-debug.log*
+*.tsbuildinfo
+
+# Version control and tooling
+.git
+.claude
+
+# Environment files (never bake secrets into the image)
+.env
+.env.*
+!.env.example
+
+# Docs (not needed to build or run the app)
+docs
+README.md
+
+# OS
+.DS_Store
