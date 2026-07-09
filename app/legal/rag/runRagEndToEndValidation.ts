@@ -18,11 +18,16 @@ const VALIDATION_STEPS: RagValidationStep[] = [
     name: "SearchToRagIntegration",
     scriptPath: "app/legal/rag/runSearchToRagIntegrationValidation.ts",
   },
+  {
+    name: "RagApiRuntime",
+    scriptPath: "app/legal/rag/runRagApiRuntimeValidation.ts",
+  },
 ];
 
 const REQUIRED_PACKAGE_JSON_SCRIPTS = [
   "validate:rag:runtime-flow",
   "validate:rag:search-integration",
+  "validate:rag:api-runtime",
 ];
 
 function assertTruthy(value: unknown, message: string): void {
