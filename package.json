@@ -70,7 +70,8 @@
     "server:start": "tsx app/legal/server/runProductionServer.ts",
     "validate:server:entrypoint": "tsx app/legal/server/runProductionServerEntrypointValidation.ts",
     "validate:server:lifecycle": "tsx app/legal/server/runServerRuntimeLifecycleValidation.ts",
-    "validate:server:shutdown": "tsx app/legal/server/runGracefulShutdownValidation.ts"
+    "validate:server:shutdown": "tsx app/legal/server/runGracefulShutdownValidation.ts",
+    "validate:server": "tsx app/legal/server/runServerRuntimeValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
