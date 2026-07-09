@@ -89,20 +89,54 @@ the full `results` array, for reporting a whole evaluation run.
 interface every future concrete evaluator will implement:
 `run(evaluationCase): Promise<EvaluationResult>`.
 
-## 6. Current limitation of Task 1
+## 6. Retrieval Quality Evaluation (Task 2)
 
-No concrete scoring logic exists yet for `retrieval`, `search`, `rag-answer`,
-or `citation` targets under the new framework. `runEvaluationFrameworkValidation.ts`
-(`pnpm validate:evaluation:framework`) only proves the type contracts hold
-using in-memory sample objects and a trivial `InMemoryEvaluationRunner` — it
-does not call any retriever, search engine, AI provider, or citation
-extractor. No PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is
-required.
+`RetrievalEvaluationRunner` (`app/legal/evaluation/RetrievalEvaluationRunner.ts`)
+is the first concrete `EvaluationRunner`: it implements the `retrieval`
+target on top of the existing, unmodified `Retriever` abstraction and the
+pre-existing `RetrievalEvaluator`. It does not duplicate scoring logic —
+`RetrievalEvaluator.evaluate()` still owns precision/recall computation;
+`RetrievalEvaluationRunner` only adapts its `RetrievalEvaluationResult` into
+the generic `EvaluationResult`/`EvaluationMetric` shape, and adds
+`runMany(evaluationCases): Promise<EvaluationSummary>` to aggregate several
+cases at once.
 
-## 7. Future tasks
+**Precision** — of the documents retrieved, what fraction were expected
+(relevant)? `0` when nothing is retrieved. A precision metric is marked
+`passed` only at a perfect `1` (no irrelevant documents retrieved).
 
-- **Retrieval Quality Evaluation** — a concrete `EvaluationRunner` for the
-  `retrieval` target, built on the existing `Retriever` abstraction.
+**Recall** — of the expected (relevant) documents, what fraction were
+actually retrieved? `1` when there are no expected documents at all (nothing
+to miss). A recall metric is marked `passed` only at a perfect `1`, and this
+is also what `RetrievalEvaluator`/`RetrievalEvaluationRunner` use as the
+overall case-level `passed` — matching the pre-existing evaluator's
+definition rather than inventing a new one.
+
+`runRetrievalEvaluationValidation.ts` exercises three in-memory cases against
+`KeywordRetriever` (no OpenSearch): an **exact match** (precision = recall =
+1), a **partial match** (query matches the expected document plus one extra
+document, so precision = 0.5 while recall stays 1), and a **no match** (query
+matches nothing, so precision = recall = 0 and the case fails).
+
+## 7. Current limitations
+
+- No concrete scoring logic exists yet for `search`, `rag-answer`, or
+  `citation` targets — only `retrieval` is implemented so far.
+- **Ranking metrics are deferred.** `RetrievalEvaluationRunner` only reports
+  precision and recall, which treat the retrieved set as unordered. It does
+  not implement MRR (Mean Reciprocal Rank) or NDCG (Normalized Discounted
+  Cumulative Gain). Those require deciding on a relevance-grading and
+  position-discounting model, which is a meaningfully bigger design surface
+  than "did the expected documents come back" — better addressed as a
+  dedicated future improvement once precision/recall are proven useful in
+  practice, rather than speculatively built now.
+- `runEvaluationFrameworkValidation.ts` and `runRetrievalEvaluationValidation.ts`
+  only use in-memory sample objects and `KeywordRetriever`/an in-memory
+  `LegalDocumentRepository` — no PostgreSQL, OpenSearch, Docker, OpenAI, or
+  Anthropic is required.
+
+## 8. Future tasks
+
 - **Search Quality Evaluation** — a concrete `EvaluationRunner` for the
   `search` target, built on the existing `SearchEngine` abstraction.
 - **RAG Answer Quality Evaluation** — a concrete `EvaluationRunner` for the
@@ -115,8 +149,9 @@ required.
   `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
   `runRagEndToEndValidation.ts`) that sequences all evaluation validators.
 
-## 8. Scripts
+## 9. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:evaluation:framework` | `tsx app/legal/evaluation/runEvaluationFrameworkValidation.ts` | Structural validation of the evaluation framework types using in-memory sample objects only. |
+| `pnpm validate:evaluation:retrieval` | `tsx app/legal/evaluation/runRetrievalEvaluationValidation.ts` | Validates `RetrievalEvaluator` precision/recall computation and `RetrievalEvaluationRunner` result/summary aggregation against an in-memory exact/partial/no-match dataset. |

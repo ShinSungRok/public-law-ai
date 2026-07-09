@@ -76,7 +76,8 @@
     "validate:server:lifecycle": "tsx app/legal/server/runServerRuntimeLifecycleValidation.ts",
     "validate:server:shutdown": "tsx app/legal/server/runGracefulShutdownValidation.ts",
     "validate:server": "tsx app/legal/server/runServerRuntimeValidation.ts",
-    "validate:evaluation:framework": "tsx app/legal/evaluation/runEvaluationFrameworkValidation.ts"
+    "validate:evaluation:framework": "tsx app/legal/evaluation/runEvaluationFrameworkValidation.ts",
+    "validate:evaluation:retrieval": "tsx app/legal/evaluation/runRetrievalEvaluationValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
