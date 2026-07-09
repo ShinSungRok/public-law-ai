@@ -16,6 +16,8 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
 
 async function main(): Promise<void> {
   const configuration: ApplicationConfiguration = {
+    environment: "development",
+    logLevel: "info",
     server: {
       host: "0.0.0.0",
       port: 3000,
@@ -39,6 +41,9 @@ async function main(): Promise<void> {
       maxRetries: 3,
     },
   };
+
+  assertEqual(configuration.environment, "development", "environment mismatch");
+  assertEqual(configuration.logLevel, "info", "logLevel mismatch");
 
   assertTruthy(configuration.server.host, "server.host missing");
   assertTruthy(

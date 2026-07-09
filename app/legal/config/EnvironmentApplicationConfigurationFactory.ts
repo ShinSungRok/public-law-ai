@@ -2,6 +2,24 @@ import { AiProviderError } from "../ai";
 import type { LlmProviderType } from "../ai";
 import type { ApplicationConfiguration } from "./ApplicationConfiguration";
 import type { ApplicationConfigurationFactory } from "./ApplicationConfigurationFactory";
+import type { ApplicationEnvironment } from "./ApplicationEnvironment";
+import type { LogLevel } from "./LogLevel";
+
+const DEFAULT_ENVIRONMENT: ApplicationEnvironment = "development";
+const DEFAULT_LOG_LEVEL: LogLevel = "info";
+
+const SUPPORTED_ENVIRONMENTS: ApplicationEnvironment[] = [
+  "development",
+  "test",
+  "production",
+];
+const SUPPORTED_LOG_LEVELS: LogLevel[] = [
+  "trace",
+  "debug",
+  "info",
+  "warn",
+  "error",
+];
 
 const DEFAULT_SERVER_HOST = "0.0.0.0";
 const DEFAULT_SERVER_PORT = 3000;
@@ -48,11 +66,33 @@ function parseAiProviderType(value: string | undefined): LlmProviderType {
   return value as LlmProviderType;
 }
 
+function parseEnvironment(value: string | undefined): ApplicationEnvironment {
+  if (!value) {
+    return DEFAULT_ENVIRONMENT;
+  }
+  if (!SUPPORTED_ENVIRONMENTS.includes(value as ApplicationEnvironment)) {
+    throw new Error(`Unsupported application environment: ${value}`);
+  }
+  return value as ApplicationEnvironment;
+}
+
+function parseLogLevel(value: string | undefined): LogLevel {
+  if (!value) {
+    return DEFAULT_LOG_LEVEL;
+  }
+  if (!SUPPORTED_LOG_LEVELS.includes(value as LogLevel)) {
+    throw new Error(`Unsupported log level: ${value}`);
+  }
+  return value as LogLevel;
+}
+
 export class EnvironmentApplicationConfigurationFactory
   implements ApplicationConfigurationFactory
 {
   create(): ApplicationConfiguration {
     return {
+      environment: parseEnvironment(process.env.APP_ENVIRONMENT),
+      logLevel: parseLogLevel(process.env.LOG_LEVEL),
       server: {
         host: process.env.SERVER_HOST || DEFAULT_SERVER_HOST,
         port: parseNumber(

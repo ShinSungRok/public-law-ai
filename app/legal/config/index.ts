@@ -3,6 +3,8 @@ export type { ServerConfiguration } from "./ServerConfiguration";
 export type { DatabaseConfiguration } from "./DatabaseConfiguration";
 export type { SearchConfiguration } from "./SearchConfiguration";
 export type { AiConfiguration } from "./AiConfiguration";
+export type { ApplicationEnvironment } from "./ApplicationEnvironment";
+export type { LogLevel } from "./LogLevel";
 export type { ApplicationConfigurationFactory } from "./ApplicationConfigurationFactory";
 export { EnvironmentApplicationConfigurationFactory } from "./EnvironmentApplicationConfigurationFactory";
 export type { ApplicationConfigurationValidator } from "./ApplicationConfigurationValidator";

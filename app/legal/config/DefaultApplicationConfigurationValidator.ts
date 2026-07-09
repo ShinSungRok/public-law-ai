@@ -1,14 +1,36 @@
 import type { LlmProviderType } from "../ai";
 import type { ApplicationConfiguration } from "./ApplicationConfiguration";
 import type { ApplicationConfigurationValidator } from "./ApplicationConfigurationValidator";
+import type { ApplicationEnvironment } from "./ApplicationEnvironment";
+import type { LogLevel } from "./LogLevel";
 
 const REAL_AI_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic"];
+
+const SUPPORTED_ENVIRONMENTS: ApplicationEnvironment[] = [
+  "development",
+  "test",
+  "production",
+];
+const SUPPORTED_LOG_LEVELS: LogLevel[] = [
+  "trace",
+  "debug",
+  "info",
+  "warn",
+  "error",
+];
 
 export class DefaultApplicationConfigurationValidator
   implements ApplicationConfigurationValidator
 {
   validate(configuration: ApplicationConfiguration): void {
     const errors: string[] = [];
+
+    if (!SUPPORTED_ENVIRONMENTS.includes(configuration.environment)) {
+      errors.push(`environment must be one of: ${SUPPORTED_ENVIRONMENTS.join(", ")}`);
+    }
+    if (!SUPPORTED_LOG_LEVELS.includes(configuration.logLevel)) {
+      errors.push(`logLevel must be one of: ${SUPPORTED_LOG_LEVELS.join(", ")}`);
+    }
 
     if (!configuration.server.host) {
       errors.push("server.host must not be empty");

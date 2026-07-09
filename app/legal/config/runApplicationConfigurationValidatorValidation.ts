@@ -1,5 +1,7 @@
 import type { ApplicationConfiguration } from "./ApplicationConfiguration";
+import type { ApplicationEnvironment } from "./ApplicationEnvironment";
 import { DefaultApplicationConfigurationValidator } from "./DefaultApplicationConfigurationValidator";
+import type { LogLevel } from "./LogLevel";
 
 function assertTruthy(value: unknown, message: string): void {
   if (!value) {
@@ -9,6 +11,8 @@ function assertTruthy(value: unknown, message: string): void {
 
 function buildValidConfiguration(): ApplicationConfiguration {
   return {
+    environment: "development",
+    logLevel: "info",
     server: {
       host: "0.0.0.0",
       port: 3000,
@@ -91,6 +95,29 @@ async function main(): Promise<void> {
     realProviderMissingApiKeyThrew,
     "expected real AI provider without apiKey to throw Error",
   );
+
+  let invalidEnvironmentThrew = false;
+  try {
+    const configuration = buildValidConfiguration();
+    configuration.environment = "staging" as ApplicationEnvironment;
+    validator.validate(configuration);
+  } catch (error) {
+    invalidEnvironmentThrew = error instanceof Error;
+  }
+  assertTruthy(
+    invalidEnvironmentThrew,
+    "expected invalid environment to throw Error",
+  );
+
+  let invalidLogLevelThrew = false;
+  try {
+    const configuration = buildValidConfiguration();
+    configuration.logLevel = "verbose" as LogLevel;
+    validator.validate(configuration);
+  } catch (error) {
+    invalidLogLevelThrew = error instanceof Error;
+  }
+  assertTruthy(invalidLogLevelThrew, "expected invalid logLevel to throw Error");
 
   console.log("Application configuration validator validation succeeded.");
 }

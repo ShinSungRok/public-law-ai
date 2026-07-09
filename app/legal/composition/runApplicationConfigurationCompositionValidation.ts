@@ -7,6 +7,8 @@ function assertTruthy(value: unknown, message: string): void {
 }
 
 async function main(): Promise<void> {
+  delete process.env.APP_ENVIRONMENT;
+  delete process.env.LOG_LEVEL;
   delete process.env.SERVER_HOST;
   delete process.env.SERVER_PORT;
   delete process.env.POSTGRES_HOST;

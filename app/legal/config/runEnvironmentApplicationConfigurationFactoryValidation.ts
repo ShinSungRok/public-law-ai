@@ -15,6 +15,8 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
 }
 
 async function main(): Promise<void> {
+  delete process.env.APP_ENVIRONMENT;
+  delete process.env.LOG_LEVEL;
   delete process.env.SERVER_HOST;
   delete process.env.SERVER_PORT;
   delete process.env.POSTGRES_HOST;
@@ -33,6 +35,13 @@ async function main(): Promise<void> {
 
   const factory = new EnvironmentApplicationConfigurationFactory();
   const configuration = factory.create();
+
+  assertEqual(
+    configuration.environment,
+    "development",
+    "environment default mismatch",
+  );
+  assertEqual(configuration.logLevel, "info", "logLevel default mismatch");
 
   assertEqual(configuration.server.host, "0.0.0.0", "server.host default mismatch");
   assertEqual(configuration.server.port, 3000, "server.port default mismatch");
@@ -88,6 +97,29 @@ async function main(): Promise<void> {
     "expected invalid numeric value to throw Error",
   );
   delete process.env.SERVER_PORT;
+
+  process.env.APP_ENVIRONMENT = "staging";
+  let invalidEnvironmentThrew = false;
+  try {
+    factory.create();
+  } catch (error) {
+    invalidEnvironmentThrew = error instanceof Error;
+  }
+  assertTruthy(
+    invalidEnvironmentThrew,
+    "expected invalid environment to throw Error",
+  );
+  delete process.env.APP_ENVIRONMENT;
+
+  process.env.LOG_LEVEL = "verbose";
+  let invalidLogLevelThrew = false;
+  try {
+    factory.create();
+  } catch (error) {
+    invalidLogLevelThrew = error instanceof Error;
+  }
+  assertTruthy(invalidLogLevelThrew, "expected invalid logLevel to throw Error");
+  delete process.env.LOG_LEVEL;
 
   console.log("Environment application configuration factory validation succeeded.");
 }
