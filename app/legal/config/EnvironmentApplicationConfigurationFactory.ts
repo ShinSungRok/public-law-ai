@@ -109,11 +109,11 @@ export class EnvironmentApplicationConfigurationFactory
           DEFAULT_DATABASE_PORT,
         ),
         database: process.env.POSTGRES_DATABASE || DEFAULT_DATABASE_NAME,
-        username: process.env.POSTGRES_USER || DEFAULT_DATABASE_USERNAME,
+        username: process.env.POSTGRES_USERNAME || DEFAULT_DATABASE_USERNAME,
         password: process.env.POSTGRES_PASSWORD || DEFAULT_DATABASE_PASSWORD,
       },
       search: {
-        nodeUrl: process.env.OPENSEARCH_NODE || DEFAULT_SEARCH_NODE_URL,
+        nodeUrl: process.env.OPENSEARCH_NODE_URL || DEFAULT_SEARCH_NODE_URL,
         indexName: process.env.OPENSEARCH_INDEX_NAME || DEFAULT_SEARCH_INDEX_NAME,
       },
       ai: {
@@ -122,8 +122,8 @@ export class EnvironmentApplicationConfigurationFactory
         apiKey: process.env.LLM_API_KEY || DEFAULT_AI_API_KEY,
         baseUrl: process.env.LLM_BASE_URL || undefined,
         timeout: parseNumber(
-          "LLM_TIMEOUT",
-          process.env.LLM_TIMEOUT,
+          "LLM_TIMEOUT_MS",
+          process.env.LLM_TIMEOUT_MS,
           DEFAULT_AI_TIMEOUT,
         ),
         maxRetries: parseNumber(

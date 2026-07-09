@@ -22,15 +22,15 @@ async function main(): Promise<void> {
   delete process.env.POSTGRES_HOST;
   delete process.env.POSTGRES_PORT;
   delete process.env.POSTGRES_DATABASE;
-  delete process.env.POSTGRES_USER;
+  delete process.env.POSTGRES_USERNAME;
   delete process.env.POSTGRES_PASSWORD;
-  delete process.env.OPENSEARCH_NODE;
+  delete process.env.OPENSEARCH_NODE_URL;
   delete process.env.OPENSEARCH_INDEX_NAME;
   delete process.env.LLM_PROVIDER;
   delete process.env.LLM_MODEL;
   delete process.env.LLM_API_KEY;
   delete process.env.LLM_BASE_URL;
-  delete process.env.LLM_TIMEOUT;
+  delete process.env.LLM_TIMEOUT_MS;
   delete process.env.LLM_MAX_RETRIES;
 
   const factory = new EnvironmentApplicationConfigurationFactory();
