@@ -122,6 +122,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       aiPromptExecutor,
       llmConfiguration,
       llmConfigurationFactory,
+      applicationConfiguration,
     };
   }
 }

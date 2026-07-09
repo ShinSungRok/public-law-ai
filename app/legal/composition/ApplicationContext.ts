@@ -4,6 +4,7 @@ import type {
   LlmConfiguration,
   LlmConfigurationFactory,
 } from "../ai";
+import type { ApplicationConfiguration } from "../config";
 import type { HealthController } from "../api/HealthController";
 import type { RagController } from "../api/RagController";
 import type { FastifyHttpAdapter } from "../http/FastifyHttpAdapter";
@@ -24,4 +25,5 @@ export interface ApplicationContext {
   aiPromptExecutor: AiPromptExecutor;
   llmConfiguration: LlmConfiguration;
   llmConfigurationFactory: LlmConfigurationFactory;
+  applicationConfiguration: ApplicationConfiguration;
 }

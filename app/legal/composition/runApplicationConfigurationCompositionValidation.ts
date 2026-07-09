@@ -1,3 +1,5 @@
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
 import { DefaultApplicationContextFactory } from "./DefaultApplicationContextFactory";
 
 function assertTruthy(value: unknown, message: string): void {
@@ -12,6 +14,26 @@ function assertEqual(actual: unknown, expected: unknown, message: string): void 
       `${message}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
     );
   }
+}
+
+function assertNoDirectProcessEnvAccess(): void {
+  const compositionDir = path.resolve(process.cwd(), "app/legal/composition");
+  const runtimeFiles = readdirSync(compositionDir).filter(
+    (fileName) => fileName.endsWith(".ts") && !/^run.*Validation\.ts$/.test(fileName),
+  );
+
+  const offendingFiles: string[] = [];
+  for (const fileName of runtimeFiles) {
+    const contents = readFileSync(path.join(compositionDir, fileName), "utf8");
+    if (contents.includes("process.env")) {
+      offendingFiles.push(fileName);
+    }
+  }
+
+  assertTruthy(
+    offendingFiles.length === 0,
+    `expected no direct process.env access in composition runtime files, found in: ${offendingFiles.join(", ")}`,
+  );
 }
 
 async function main(): Promise<void> {
@@ -39,6 +61,35 @@ async function main(): Promise<void> {
   assertTruthy(context.ragController, "ragController missing");
   assertTruthy(context.aiProvider, "aiProvider missing");
   assertTruthy(context.aiPromptExecutor, "aiPromptExecutor missing");
+  assertTruthy(
+    context.applicationConfiguration,
+    "applicationConfiguration missing from application context",
+  );
+
+  // Simulate Docker-network-style configuration (service names instead of
+  // localhost) to verify the runtime relies only on configuration values.
+  process.env.POSTGRES_HOST = "postgres";
+  process.env.OPENSEARCH_NODE_URL = "http://opensearch:9200";
+  const dockerNetworkContext = new DefaultApplicationContextFactory().create();
+  assertEqual(
+    dockerNetworkContext.applicationConfiguration.database.host,
+    "postgres",
+    "PostgreSQL host did not resolve through ApplicationConfiguration for a Docker-network hostname",
+  );
+  assertEqual(
+    dockerNetworkContext.applicationConfiguration.search.nodeUrl,
+    "http://opensearch:9200",
+    "OpenSearch node URL did not resolve through ApplicationConfiguration for a Docker-network hostname",
+  );
+  assertEqual(
+    dockerNetworkContext.llmConfiguration.provider,
+    dockerNetworkContext.applicationConfiguration.ai.provider,
+    "AI configuration did not continue to come from the validated ApplicationConfiguration",
+  );
+  delete process.env.POSTGRES_HOST;
+  delete process.env.OPENSEARCH_NODE_URL;
+
+  assertNoDirectProcessEnvAccess();
 
   process.env.LLM_MODEL = "centralized-config-model";
   const centralizedContext = new DefaultApplicationContextFactory().create();

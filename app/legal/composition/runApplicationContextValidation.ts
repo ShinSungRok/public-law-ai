@@ -135,6 +135,7 @@ function buildApplicationContext(): ApplicationContext {
     aiPromptExecutor,
     llmConfiguration,
     llmConfigurationFactory,
+    applicationConfiguration,
   };
 }
 
@@ -152,6 +153,7 @@ async function main(): Promise<void> {
   assertTruthy(context.aiPromptExecutor, "aiPromptExecutor missing");
   assertTruthy(context.llmConfiguration, "llmConfiguration missing");
   assertTruthy(context.llmConfigurationFactory, "llmConfigurationFactory missing");
+  assertTruthy(context.applicationConfiguration, "applicationConfiguration missing");
 
   const initialRoutes = context.routeRegistry.getRoutes();
   assertEqual(initialRoutes.length, 2, "routeRegistry route count mismatch");
