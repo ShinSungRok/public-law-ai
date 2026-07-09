@@ -35,6 +35,37 @@ async function main(): Promise<void> {
     "runProductionServer.ts does not call runtime.stop()",
   );
 
+  const startCallIndex = runProductionServerSource.indexOf(
+    "await runtime.start()",
+  );
+  const getContextCallIndex = runProductionServerSource.indexOf(
+    "runtime.getContext()",
+  );
+  const registerShutdownCallIndex = runProductionServerSource.indexOf(
+    "registerShutdownHandlers(runtime)",
+  );
+
+  assertTruthy(
+    startCallIndex !== -1,
+    "runProductionServer.ts does not call await runtime.start()",
+  );
+  assertTruthy(
+    getContextCallIndex !== -1,
+    "runProductionServer.ts does not call runtime.getContext()",
+  );
+  assertTruthy(
+    registerShutdownCallIndex !== -1,
+    "runProductionServer.ts does not call registerShutdownHandlers(runtime)",
+  );
+  assertTruthy(
+    startCallIndex < getContextCallIndex,
+    "runProductionServer.ts must call await runtime.start() before runtime.getContext()",
+  );
+  assertTruthy(
+    startCallIndex < registerShutdownCallIndex,
+    "runProductionServer.ts must call await runtime.start() before registerShutdownHandlers(runtime)",
+  );
+
   for (const relativePath of SERVER_RUNTIME_FILES) {
     assertTruthy(
       !readSource(relativePath).includes("process.env"),
