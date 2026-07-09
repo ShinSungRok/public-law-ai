@@ -61,6 +61,7 @@
     "validate:config:validator": "tsx app/legal/config/runApplicationConfigurationValidatorValidation.ts",
     "validate:config": "tsx app/legal/config/runConfigMilestoneValidation.ts",
     "validate:infra:local": "tsx app/legal/infra/runLocalInfrastructureValidation.ts",
+    "validate:infra": "tsx app/legal/infra/runInfraMilestoneValidation.ts",
     "infra:config": "docker compose config",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
