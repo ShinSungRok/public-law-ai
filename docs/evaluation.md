@@ -227,10 +227,11 @@ evaluator in this framework.
   matching — no semantic similarity, no LLM-as-a-Judge, no AI-based scoring
   (see above).
 - `runEvaluationFrameworkValidation.ts`, `runRetrievalEvaluationValidation.ts`,
-  `runSearchEvaluationValidation.ts`, and `runRagAnswerEvaluationValidation.ts`
-  only use in-memory sample objects and `KeywordRetriever`/`KeywordSearchEngine`/
-  a fake `LLMProvider`/an in-memory `LegalDocumentRepository` — no
-  PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is required.
+  `runSearchEvaluationValidation.ts`, `runRagAnswerEvaluationValidation.ts`,
+  and `runRegressionEvaluationValidation.ts` only use in-memory sample
+  objects and `KeywordRetriever`/`KeywordSearchEngine`/a fake `LLMProvider`/an
+  in-memory `LegalDocumentRepository` — no PostgreSQL, OpenSearch, Docker,
+  OpenAI, or Anthropic is required.
 
 ## 10. Regression Evaluation Runner (Task 5)
 
@@ -267,7 +268,21 @@ missing-runner error path above — this is expected until a future phase adds
 one. `regression` itself is never a case `target`; it is only the role this
 runner plays.
 
-## 11. Future tasks
+## 11. Evaluation Milestone Validation (Task 6)
+
+`runEvaluationMilestoneValidation.ts` (`pnpm validate:evaluation`) closes out
+Phase 19: it sequences all five validators above
+(`runEvaluationFrameworkValidation.ts`, `runRetrievalEvaluationValidation.ts`,
+`runSearchEvaluationValidation.ts`, `runRagAnswerEvaluationValidation.ts`,
+`runRegressionEvaluationValidation.ts`), plus statically confirms every
+`validate:evaluation:*` `package.json` script exists and this document
+(`docs/evaluation.md`) exists — mirroring the milestone-runner pattern
+already used by `runInfraMilestoneValidation.ts`,
+`runServerRuntimeValidation.ts`, and `runRagEndToEndValidation.ts`. It
+introduces no new scoring logic; it only proves the whole framework is wired
+together and still requires no external services.
+
+## 12. Future tasks
 
 - **Citation Accuracy Evaluation** — a concrete, standalone `EvaluationRunner`
   for the `citation` target built directly on `CitationExtractor` (not
@@ -275,11 +290,8 @@ runner plays.
   presence checks noted in Task 4. Once added, it can be registered into a
   `RegressionEvaluationRunner`'s `EvaluationRunnerRegistry` like the other
   three targets.
-- **Milestone Validation** — a milestone runner (mirroring
-  `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
-  `runRagEndToEndValidation.ts`) that sequences all evaluation validators.
 
-## 12. Scripts
+## 13. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
@@ -288,3 +300,4 @@ runner plays.
 | `pnpm validate:evaluation:search` | `tsx app/legal/evaluation/runSearchEvaluationValidation.ts` | Validates `SearchEvaluationRunner` precision/recall computation and summary aggregation against the `SearchEngine` abstraction, using the same in-memory exact/partial/no-match dataset. |
 | `pnpm validate:evaluation:rag` | `tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts` | Validates `RagAnswerEvaluationRunner`'s answer/citation metrics and summary aggregation against `GenerateRagAnswerUseCase` running on fake/in-memory dependencies. |
 | `pnpm validate:evaluation:regression` | `tsx app/legal/evaluation/runRegressionEvaluationValidation.ts` | Validates `RegressionEvaluationRunner` dispatching across retrieval/search/rag-answer cases, cross-target summary aggregation, and the missing-runner error path. |
+| `pnpm validate:evaluation` | `tsx app/legal/evaluation/runEvaluationMilestoneValidation.ts` | Phase 19 milestone runner: sequences all validators above and confirms the framework's scripts/docs are wired together. |
