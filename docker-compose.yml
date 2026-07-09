@@ -1,7 +1,26 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: public-ai-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - public-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   opensearch:
-    image: opensearchproject/opensearch:2.19.1
-    container_name: public-law-ai-opensearch
+    image: opensearchproject/opensearch:2
+    container_name: public-ai-opensearch
     environment:
       - discovery.type=single-node
       - plugins.security.disabled=true
@@ -12,6 +31,13 @@ services:
       - "9600:9600"
     volumes:
       - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - public-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.19.1
@@ -23,6 +49,13 @@ services:
       - "5601:5601"
     depends_on:
       - opensearch
+    networks:
+      - public-ai-network
+
+networks:
+  public-ai-network:
+    driver: bridge
 
 volumes:
+  postgres-data:
   opensearch-data:
