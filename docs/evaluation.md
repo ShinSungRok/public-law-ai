@@ -232,19 +232,54 @@ evaluator in this framework.
   a fake `LLMProvider`/an in-memory `LegalDocumentRepository` — no
   PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is required.
 
-## 10. Future tasks
+## 10. Regression Evaluation Runner (Task 5)
+
+`RegressionEvaluationRunner` (`app/legal/evaluation/RegressionEvaluationRunner.ts`)
+does not implement any metrics itself. It is a thin dispatcher: given an
+`EvaluationRunnerRegistry` (`Partial<Record<EvaluationTarget, EvaluationRunner>>`)
+mapping each supported target to the concrete runner that already handles it
+(`RetrievalEvaluationRunner`, `SearchEvaluationRunner`,
+`RagAnswerEvaluationRunner` — all reused unmodified), it lets a single fixed
+suite of `EvaluationCase`s span multiple targets in one call.
+
+**Target dispatching** — `run(evaluationCase)` looks up
+`runnersByTarget[evaluationCase.target]` and delegates to that runner's own
+`run()`; it never inspects or scores a case itself, so there is exactly one
+place (each target's own runner) that owns that target's metric logic.
+`runMany(evaluationCases)` calls `run()` for each case in the list — cases
+for different targets can be mixed freely in the same array — and aggregates
+every result into one `EvaluationSummary`, the same aggregation shape used by
+every other runner in this framework.
+
+**Supported targets** — only `retrieval`, `search`, and `rag-answer`, i.e.
+whatever the caller registers in the `EvaluationRunnerRegistry` it passes in.
+
+**Missing runner behavior** — if a case's `target` has no entry in the
+registry, `run()` throws a plain `Error` naming the missing target
+(`no evaluation runner registered for target: <target>`) instead of silently
+skipping the case or crashing on a `null` dereference.
+
+**Current limitation** — there is still no standalone `citation`-target
+runner (see Task 4's note on RAG-answer-level citation checks), so any
+`EvaluationCase` with `target: "citation"` passed to a
+`RegressionEvaluationRunner` that has not registered one will hit exactly the
+missing-runner error path above — this is expected until a future phase adds
+one. `regression` itself is never a case `target`; it is only the role this
+runner plays.
+
+## 11. Future tasks
 
 - **Citation Accuracy Evaluation** — a concrete, standalone `EvaluationRunner`
   for the `citation` target built directly on `CitationExtractor` (not
   routed through a full RAG run), for deeper checks than the RAG-answer-level
-  presence checks above.
-- **Regression Runner** — a runner that executes a fixed suite of
-  `EvaluationCase`s across all targets and produces an `EvaluationSummary`.
+  presence checks noted in Task 4. Once added, it can be registered into a
+  `RegressionEvaluationRunner`'s `EvaluationRunnerRegistry` like the other
+  three targets.
 - **Milestone Validation** — a milestone runner (mirroring
   `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
   `runRagEndToEndValidation.ts`) that sequences all evaluation validators.
 
-## 11. Scripts
+## 12. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
@@ -252,3 +287,4 @@ evaluator in this framework.
 | `pnpm validate:evaluation:retrieval` | `tsx app/legal/evaluation/runRetrievalEvaluationValidation.ts` | Validates `RetrievalEvaluator` precision/recall computation and `RetrievalEvaluationRunner` result/summary aggregation against an in-memory exact/partial/no-match dataset. |
 | `pnpm validate:evaluation:search` | `tsx app/legal/evaluation/runSearchEvaluationValidation.ts` | Validates `SearchEvaluationRunner` precision/recall computation and summary aggregation against the `SearchEngine` abstraction, using the same in-memory exact/partial/no-match dataset. |
 | `pnpm validate:evaluation:rag` | `tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts` | Validates `RagAnswerEvaluationRunner`'s answer/citation metrics and summary aggregation against `GenerateRagAnswerUseCase` running on fake/in-memory dependencies. |
+| `pnpm validate:evaluation:regression` | `tsx app/legal/evaluation/runRegressionEvaluationValidation.ts` | Validates `RegressionEvaluationRunner` dispatching across retrieval/search/rag-answer cases, cross-target summary aggregation, and the missing-runner error path. |

@@ -79,7 +79,8 @@
     "validate:evaluation:framework": "tsx app/legal/evaluation/runEvaluationFrameworkValidation.ts",
     "validate:evaluation:retrieval": "tsx app/legal/evaluation/runRetrievalEvaluationValidation.ts",
     "validate:evaluation:search": "tsx app/legal/evaluation/runSearchEvaluationValidation.ts",
-    "validate:evaluation:rag": "tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts"
+    "validate:evaluation:rag": "tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts",
+    "validate:evaluation:regression": "tsx app/legal/evaluation/runRegressionEvaluationValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

@@ -10,3 +10,5 @@ export type { EvaluationRunner } from "./EvaluationRunner";
 export { RetrievalEvaluationRunner } from "./RetrievalEvaluationRunner";
 export { SearchEvaluationRunner } from "./SearchEvaluationRunner";
 export { RagAnswerEvaluationRunner } from "./RagAnswerEvaluationRunner";
+export type { EvaluationRunnerRegistry } from "./RegressionEvaluationRunner";
+export { RegressionEvaluationRunner } from "./RegressionEvaluationRunner";
