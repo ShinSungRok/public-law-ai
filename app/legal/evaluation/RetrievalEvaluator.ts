@@ -1,5 +1,5 @@
 import type { Retriever } from "../retrieval/Retriever";
-import type { EvaluationResult } from "./EvaluationResult";
+import type { RetrievalEvaluationResult } from "./RetrievalEvaluationResult";
 import type { RetrievalTestCase } from "./RetrievalTestCase";
 
 function computePrecision(expected: string[], retrieved: string[]): number {
@@ -25,7 +25,7 @@ function computeRecall(expected: string[], retrieved: string[]): number {
 export class RetrievalEvaluator {
   constructor(private readonly retriever: Retriever) {}
 
-  async evaluate(testCase: RetrievalTestCase): Promise<EvaluationResult> {
+  async evaluate(testCase: RetrievalTestCase): Promise<RetrievalEvaluationResult> {
     const retrievalResult = await this.retriever.retrieve(testCase.query);
     const retrievedDocumentIds = retrievalResult.documents.map(
       (retrievedDocument) => retrievedDocument.document.id,
