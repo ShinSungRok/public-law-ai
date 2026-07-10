@@ -18,3 +18,4 @@ export type { LlmConfigurationFactory } from "./LlmConfigurationFactory";
 export { EnvironmentLlmConfigurationFactory } from "./EnvironmentLlmConfigurationFactory";
 export { OpenAiProvider } from "./OpenAiProvider";
 export { AnthropicProvider } from "./AnthropicProvider";
+export { AiPromptExecutorLlmProviderAdapter } from "./AiPromptExecutorLlmProviderAdapter";

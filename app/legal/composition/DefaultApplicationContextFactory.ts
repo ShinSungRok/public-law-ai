@@ -1,8 +1,6 @@
 import { GenerateRagAnswerUseCase } from "../application/GenerateRagAnswerUseCase";
 import { RagApplicationService } from "../application/RagApplicationService";
-import type { LLMCompletionRequest } from "../../ai/provider/LLMProvider";
-import type { LLMProvider } from "../../ai/provider/LLMProvider";
-import type { AIResponseStream } from "../../ai/model/AIResponse";
+import { AiPromptExecutorLlmProviderAdapter } from "../ai/AiPromptExecutorLlmProviderAdapter";
 import { DefaultAiProviderFactory } from "../ai/DefaultAiProviderFactory";
 import { DefaultAiPromptExecutor } from "../ai/DefaultAiPromptExecutor";
 import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigurationFactory";
@@ -58,15 +56,6 @@ class InMemoryLegalDocumentRepository implements LegalDocumentRepository {
   }
 }
 
-class FakeLLMProvider implements LLMProvider {
-  streamCompletion(request: LLMCompletionRequest): AIResponseStream {
-    return (async function* (): AIResponseStream {
-      yield { text: "This is a fake generated answer based on the retrieved legal context." };
-      yield { text: ` Prompt length: ${request.prompt.length}.` };
-    })();
-  }
-}
-
 export class DefaultApplicationContextFactory implements ApplicationContextFactory {
   create(): ApplicationContext {
     const applicationConfiguration = new EnvironmentApplicationConfigurationFactory().create();
@@ -75,9 +64,20 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     const apiConfiguration = new DefaultApiConfigurationFactory().create();
     const healthController = new HealthController(apiConfiguration);
 
+    const llmConfigurationFactory = new EnvironmentLlmConfigurationFactory();
+    const llmConfiguration: LlmConfiguration = applicationConfiguration.ai;
+    const aiProvider = new DefaultAiProviderFactory().create(
+      llmConfiguration.provider,
+      llmConfiguration,
+    );
+    const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
+
     const repository = new InMemoryLegalDocumentRepository(SAMPLE_DOCUMENTS);
     const retriever = new KeywordRetriever(repository);
-    const llmProvider = new FakeLLMProvider();
+    const llmProvider = new AiPromptExecutorLlmProviderAdapter(
+      aiPromptExecutor,
+      llmConfiguration.model,
+    );
     const ragAnswerBuilder = new RagAnswerBuilder(new DefaultCitationExtractor());
     const generateRagAnswerUseCase = new GenerateRagAnswerUseCase(
       retriever,
@@ -101,14 +101,6 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       responseMapper,
     );
     const openApiGenerator = new OpenApiGenerator();
-
-    const llmConfigurationFactory = new EnvironmentLlmConfigurationFactory();
-    const llmConfiguration: LlmConfiguration = applicationConfiguration.ai;
-    const aiProvider = new DefaultAiProviderFactory().create(
-      llmConfiguration.provider,
-      llmConfiguration,
-    );
-    const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
     return {
       healthController,

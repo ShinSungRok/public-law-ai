@@ -49,6 +49,11 @@ const VALIDATION_STEPS: CompositionValidationStep[] = [
     name: "LlmRuntime",
     scriptPath: "app/legal/composition/runLlmRuntimeValidation.ts",
   },
+  {
+    name: "ApplicationContextRagProviderWiring",
+    scriptPath:
+      "app/legal/composition/runApplicationContextRagProviderWiringValidation.ts",
+  },
 ];
 
 async function main(): Promise<void> {
