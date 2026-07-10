@@ -124,15 +124,11 @@ in `ApplicationContext`/`ProductionServerRuntime`.
   in-memory — no PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is
   required.
 
-## 7. Future milestone validation
+## 7. Future work
 
 - **Runtime wiring** — construct an `ObservabilityService` from
   `ApplicationContext`/`ProductionServerRuntime` and have the real
   `HealthController` delegate to `HealthCheckService` for dependency status.
-- **Milestone Validation** — a milestone runner (mirroring
-  `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
-  `runEvaluationMilestoneValidation.ts`) that sequences all observability
-  validators (foundation + integration).
 - Prometheus export, OpenTelemetry, and distributed tracing remain explicitly
   out of scope until a dedicated future task introduces them.
 
@@ -142,3 +138,4 @@ in `ApplicationContext`/`ProductionServerRuntime`.
 |---|---|---|
 | `pnpm validate:observability:foundation` | `tsx app/legal/observability/runObservabilityFoundationValidation.ts` | Validates `Logger` (`InMemoryLogger`/`ConsoleLogger`) supports all log levels and structured fields, and `MetricsCollector` (`InMemoryMetricsCollector`) records counter/gauge/timer metrics with expected fields — in-memory only, no external services. |
 | `pnpm validate:observability:integration` | `tsx app/legal/observability/runObservabilityIntegrationValidation.ts` | Validates `HealthCheckService` (`InMemoryHealthCheckService`) dependency registration, per-dependency fields, and aggregate `overallStatus` for healthy/degraded/unhealthy combinations, and that `ObservabilityService` exposes a `Logger`, `MetricsCollector`, and `HealthCheckService` — in-memory only, no external services. |
+| `pnpm validate:observability` | `tsx app/legal/observability/runObservabilityMilestoneValidation.ts` | Milestone runner: verifies every Phase 20 source file, validation runner, and package.json script exists, then sequences the foundation and integration validators — in-memory only, no external services. |

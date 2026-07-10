@@ -83,7 +83,8 @@
     "validate:evaluation:regression": "tsx app/legal/evaluation/runRegressionEvaluationValidation.ts",
     "validate:evaluation": "tsx app/legal/evaluation/runEvaluationMilestoneValidation.ts",
     "validate:observability:foundation": "tsx app/legal/observability/runObservabilityFoundationValidation.ts",
-    "validate:observability:integration": "tsx app/legal/observability/runObservabilityIntegrationValidation.ts"
+    "validate:observability:integration": "tsx app/legal/observability/runObservabilityIntegrationValidation.ts",
+    "validate:observability": "tsx app/legal/observability/runObservabilityMilestoneValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
