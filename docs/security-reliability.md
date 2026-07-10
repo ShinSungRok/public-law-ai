@@ -94,12 +94,33 @@ or prompt-injection detection yet.
   existing application error (`AiProviderError`, `InvalidRagRequestError`,
   etc.).
 
-## 8. Current limitations
+## 8. SecurityReliabilityService
+
+Task 2 adds a lightweight composition layer on top of the foundation,
+mirroring `ObservabilityService`:
+
+- `SecurityReliabilityService` (`SecurityReliabilityService.ts`) — a plain
+  interface exposing `retryPolicy: RetryPolicy`, `timeoutPolicy:
+  TimeoutPolicy`, `circuitBreaker: CircuitBreaker`, `rateLimiter:
+  RateLimiter`, `inputValidator: InputValidator`, `errorClassifier:
+  ErrorClassifier`. It only groups these six components together; it adds
+  no behavior of its own.
+- `DefaultSecurityReliabilityServiceFactory`
+  (`DefaultSecurityReliabilityServiceFactory.ts`) — implements the
+  `SecurityReliabilityServiceFactory` interface (`create():
+  SecurityReliabilityService`) and constructs one `DefaultRetryPolicy`,
+  `DefaultTimeoutPolicy`, `InMemoryCircuitBreaker` (failure threshold 5,
+  reset timeout 30s), `InMemoryRateLimiter` (100 requests / 60s window),
+  `DefaultInputValidator`, and `DefaultErrorClassifier` with deterministic,
+  reasonable in-memory defaults. Every component built by the factory
+  remains independently constructible and usable outside the service.
+
+## 9. Current limitations
 
 - Not wired into production runtime — no controller, use case, retriever,
   search engine, AI provider, or server runtime file constructs or calls a
   `RetryPolicy`/`TimeoutPolicy`/`CircuitBreaker`/`RateLimiter`/
-  `InputValidator`/`ErrorClassifier` yet.
+  `InputValidator`/`ErrorClassifier`/`SecurityReliabilityService` yet.
 - No authentication or authorization of any kind.
 - No exponential backoff or jitter on retry.
 - No content moderation or prompt-injection detection.
@@ -107,27 +128,38 @@ or prompt-injection detection yet.
   in-memory, and process-scoped.
 - No external resilience or security library is used.
 - `runSecurityReliabilityFoundationValidation.ts`
-  (`pnpm validate:security-reliability:foundation`) only exercises these
+  (`pnpm validate:security-reliability:foundation`) and
+  `runSecurityReliabilityIntegrationValidation.ts`
+  (`pnpm validate:security-reliability:integration`) only exercise these
   classes in-memory with deterministic (injected or fake) clocks/delays — no
   PostgreSQL, OpenSearch, Docker, OpenAI, Anthropic, or Redis is required.
 
-## 9. Task 2 milestone and integration scope
+## 10. Integration scope and milestone validation
 
-- **Runtime wiring** — apply `RetryPolicy`/`TimeoutPolicy`/`CircuitBreaker`
-  to AI provider and search calls, apply `RateLimiter`/`InputValidator` to
-  HTTP request handling, and route caught errors through
-  `ErrorClassifier` — without changing existing RAG/search/AI provider
-  business logic.
-- **Milestone Validation** — a milestone runner (mirroring
-  `runObservabilityMilestoneValidation.ts`) that verifies all Phase 21
-  source files, scripts, and docs exist and sequences the foundation (and
-  any future integration) validators.
+- **Integration validation** —
+  `runSecurityReliabilityIntegrationValidation.ts` verifies the factory
+  constructs all six components, that each is independently usable, and
+  that known production runtime files (`ApplicationContext.ts`,
+  `DefaultApplicationContextFactory.ts`, `FastifyHttpAdapter.ts`) do not yet
+  import from `reliability`/`security` — confirming no production runtime
+  behavior was modified by this task.
+- **Milestone validation** — `runSecurityReliabilityMilestoneValidation.ts`
+  (mirroring `runObservabilityMilestoneValidation.ts`) verifies all Phase 21
+  source files, scripts, and docs exist, checks no prohibited external
+  service is referenced, and sequences the foundation and integration
+  validators to confirm Phase 21 completion.
+- Actual runtime wiring — applying `RetryPolicy`/`TimeoutPolicy`/
+  `CircuitBreaker` to AI provider and search calls, applying
+  `RateLimiter`/`InputValidator` to HTTP request handling, and routing
+  caught errors through `ErrorClassifier` — remains a future task.
 - Authentication, authorization, exponential backoff/jitter, distributed
   state, content moderation, and prompt-injection detection remain
   explicitly out of scope until a dedicated future task introduces them.
 
-## 10. Scripts
+## 11. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:security-reliability:foundation` | `tsx app/legal/reliability/runSecurityReliabilityFoundationValidation.ts` | Validates `DefaultRetryPolicy`, `DefaultTimeoutPolicy`, `InMemoryCircuitBreaker`, `InMemoryRateLimiter`, `DefaultInputValidator`, and `DefaultErrorClassifier` — in-memory and deterministic only, no external services. |
+| `pnpm validate:security-reliability:integration` | `tsx app/legal/reliability/runSecurityReliabilityIntegrationValidation.ts` | Validates `DefaultSecurityReliabilityServiceFactory` constructs a usable `SecurityReliabilityService`, that its components remain independently usable, and that production runtime files are not yet wired to `reliability`/`security` — in-memory only, no external services. |
+| `pnpm validate:security-reliability` | `tsx app/legal/reliability/runSecurityReliabilityMilestoneValidation.ts` | Milestone runner: verifies every Phase 21 source file, validation runner, and package.json script exists, then sequences the foundation and integration validators — in-memory only, no external services. |

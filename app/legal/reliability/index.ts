@@ -16,3 +16,7 @@ export type { ErrorCategory } from "./ErrorCategory";
 export type { ClassifiedError } from "./ClassifiedError";
 export type { ErrorClassifier } from "./ErrorClassifier";
 export { DefaultErrorClassifier } from "./DefaultErrorClassifier";
+
+export type { SecurityReliabilityService } from "./SecurityReliabilityService";
+export type { SecurityReliabilityServiceFactory } from "./DefaultSecurityReliabilityServiceFactory";
+export { DefaultSecurityReliabilityServiceFactory } from "./DefaultSecurityReliabilityServiceFactory";
