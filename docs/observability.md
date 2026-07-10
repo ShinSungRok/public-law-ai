@@ -55,35 +55,90 @@ attached to every entry they produce.
 No external metrics library, no histogram type, no Prometheus (or any other)
 export yet.
 
-## 4. Current limitations
+## 4. Health Check architecture
+
+Task 2 adds a Health Check surface on top of the logging/metrics foundation,
+still entirely in-memory:
+
+- `HealthStatus` (`app/legal/observability/HealthStatus.ts`) — `"healthy" |
+  "degraded" | "unhealthy"`.
+- `DependencyHealth` (`app/legal/observability/DependencyHealth.ts`) — the
+  health of a single dependency: `name`, `status`, optional `message`,
+  `checkedAt` (ISO string).
+- `HealthCheckResult` (`app/legal/observability/HealthCheckResult.ts`) — the
+  aggregate result of a health check run: `overallStatus`, `dependencies`
+  (`DependencyHealth[]`), `checkedAt`.
+- `HealthCheckService` (`app/legal/observability/HealthCheckService.ts`) —
+  the interface every health check service implements:
+  `registerDependency(name, check)` and `runHealthCheck(): Promise<HealthCheckResult>`.
+  `DependencyHealthCheck` is a function type
+  (`() => DependencyHealthCheckOutcome | Promise<DependencyHealthCheckOutcome>`)
+  supplied by the caller per dependency — it never performs a real network
+  call; callers pass a fake/in-memory function that returns a `status` and
+  optional `message`.
+- `InMemoryHealthCheckService` (`app/legal/observability/InMemoryHealthCheckService.ts`)
+  — stores registered checks in a `Map`, runs each check when
+  `runHealthCheck()` is called, stamps a `checkedAt` per dependency, and
+  computes `overallStatus` as the single worst status among all
+  dependencies (severity order `healthy < degraded < unhealthy`; no
+  registered dependencies means `healthy`).
+
+### Aggregate health
+
+`overallStatus` is not a separate signal — it is derived deterministically
+from `dependencies`: the result is `unhealthy` if any dependency is
+`unhealthy`, otherwise `degraded` if any dependency is `degraded`, otherwise
+`healthy`. This keeps the aggregate rule simple and independent of
+dependency registration order.
+
+## 5. ObservabilityService
+
+`ObservabilityService` (`app/legal/observability/ObservabilityService.ts`) is
+a lightweight composition object — a plain interface, mirroring
+`ApplicationContext` — exposing:
+
+- `logger: Logger`
+- `metricsCollector: MetricsCollector`
+- `healthCheckService: HealthCheckService`
+
+It only groups these three together for callers that need all of them; it
+adds no behavior of its own and is not yet constructed or consumed anywhere
+in `ApplicationContext`/`ProductionServerRuntime`.
+
+## 6. Current limitations
 
 - Not wired into production runtime — no controller, use case, retriever,
   search engine, AI provider, or server runtime file constructs or calls a
-  `Logger`/`MetricsCollector` yet.
-- No health checks.
+  `Logger`/`MetricsCollector`/`HealthCheckService`/`ObservabilityService` yet.
+- Health checks never perform real network calls — every dependency check in
+  the validation runner is a fake in-memory function.
 - No Prometheus (or any other) metrics export.
 - No histogram metric type.
-- No correlation ID and no distributed tracing.
+- No correlation ID and no distributed tracing, no OpenTelemetry.
 - No external logging or metrics library is used — only `console` and
-  in-memory arrays.
+  in-memory arrays/maps.
 - `runObservabilityFoundationValidation.ts`
-  (`pnpm validate:observability:foundation`) only exercises these classes
-  in-memory (plus a temporary `console.*` capture to verify `ConsoleLogger`
-  output) — no PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is
+  (`pnpm validate:observability:foundation`) and
+  `runObservabilityIntegrationValidation.ts`
+  (`pnpm validate:observability:integration`) only exercise these classes
+  in-memory — no PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is
   required.
 
-## 5. Future tasks
+## 7. Future milestone validation
 
-- **Health Check & Observability Integration** — wire `Logger`/
-  `MetricsCollector` into `ApplicationContext`/`ProductionServerRuntime` and
-  add a health check surface built on this foundation.
+- **Runtime wiring** — construct an `ObservabilityService` from
+  `ApplicationContext`/`ProductionServerRuntime` and have the real
+  `HealthController` delegate to `HealthCheckService` for dependency status.
 - **Milestone Validation** — a milestone runner (mirroring
   `runInfraMilestoneValidation.ts` / `runServerRuntimeValidation.ts` /
   `runEvaluationMilestoneValidation.ts`) that sequences all observability
-  validators.
+  validators (foundation + integration).
+- Prometheus export, OpenTelemetry, and distributed tracing remain explicitly
+  out of scope until a dedicated future task introduces them.
 
-## 6. Scripts
+## 8. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:observability:foundation` | `tsx app/legal/observability/runObservabilityFoundationValidation.ts` | Validates `Logger` (`InMemoryLogger`/`ConsoleLogger`) supports all log levels and structured fields, and `MetricsCollector` (`InMemoryMetricsCollector`) records counter/gauge/timer metrics with expected fields — in-memory only, no external services. |
+| `pnpm validate:observability:integration` | `tsx app/legal/observability/runObservabilityIntegrationValidation.ts` | Validates `HealthCheckService` (`InMemoryHealthCheckService`) dependency registration, per-dependency fields, and aggregate `overallStatus` for healthy/degraded/unhealthy combinations, and that `ObservabilityService` exposes a `Logger`, `MetricsCollector`, and `HealthCheckService` — in-memory only, no external services. |
