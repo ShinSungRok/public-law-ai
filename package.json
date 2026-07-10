@@ -89,7 +89,8 @@
     "validate:security-reliability:integration": "tsx app/legal/reliability/runSecurityReliabilityIntegrationValidation.ts",
     "validate:security-reliability": "tsx app/legal/reliability/runSecurityReliabilityMilestoneValidation.ts",
     "validate:docs": "tsx app/legal/docs/runDocumentationValidation.ts",
-    "validate:portfolio": "tsx app/legal/docs/runDocumentationMilestoneValidation.ts"
+    "validate:portfolio": "tsx app/legal/docs/runDocumentationMilestoneValidation.ts",
+    "validate:release": "tsx app/legal/release/runProductionReleaseValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",

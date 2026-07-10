@@ -5,6 +5,22 @@ that answers Korean legal questions with cited, traceable sources — built in
 public, phase by phase, as a portfolio project for AI Backend Engineer
 roles.
 
+## Release Status
+
+**Status:** Phases 0–23 complete — feature-complete for its portfolio
+scope. Phase 23 closes the project out with a final project-wide
+validation pass and no new features.
+
+Run the full release validation suite with:
+
+```bash
+pnpm validate:release
+```
+
+See [`docs/release.md`](docs/release.md) for the completed phase list,
+validation strategy, known limitations, and future production
+improvements.
+
 ## Overview
 
 This repository is not a chatbot demo. It is an enterprise-shaped backend
@@ -123,7 +139,8 @@ repository follows.
 | 19 | Evaluation & quality framework |
 | 20 | Observability foundation (logging, metrics, health checks) |
 | 21 | Security & reliability foundation (retry, timeout, circuit breaker, rate limiting, input validation) |
-| 22 | Portfolio packaging (this phase) |
+| 22 | Portfolio packaging (README, architecture/module/development/deployment/portfolio docs) |
+| 23 | Final production release (release docs, project-wide validation) |
 
 Each completed phase has a corresponding doc under `docs/` and one or more
 `pnpm validate:*` scripts that prove it in-memory.
