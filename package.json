@@ -84,7 +84,8 @@
     "validate:evaluation": "tsx app/legal/evaluation/runEvaluationMilestoneValidation.ts",
     "validate:observability:foundation": "tsx app/legal/observability/runObservabilityFoundationValidation.ts",
     "validate:observability:integration": "tsx app/legal/observability/runObservabilityIntegrationValidation.ts",
-    "validate:observability": "tsx app/legal/observability/runObservabilityMilestoneValidation.ts"
+    "validate:observability": "tsx app/legal/observability/runObservabilityMilestoneValidation.ts",
+    "validate:security-reliability:foundation": "tsx app/legal/reliability/runSecurityReliabilityFoundationValidation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.110.0",
