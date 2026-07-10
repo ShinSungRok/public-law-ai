@@ -2,6 +2,7 @@ import type { ApplicationConfiguration } from "./ApplicationConfiguration";
 import type { ApplicationEnvironment } from "./ApplicationEnvironment";
 import { DefaultApplicationConfigurationValidator } from "./DefaultApplicationConfigurationValidator";
 import type { LogLevel } from "./LogLevel";
+import type { SearchEngineType } from "./SearchEngineType";
 
 function assertTruthy(value: unknown, message: string): void {
   if (!value) {
@@ -25,6 +26,7 @@ function buildValidConfiguration(): ApplicationConfiguration {
       password: "",
     },
     search: {
+      engine: "in-memory",
       nodeUrl: "http://localhost:9200",
       indexName: "public-law-ai-local",
     },
@@ -80,6 +82,19 @@ async function main(): Promise<void> {
   assertTruthy(
     missingSearchIndexNameThrew,
     "expected missing search indexName to throw Error",
+  );
+
+  let invalidSearchEngineThrew = false;
+  try {
+    const configuration = buildValidConfiguration();
+    configuration.search.engine = "unsupported" as SearchEngineType;
+    validator.validate(configuration);
+  } catch (error) {
+    invalidSearchEngineThrew = error instanceof Error;
+  }
+  assertTruthy(
+    invalidSearchEngineThrew,
+    "expected invalid search.engine to throw Error",
   );
 
   let realProviderMissingApiKeyThrew = false;

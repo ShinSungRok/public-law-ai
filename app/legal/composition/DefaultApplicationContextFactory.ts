@@ -7,13 +7,20 @@ import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigur
 import type { LlmConfiguration } from "../ai/LlmConfiguration";
 import { DefaultApplicationConfigurationValidator } from "../config/DefaultApplicationConfigurationValidator";
 import { EnvironmentApplicationConfigurationFactory } from "../config/EnvironmentApplicationConfigurationFactory";
+import type { SearchConfiguration } from "../config/SearchConfiguration";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
 import { DefaultCitationExtractor } from "../rag/DefaultCitationExtractor";
 import { RagAnswerBuilder } from "../rag/RagAnswerBuilder";
 import { KeywordRetriever } from "../retrieval/KeywordRetriever";
+import { SearchEngineRetriever } from "../retrieval/SearchEngineRetriever";
+import type { Retriever } from "../retrieval/Retriever";
 import type { LegalDocumentRepository } from "../repository/LegalDocumentRepository";
+import type { OpenSearchClient } from "../search/opensearch/OpenSearchClient";
+import type { OpenSearchConfig } from "../search/opensearch/OpenSearchConfig";
+import { OpenSearchSdkClient } from "../search/opensearch/OpenSearchSdkClient";
+import { OpenSearchSearchEngine } from "../search/opensearch/OpenSearchSearchEngine";
 import { DefaultApiConfigurationFactory } from "../server/DefaultApiConfigurationFactory";
 import { DefaultHttpRequestMapper } from "../http/DefaultHttpRequestMapper";
 import { DefaultHttpResponseMapper } from "../http/DefaultHttpResponseMapper";
@@ -57,6 +64,8 @@ class InMemoryLegalDocumentRepository implements LegalDocumentRepository {
 }
 
 export class DefaultApplicationContextFactory implements ApplicationContextFactory {
+  constructor(private readonly openSearchClient?: OpenSearchClient) {}
+
   create(): ApplicationContext {
     const applicationConfiguration = new EnvironmentApplicationConfigurationFactory().create();
     new DefaultApplicationConfigurationValidator().validate(applicationConfiguration);
@@ -72,8 +81,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     );
     const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
-    const repository = new InMemoryLegalDocumentRepository(SAMPLE_DOCUMENTS);
-    const retriever = new KeywordRetriever(repository);
+    const retriever = this.createRetriever(applicationConfiguration.search);
     const llmProvider = new AiPromptExecutorLlmProviderAdapter(
       aiPromptExecutor,
       llmConfiguration.model,
@@ -116,5 +124,22 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       llmConfigurationFactory,
       applicationConfiguration,
     };
+  }
+
+  private createRetriever(searchConfiguration: SearchConfiguration): Retriever {
+    if (searchConfiguration.engine === "opensearch") {
+      const openSearchConfig: OpenSearchConfig = {
+        node: searchConfiguration.nodeUrl,
+        indexName: searchConfiguration.indexName,
+        username: searchConfiguration.username,
+        password: searchConfiguration.password,
+      };
+      const client = this.openSearchClient ?? new OpenSearchSdkClient(openSearchConfig);
+      const searchEngine = new OpenSearchSearchEngine(client, openSearchConfig);
+      return new SearchEngineRetriever(searchEngine);
+    }
+
+    const repository = new InMemoryLegalDocumentRepository(SAMPLE_DOCUMENTS);
+    return new KeywordRetriever(repository);
   }
 }

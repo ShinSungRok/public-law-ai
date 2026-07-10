@@ -54,6 +54,11 @@ const VALIDATION_STEPS: CompositionValidationStep[] = [
     scriptPath:
       "app/legal/composition/runApplicationContextRagProviderWiringValidation.ts",
   },
+  {
+    name: "ApplicationContextSearchWiring",
+    scriptPath:
+      "app/legal/composition/runApplicationContextSearchWiringValidation.ts",
+  },
 ];
 
 async function main(): Promise<void> {

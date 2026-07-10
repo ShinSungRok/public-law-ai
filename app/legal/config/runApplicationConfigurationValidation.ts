@@ -30,6 +30,7 @@ async function main(): Promise<void> {
       password: "fake-password",
     },
     search: {
+      engine: "in-memory",
       nodeUrl: "http://localhost:9200",
       indexName: "public-law-ai-local",
     },
@@ -60,6 +61,7 @@ async function main(): Promise<void> {
   assertTruthy(configuration.database.username, "database.username missing");
   assertTruthy(configuration.database.password, "database.password missing");
 
+  assertEqual(configuration.search.engine, "in-memory", "search.engine mismatch");
   assertTruthy(configuration.search.nodeUrl, "search.nodeUrl missing");
   assertTruthy(configuration.search.indexName, "search.indexName missing");
 
