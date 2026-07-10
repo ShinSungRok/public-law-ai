@@ -26,9 +26,6 @@ async function main(): Promise<void> {
   delete process.env.POSTGRES_PASSWORD;
   delete process.env.OPENSEARCH_NODE_URL;
   delete process.env.OPENSEARCH_INDEX_NAME;
-  delete process.env.OPENSEARCH_USERNAME;
-  delete process.env.OPENSEARCH_PASSWORD;
-  delete process.env.SEARCH_ENGINE;
   delete process.env.LLM_PROVIDER;
   delete process.env.LLM_MODEL;
   delete process.env.LLM_API_KEY;
@@ -72,11 +69,6 @@ async function main(): Promise<void> {
   );
 
   assertEqual(
-    configuration.search.engine,
-    "in-memory",
-    "search.engine default mismatch",
-  );
-  assertEqual(
     configuration.search.nodeUrl,
     "http://localhost:9200",
     "search.nodeUrl default mismatch",
@@ -86,38 +78,6 @@ async function main(): Promise<void> {
     "public-law-ai-local",
     "search.indexName default mismatch",
   );
-  assertEqual(
-    configuration.search.username,
-    undefined,
-    "search.username expected to be optional and unset by default",
-  );
-  assertEqual(
-    configuration.search.password,
-    undefined,
-    "search.password expected to be optional and unset by default",
-  );
-
-  process.env.SEARCH_ENGINE = "opensearch";
-  const openSearchConfiguration = factory.create();
-  assertEqual(
-    openSearchConfiguration.search.engine,
-    "opensearch",
-    "search.engine did not resolve to opensearch from SEARCH_ENGINE env var",
-  );
-  delete process.env.SEARCH_ENGINE;
-
-  process.env.SEARCH_ENGINE = "unsupported";
-  let invalidSearchEngineThrew = false;
-  try {
-    factory.create();
-  } catch (error) {
-    invalidSearchEngineThrew = error instanceof Error;
-  }
-  assertTruthy(
-    invalidSearchEngineThrew,
-    "expected invalid SEARCH_ENGINE value to throw Error",
-  );
-  delete process.env.SEARCH_ENGINE;
 
   assertEqual(configuration.ai.provider, "fake", "ai.provider default mismatch");
   assertEqual(configuration.ai.model, "fake-model", "ai.model default mismatch");

@@ -2,7 +2,10 @@ export type { OpenSearchBatchIndexOptions } from "./OpenSearchBatchIndexOptions"
 export type { OpenSearchBatchIndexResult } from "./OpenSearchBatchIndexResult";
 export { OpenSearchBulkIndexError } from "./OpenSearchBulkIndexError";
 export type { OpenSearchConfig } from "./OpenSearchConfig";
-export { createOpenSearchConfigFromEnv } from "./OpenSearchConfigFactory";
+export {
+  createOpenSearchConfigFromEnv,
+  shouldUseOpenSearchEngine,
+} from "./OpenSearchConfigFactory";
 export type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
 export { toOpenSearchLegalDocument } from "./OpenSearchLegalDocumentMapper";
 export { OPEN_SEARCH_LEGAL_INDEX_MAPPING } from "./OpenSearchLegalIndexMapping";

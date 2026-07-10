@@ -15,3 +15,7 @@ export function createOpenSearchConfigFromEnv(): OpenSearchConfig {
     password: readOptionalEnv(process.env.OPENSEARCH_PASSWORD),
   };
 }
+
+export function shouldUseOpenSearchEngine(): boolean {
+  return process.env.SEARCH_ENGINE === "opensearch";
+}

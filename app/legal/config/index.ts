@@ -2,7 +2,6 @@ export type { ApplicationConfiguration } from "./ApplicationConfiguration";
 export type { ServerConfiguration } from "./ServerConfiguration";
 export type { DatabaseConfiguration } from "./DatabaseConfiguration";
 export type { SearchConfiguration } from "./SearchConfiguration";
-export type { SearchEngineType } from "./SearchEngineType";
 export type { AiConfiguration } from "./AiConfiguration";
 export type { ApplicationEnvironment } from "./ApplicationEnvironment";
 export type { LogLevel } from "./LogLevel";

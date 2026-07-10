@@ -7,7 +7,6 @@ import { EnvironmentLlmConfigurationFactory } from "../ai/EnvironmentLlmConfigur
 import type { LlmConfiguration } from "../ai/LlmConfiguration";
 import { DefaultApplicationConfigurationValidator } from "../config/DefaultApplicationConfigurationValidator";
 import { EnvironmentApplicationConfigurationFactory } from "../config/EnvironmentApplicationConfigurationFactory";
-import type { SearchConfiguration } from "../config/SearchConfiguration";
 import type { LegalDocument } from "../domain";
 import { HealthController } from "../api/HealthController";
 import { RagController } from "../api/RagController";
@@ -18,7 +17,10 @@ import { SearchEngineRetriever } from "../retrieval/SearchEngineRetriever";
 import type { Retriever } from "../retrieval/Retriever";
 import type { LegalDocumentRepository } from "../repository/LegalDocumentRepository";
 import type { OpenSearchClient } from "../search/opensearch/OpenSearchClient";
-import type { OpenSearchConfig } from "../search/opensearch/OpenSearchConfig";
+import {
+  createOpenSearchConfigFromEnv,
+  shouldUseOpenSearchEngine,
+} from "../search/opensearch/OpenSearchConfigFactory";
 import { OpenSearchSdkClient } from "../search/opensearch/OpenSearchSdkClient";
 import { OpenSearchSearchEngine } from "../search/opensearch/OpenSearchSearchEngine";
 import { DefaultApiConfigurationFactory } from "../server/DefaultApiConfigurationFactory";
@@ -81,7 +83,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     );
     const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
-    const retriever = this.createRetriever(applicationConfiguration.search);
+    const retriever = this.createRetriever();
     const llmProvider = new AiPromptExecutorLlmProviderAdapter(
       aiPromptExecutor,
       llmConfiguration.model,
@@ -126,14 +128,9 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     };
   }
 
-  private createRetriever(searchConfiguration: SearchConfiguration): Retriever {
-    if (searchConfiguration.engine === "opensearch") {
-      const openSearchConfig: OpenSearchConfig = {
-        node: searchConfiguration.nodeUrl,
-        indexName: searchConfiguration.indexName,
-        username: searchConfiguration.username,
-        password: searchConfiguration.password,
-      };
+  private createRetriever(): Retriever {
+    if (shouldUseOpenSearchEngine()) {
+      const openSearchConfig = createOpenSearchConfigFromEnv();
       const client = this.openSearchClient ?? new OpenSearchSdkClient(openSearchConfig);
       const searchEngine = new OpenSearchSearchEngine(client, openSearchConfig);
       return new SearchEngineRetriever(searchEngine);

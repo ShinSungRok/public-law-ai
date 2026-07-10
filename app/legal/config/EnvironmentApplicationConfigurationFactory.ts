@@ -4,7 +4,6 @@ import type { ApplicationConfiguration } from "./ApplicationConfiguration";
 import type { ApplicationConfigurationFactory } from "./ApplicationConfigurationFactory";
 import type { ApplicationEnvironment } from "./ApplicationEnvironment";
 import type { LogLevel } from "./LogLevel";
-import type { SearchEngineType } from "./SearchEngineType";
 
 const DEFAULT_ENVIRONMENT: ApplicationEnvironment = "development";
 const DEFAULT_LOG_LEVEL: LogLevel = "info";
@@ -31,11 +30,8 @@ const DEFAULT_DATABASE_NAME = "public_law_ai";
 const DEFAULT_DATABASE_USERNAME = "public_law_ai";
 const DEFAULT_DATABASE_PASSWORD = "";
 
-const DEFAULT_SEARCH_ENGINE: SearchEngineType = "in-memory";
 const DEFAULT_SEARCH_NODE_URL = "http://localhost:9200";
 const DEFAULT_SEARCH_INDEX_NAME = "public-law-ai-local";
-
-const SUPPORTED_SEARCH_ENGINE_TYPES: SearchEngineType[] = ["in-memory", "opensearch"];
 
 const DEFAULT_AI_PROVIDER: LlmProviderType = "fake";
 const DEFAULT_AI_MODEL = "fake-model";
@@ -68,16 +64,6 @@ function parseAiProviderType(value: string | undefined): LlmProviderType {
     throw new AiProviderError(`Unsupported AI provider type: ${value}`);
   }
   return value as LlmProviderType;
-}
-
-function parseSearchEngineType(value: string | undefined): SearchEngineType {
-  if (!value) {
-    return DEFAULT_SEARCH_ENGINE;
-  }
-  if (!SUPPORTED_SEARCH_ENGINE_TYPES.includes(value as SearchEngineType)) {
-    throw new Error(`Unsupported search engine type: ${value}`);
-  }
-  return value as SearchEngineType;
 }
 
 function parseEnvironment(value: string | undefined): ApplicationEnvironment {
@@ -127,11 +113,8 @@ export class EnvironmentApplicationConfigurationFactory
         password: process.env.POSTGRES_PASSWORD || DEFAULT_DATABASE_PASSWORD,
       },
       search: {
-        engine: parseSearchEngineType(process.env.SEARCH_ENGINE),
         nodeUrl: process.env.OPENSEARCH_NODE_URL || DEFAULT_SEARCH_NODE_URL,
         indexName: process.env.OPENSEARCH_INDEX_NAME || DEFAULT_SEARCH_INDEX_NAME,
-        username: process.env.OPENSEARCH_USERNAME || undefined,
-        password: process.env.OPENSEARCH_PASSWORD || undefined,
       },
       ai: {
         provider: parseAiProviderType(process.env.LLM_PROVIDER),

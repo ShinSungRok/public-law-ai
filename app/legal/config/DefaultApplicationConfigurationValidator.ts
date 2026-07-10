@@ -3,7 +3,6 @@ import type { ApplicationConfiguration } from "./ApplicationConfiguration";
 import type { ApplicationConfigurationValidator } from "./ApplicationConfigurationValidator";
 import type { ApplicationEnvironment } from "./ApplicationEnvironment";
 import type { LogLevel } from "./LogLevel";
-import type { SearchEngineType } from "./SearchEngineType";
 
 const REAL_AI_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic"];
 
@@ -19,7 +18,6 @@ const SUPPORTED_LOG_LEVELS: LogLevel[] = [
   "warn",
   "error",
 ];
-const SUPPORTED_SEARCH_ENGINE_TYPES: SearchEngineType[] = ["in-memory", "opensearch"];
 
 export class DefaultApplicationConfigurationValidator
   implements ApplicationConfigurationValidator
@@ -51,11 +49,6 @@ export class DefaultApplicationConfigurationValidator
       errors.push("database.database must not be empty");
     }
 
-    if (!SUPPORTED_SEARCH_ENGINE_TYPES.includes(configuration.search.engine)) {
-      errors.push(
-        `search.engine must be one of: ${SUPPORTED_SEARCH_ENGINE_TYPES.join(", ")}`,
-      );
-    }
     if (!configuration.search.nodeUrl) {
       errors.push("search.nodeUrl must not be empty");
     }

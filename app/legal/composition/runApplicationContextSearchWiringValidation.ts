@@ -67,9 +67,9 @@ function assertSearchSelectionHappensExactlyOnce(): void {
   const source = readFactorySource();
 
   assertEqual(
-    countOccurrences(source, /createRetriever\(applicationConfiguration\.search\)/g),
+    countOccurrences(source, /this\.createRetriever\(\)/g),
     1,
-    "expected DefaultApplicationContextFactory to select the retriever exactly once from applicationConfiguration.search",
+    "expected DefaultApplicationContextFactory to select the retriever exactly once via createRetriever()",
   );
   assertEqual(
     countOccurrences(source, /new OpenSearchSearchEngine\(/g),
@@ -91,24 +91,31 @@ function assertSearchSelectionHappensExactlyOnce(): void {
     "expected GenerateRagAnswerUseCase to receive the single configured retriever variable",
   );
   assertTruthy(
+    source.includes("createOpenSearchConfigFromEnv"),
+    "expected DefaultApplicationContextFactory to reuse the existing OpenSearch configuration factory rather than reimplementing it",
+  );
+  assertTruthy(
+    source.includes("shouldUseOpenSearchEngine"),
+    "expected DefaultApplicationContextFactory to reuse the existing OpenSearch module's engine-selection helper",
+  );
+  assertTruthy(
+    !/SearchConfiguration|SearchEngineType/.test(source),
+    "DefaultApplicationContextFactory.ts must not evolve ApplicationConfiguration/SearchConfiguration for engine selection",
+  );
+  assertTruthy(
     !/process\.env/.test(source),
-    "DefaultApplicationContextFactory.ts must not read environment variables directly",
+    "DefaultApplicationContextFactory.ts must not read environment variables directly; env reading stays centralized (EnvironmentApplicationConfigurationFactory / OpenSearchConfigFactory)",
   );
 }
 
 async function validateInMemoryConfigurationWiresInMemoryRuntime(): Promise<void> {
   delete process.env.SEARCH_ENGINE;
-  delete process.env.OPENSEARCH_NODE_URL;
+  delete process.env.OPENSEARCH_NODE;
   delete process.env.OPENSEARCH_INDEX_NAME;
   delete process.env.OPENSEARCH_USERNAME;
   delete process.env.OPENSEARCH_PASSWORD;
 
   const context = new DefaultApplicationContextFactory().create();
-  assertEqual(
-    context.applicationConfiguration.search.engine,
-    "in-memory",
-    "expected default SEARCH_ENGINE to resolve to in-memory",
-  );
 
   const ragAnswer = await context.ragController.answer({ query: SAMPLE_QUERY });
   assertTruthy(
@@ -121,18 +128,12 @@ async function validateInMemoryConfigurationWiresInMemoryRuntime(): Promise<void
 
 async function validateOpenSearchConfigurationWiresOpenSearchRuntime(): Promise<void> {
   process.env.SEARCH_ENGINE = "opensearch";
-  process.env.OPENSEARCH_NODE_URL = "http://fake-opensearch:9200";
+  process.env.OPENSEARCH_NODE = "http://fake-opensearch:9200";
   process.env.OPENSEARCH_INDEX_NAME = "public-law-ai-validation";
 
   try {
     const recordingClient = new RecordingOpenSearchClient(new FakeOpenSearchClient());
     const context = new DefaultApplicationContextFactory(recordingClient).create();
-
-    assertEqual(
-      context.applicationConfiguration.search.engine,
-      "opensearch",
-      "expected SEARCH_ENGINE=opensearch to resolve through applicationConfiguration",
-    );
 
     const ragAnswer = await context.ragController.answer({ query: SAMPLE_QUERY });
     assertTruthy(
@@ -152,7 +153,7 @@ async function validateOpenSearchConfigurationWiresOpenSearchRuntime(): Promise<
     );
   } finally {
     delete process.env.SEARCH_ENGINE;
-    delete process.env.OPENSEARCH_NODE_URL;
+    delete process.env.OPENSEARCH_NODE;
     delete process.env.OPENSEARCH_INDEX_NAME;
   }
 }
