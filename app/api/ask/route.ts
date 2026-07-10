@@ -1,6 +1,18 @@
-import { createAIService } from "@/app/ai";
+import { DefaultApplicationBootstrapFactory } from "@/app/legal/composition";
+import { ProductionServerRuntime } from "@/app/legal/server/ProductionServerRuntime";
+import { ApiErrorMapper } from "@/app/legal/api";
 
 export const runtime = "nodejs";
+
+const serverRuntime = new ProductionServerRuntime(
+  new DefaultApplicationBootstrapFactory().create(),
+);
+const errorMapper = new ApiErrorMapper();
+
+async function getRagController() {
+  await serverRuntime.start();
+  return serverRuntime.getContext().ragController;
+}
 
 export async function POST(req: Request) {
   const { question } = await req.json();
@@ -9,20 +21,16 @@ export async function POST(req: Request) {
     return new Response("Missing question", { status: 400 });
   }
 
-  const aiService = createAIService();
-  const chunks = aiService.answerLegalQuestion(question);
-
   const encoder = new TextEncoder();
   const body = new ReadableStream({
     async start(controller) {
       try {
-        for await (const chunk of chunks) {
-          controller.enqueue(encoder.encode(chunk.text));
-        }
+        const ragController = await getRagController();
+        const { answer } = await ragController.answer({ query: question });
+        controller.enqueue(encoder.encode(answer));
       } catch (err) {
-        controller.enqueue(
-          encoder.encode("\n\n[Error: failed to generate a response.]"),
-        );
+        const mapped = errorMapper.map(err);
+        controller.enqueue(encoder.encode(`\n\n[Error: ${mapped.message}]`));
         console.error(err);
       } finally {
         controller.close();
