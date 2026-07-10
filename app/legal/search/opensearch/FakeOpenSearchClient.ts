@@ -70,6 +70,10 @@ export class FakeOpenSearchClient implements OpenSearchClient {
     Map<string, OpenSearchLegalDocument>
   >();
 
+  async indexExists(indexName: string): Promise<boolean> {
+    return this.indices.has(indexName);
+  }
+
   async createIndex(indexName: string, mapping: unknown): Promise<void> {
     this.indices.set(indexName, mapping);
     if (!this.documents.has(indexName)) {

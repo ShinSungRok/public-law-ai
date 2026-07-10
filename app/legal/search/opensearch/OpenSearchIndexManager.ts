@@ -9,6 +9,11 @@ export class OpenSearchIndexManager {
   ) {}
 
   async ensureLegalIndex(): Promise<void> {
+    const exists = await this.client.indexExists(this.config.indexName);
+    if (exists) {
+      return;
+    }
+
     await this.client.createIndex(
       this.config.indexName,
       OPEN_SEARCH_LEGAL_INDEX_MAPPING,

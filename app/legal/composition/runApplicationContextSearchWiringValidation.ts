@@ -13,6 +13,10 @@ class RecordingOpenSearchClient implements OpenSearchClient {
 
   constructor(private readonly delegate: OpenSearchClient) {}
 
+  indexExists(indexName: string): Promise<boolean> {
+    return this.delegate.indexExists(indexName);
+  }
+
   createIndex(indexName: string, mapping: unknown): Promise<void> {
     return this.delegate.createIndex(indexName, mapping);
   }

@@ -1,6 +1,7 @@
 import type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
 
 export interface OpenSearchClient {
+  indexExists(indexName: string): Promise<boolean>;
   createIndex(indexName: string, mapping: unknown): Promise<void>;
   indexDocument(
     indexName: string,

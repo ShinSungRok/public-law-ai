@@ -17,6 +17,11 @@ export class OpenSearchSdkClient implements OpenSearchClient {
     });
   }
 
+  async indexExists(indexName: string): Promise<boolean> {
+    const response = await this.client.indices.exists({ index: indexName });
+    return response.body;
+  }
+
   async createIndex(indexName: string, mapping: unknown): Promise<void> {
     await this.client.indices.create({
       index: indexName,
