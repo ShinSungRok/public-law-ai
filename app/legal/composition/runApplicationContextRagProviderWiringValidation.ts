@@ -117,19 +117,18 @@ async function validateAnthropicConfigurationSelectsAnthropicProviderStructurall
       context.aiProvider instanceof AnthropicProvider,
       "expected ApplicationContext.aiProvider to be an AnthropicProvider for anthropic configuration",
     );
+    assertTruthy(
+      context.aiPromptExecutor,
+      "expected ApplicationContext.aiPromptExecutor to be wired for anthropic configuration",
+    );
 
-    // AnthropicProvider.complete() is a structural, network-free placeholder
-    // implementation (see app/legal/ai/AnthropicProvider.ts) — invoking it
-    // here proves wiring without making a real Anthropic API call.
-    const ragAnswer = await context.ragController.answer({ query: SAMPLE_QUERY });
-    assertTruthy(
-      typeof ragAnswer.answer === "string" && ragAnswer.answer.length > 0,
-      "RAG answer under anthropic configuration was empty",
-    );
-    assertTruthy(
-      !ragAnswer.answer.includes(OLD_HARD_CODED_FAKE_ANSWER_MARKER),
-      "RAG answer under anthropic configuration still reflects the old local hard-coded FakeLLMProvider text",
-    );
+    // AnthropicProvider now calls the real Anthropic API (see
+    // app/legal/ai/AnthropicProvider.ts), so this check stays structural
+    // (constructor/type wiring only) rather than invoking ragController,
+    // which would otherwise make a real Anthropic API call during
+    // validation. Streaming/retry/timeout/request-mapping behavior for
+    // AnthropicProvider itself is covered with injected fakes in
+    // app/legal/ai/runAnthropicProviderValidation.ts.
   } finally {
     delete process.env.LLM_PROVIDER;
     delete process.env.LLM_MODEL;

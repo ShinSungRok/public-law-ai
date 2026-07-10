@@ -1,4 +1,5 @@
 import { AiProviderError } from "./AiProviderError";
+import { AnthropicProvider } from "./AnthropicProvider";
 import { DefaultAiProviderFactory } from "./DefaultAiProviderFactory";
 import type { LlmConfiguration } from "./LlmConfiguration";
 
@@ -41,15 +42,13 @@ async function main(): Promise<void> {
     timeout: 15000,
     maxRetries: 2,
   };
+  // AnthropicProvider now calls the real Anthropic API, so this factory-level
+  // check stays structural (no injected transport is available through the
+  // factory) to avoid making a real network call during validation.
   const anthropicProvider = factory.create("anthropic", anthropicConfiguration);
-  const anthropicResponse = await anthropicProvider.complete({
-    model: anthropicConfiguration.model,
-    messages: [{ role: "user", content: "What is the statute of limitations?" }],
-  });
-  assertTruthy(anthropicResponse.text, "anthropic provider response missing text");
   assertTruthy(
-    anthropicResponse.metadata,
-    "anthropic provider response missing metadata",
+    anthropicProvider instanceof AnthropicProvider,
+    "factory did not construct an AnthropicProvider for provider type \"anthropic\"",
   );
 
   let missingConfigurationThrew = false;
