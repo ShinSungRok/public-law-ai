@@ -20,3 +20,21 @@ export type {
   RagEvaluationCategory,
   RagEvaluationCaseMetadata,
 } from "./RagEvaluationDataset";
+export {
+  computeHit,
+  computeRecallAtK,
+  computeReciprocalRank,
+} from "./RetrievalMetricsCalculator";
+export {
+  HIT_RATE_METRIC_NAME,
+  RECALL_AT_1_METRIC_NAME,
+  RECALL_AT_3_METRIC_NAME,
+  RECALL_AT_5_METRIC_NAME,
+  MRR_METRIC_NAME,
+  RetrievalMetricsEvaluationRunner,
+} from "./RetrievalMetricsEvaluationRunner";
+export type { RetrievalMetricsReport } from "./RetrievalMetricsReport";
+export {
+  buildRetrievalMetricsReport,
+  formatRetrievalMetricsReport,
+} from "./RetrievalMetricsReport";
