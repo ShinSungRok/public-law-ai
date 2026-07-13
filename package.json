@@ -86,6 +86,7 @@
     "validate:evaluation:search": "tsx app/legal/evaluation/runSearchEvaluationValidation.ts",
     "validate:evaluation:rag": "tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts",
     "validate:evaluation:regression": "tsx app/legal/evaluation/runRegressionEvaluationValidation.ts",
+    "validate:evaluation:rag-dataset": "tsx app/legal/evaluation/runRagEvaluationDatasetValidation.ts",
     "validate:evaluation": "tsx app/legal/evaluation/runEvaluationMilestoneValidation.ts",
     "validate:observability:foundation": "tsx app/legal/observability/runObservabilityFoundationValidation.ts",
     "validate:observability:integration": "tsx app/legal/observability/runObservabilityIntegrationValidation.ts",

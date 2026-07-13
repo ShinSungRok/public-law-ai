@@ -12,3 +12,11 @@ export { SearchEvaluationRunner } from "./SearchEvaluationRunner";
 export { RagAnswerEvaluationRunner } from "./RagAnswerEvaluationRunner";
 export type { EvaluationRunnerRegistry } from "./RegressionEvaluationRunner";
 export { RegressionEvaluationRunner } from "./RegressionEvaluationRunner";
+export {
+  RAG_EVALUATION_CATEGORIES,
+  RAG_EVALUATION_DATASET,
+} from "./RagEvaluationDataset";
+export type {
+  RagEvaluationCategory,
+  RagEvaluationCaseMetadata,
+} from "./RagEvaluationDataset";
