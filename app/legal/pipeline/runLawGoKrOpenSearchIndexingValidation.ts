@@ -5,6 +5,9 @@ import {
   runLawGoKrOpenSearchIndexing,
   type LawGoKrOpenSearchIndexingSummary,
 } from "./runLawGoKrOpenSearchIndexing";
+import { LawGoKrStatuteDetailParser } from "./source/LawGoKrStatuteDetailParser";
+import { buildLawGoKrStatuteDetailUrl } from "./source/LawGoKrUrlBuilder";
+import type { RawLegalData } from "./RawLegalData";
 import { FakeOpenSearchClient } from "../search/opensearch/FakeOpenSearchClient";
 import { OpenSearchBulkIndexError } from "../search/opensearch/OpenSearchBulkIndexError";
 import type { OpenSearchClient } from "../search/opensearch/OpenSearchClient";
@@ -13,36 +16,127 @@ import type { OpenSearchLegalDocument } from "../search/opensearch/OpenSearchLeg
 
 const FAKE_OC = "fake-oc-for-validation-only";
 
-const TWO_STATUTE_RESPONSE = JSON.stringify({
+// -- Fixtures --------------------------------------------------------------
+//
+// SEARCH_RESPONSE lists three law.go.kr search hits: "law-1" appears twice
+// (simulating a duplicate/historical-version repeat that must be downloaded
+// only once) and "law-2" once.
+const SEARCH_RESPONSE = JSON.stringify({
   LawSearch: {
     law: [
-      {
-        법령ID: "law-1",
-        법령명한글: "개인정보 보호법",
-        법령구분명: "법률",
-        소관부처명: "개인정보보호위원회",
-        공포일자: "20200101",
-        시행일자: "20200101",
-      },
-      {
-        법령ID: "law-2",
-        법령명한글: "정보통신망 이용촉진 및 정보보호 등에 관한 법률",
-        법령구분명: "법률",
-        소관부처명: "과학기술정보통신부",
-        공포일자: "20190101",
-        시행일자: "20190101",
-      },
+      { 법령ID: "law-1", 법령명한글: "개인정보 보호법", 법령구분명: "법률" },
+      { 법령ID: "law-2", 법령명한글: "정보통신망법", 법령구분명: "법률" },
+      { 법령ID: "law-1", 법령명한글: "개인정보 보호법", 법령구분명: "법률" },
     ],
   },
 });
 
-const EMPTY_RESPONSE = JSON.stringify({ LawSearch: { law: [] } });
+const EMPTY_SEARCH_RESPONSE = JSON.stringify({ LawSearch: { law: [] } });
 
-class FakeLawGoKrHttpClient implements HttpClient {
-  constructor(private readonly content: string) {}
+// law-1 detail: article 2 (usable), article 3 (blank -> must be skipped),
+// article 15-2 (branch number -> must produce id "law-1:15-2").
+const LAW_1_DETAIL_RESPONSE = JSON.stringify({
+  법령: {
+    기본정보: {
+      법령명_한글: "개인정보 보호법",
+      공포일자: "20200101",
+      시행일자: "20200101",
+    },
+    조문: {
+      조문단위: [
+        {
+          조문번호: "2",
+          조문가지번호: "0",
+          조문제목: "정의",
+          조문내용: "제2조(정의) 이 법에서 사용하는 용어의 뜻은 다음과 같다.",
+          항: [
+            {
+              항번호: "1",
+              항내용: "1. \"개인정보\"란 살아있는 개인에 관한 정보를 말한다.",
+            },
+          ],
+        },
+        {
+          조문번호: "3",
+          조문가지번호: "0",
+          조문제목: "",
+          조문내용: "",
+        },
+        {
+          조문번호: "15",
+          조문가지번호: "2",
+          조문제목: "손해배상책임",
+          조문내용: "제15조의2(손해배상책임) 개인정보처리자는 이 법을 위반한 행위로 정보주체에게 손해를 발생시킨 경우 그 손해를 배상할 책임이 있다.",
+        },
+      ],
+    },
+  },
+});
 
-  async get(): Promise<string> {
-    return this.content;
+// law-2 detail: a single usable article.
+const LAW_2_DETAIL_RESPONSE = JSON.stringify({
+  법령: {
+    기본정보: {
+      법령명_한글: "정보통신망법",
+      공포일자: "20190101",
+      시행일자: "20190101",
+    },
+    조문: {
+      조문단위: [
+        {
+          조문번호: "3",
+          조문가지번호: "0",
+          조문제목: "국가등의 책무",
+          조문내용: "제3조(국가등의 책무) 정부는 정보통신망의 이용촉진 및 안정적 관리ㆍ운영과 정보보호를 위한 시책을 마련하여야 한다.",
+        },
+      ],
+    },
+  },
+});
+
+// law-3 detail: metadata only, no 조문 section at all.
+const METADATA_ONLY_DETAIL_RESPONSE = JSON.stringify({
+  법령: {
+    기본정보: {
+      법령명_한글: "메타데이터만있는법",
+      공포일자: "20180101",
+      시행일자: "20180101",
+    },
+  },
+});
+
+class RoutedFakeLawGoKrHttpClient implements HttpClient {
+  readonly detailCallCountById = new Map<string, number>();
+
+  constructor(
+    private readonly searchResponse: string,
+    private readonly detailResponses: Record<string, string>,
+    private readonly failingDetailIds: Set<string> = new Set(),
+  ) {}
+
+  async get(url: string): Promise<string> {
+    const parsed = new URL(url);
+
+    if (parsed.pathname.endsWith("lawSearch.do")) {
+      return this.searchResponse;
+    }
+
+    if (parsed.pathname.endsWith("lawService.do")) {
+      const id = parsed.searchParams.get("ID") ?? "";
+      this.detailCallCountById.set(id, (this.detailCallCountById.get(id) ?? 0) + 1);
+
+      if (this.failingDetailIds.has(id)) {
+        throw new Error(`simulated network failure fetching detail for ${id}`);
+      }
+
+      const response = this.detailResponses[id];
+      if (response === undefined) {
+        throw new Error(`no fixture registered for law.go.kr detail id "${id}"`);
+      }
+      return response;
+    }
+
+    throw new Error(`unexpected law.go.kr URL requested in validation: ${url}`);
   }
 }
 
@@ -119,6 +213,8 @@ function assertExistingPipelineReuse(): void {
   const requiredReferences = [
     "LawGoKrStatuteSearchDownloader",
     "LawGoKrStatuteSearchParser",
+    "LawGoKrStatuteDetailDownloader",
+    "LawGoKrStatuteDetailParser",
     "PublicLegalDataPipeline",
     "createLawGoKrConfigFromEnv",
     "assertLawGoKrConfig",
@@ -147,22 +243,74 @@ function assertExistingPipelineReuse(): void {
   );
 }
 
-async function validateSuccessfulIndexingAndStableIds(): Promise<void> {
+async function validateFullContentIndexingEndToEnd(): Promise<void> {
   await withLawGoKrEnv(async () => {
-    const httpClient = new FakeLawGoKrHttpClient(TWO_STATUTE_RESPONSE);
+    const httpClient = new RoutedFakeLawGoKrHttpClient(SEARCH_RESPONSE, {
+      "law-1": LAW_1_DETAIL_RESPONSE,
+      "law-2": LAW_2_DETAIL_RESPONSE,
+    });
     const openSearchClient = new FakeOpenSearchClient();
 
-    const firstRun = await runLawGoKrOpenSearchIndexing({
+    const summary = await runLawGoKrOpenSearchIndexing({
       httpClient,
       openSearchClient,
       query: "개인정보",
     });
 
-    assertEqual(firstRun.totalCount, 2, "expected two parsed statute documents");
-    assertEqual(firstRun.indexedCount, 2, "expected both documents to be indexed");
-    assertEqual(firstRun.failedCount, 0, "expected no failed documents");
-    assertEqual(firstRun.failedDocumentIds.length, 0, "expected no failed document ids");
+    // Search-to-detail flow: duplicate search identifiers downloaded once.
+    assertEqual(summary.statuteCount, 2, "expected two distinct statutes after dedupe");
+    assertEqual(
+      httpClient.detailCallCountById.get("law-1"),
+      1,
+      "expected the duplicate law-1 search hit to trigger exactly one detail request",
+    );
+    assertEqual(
+      httpClient.detailCallCountById.get("law-2"),
+      1,
+      "expected exactly one detail request for law-2",
+    );
 
+    // Article-level documents: 2 usable articles from law-1 (blank article-3 skipped) + 1 from law-2.
+    assertEqual(summary.totalCount, 3, "expected 3 article-level documents across both statutes");
+    assertEqual(summary.indexedCount, 3, "expected all 3 article documents to be indexed");
+    assertEqual(summary.failedCount, 0, "expected no bulk-indexing failures");
+    assertEqual(summary.detailFailedStatuteIds.length, 0, "expected no detail-fetch failures");
+    assertEqual(summary.detailEmptyStatuteIds.length, 0, "expected no empty-detail statutes");
+
+    const searchResults = (await openSearchClient.search(summary.targetIndex, {
+      query: { multi_match: { query: "개인정보 정보통신망" } },
+      size: 10,
+    })) as { hits: { hits: { _id: string; _source: OpenSearchLegalDocument }[] } };
+    const indexedById = new Map(
+      searchResults.hits.hits.map((hit) => [hit._id, hit._source]),
+    );
+
+    assertTruthy(
+      indexedById.has("law-1:2") && indexedById.has("law-1:15-2") && indexedById.has("law-2:3"),
+      "expected stable, composite article ids (statuteId:articleNo)",
+    );
+    assertTruthy(
+      !indexedById.has("law-1:3"),
+      "expected the blank article (law-1:3) to be skipped rather than indexed",
+    );
+
+    const article2 = indexedById.get("law-1:2")!;
+    assertTruthy(
+      article2.text.includes("살아있는 개인에 관한 정보를 말한다"),
+      "expected indexed text to contain real article body content, not just metadata",
+    );
+    assertTruthy(
+      article2.title.includes("개인정보 보호법") && article2.title.includes("제2조"),
+      "expected the article title to carry statute + article context",
+    );
+
+    const article15 = indexedById.get("law-1:15-2")!;
+    assertTruthy(
+      article15.text.includes("손해를 배상할 책임이 있다"),
+      "expected the branch-numbered article's body text to be indexed",
+    );
+
+    // Repeated indexing must overwrite, not duplicate.
     const secondRun = await runLawGoKrOpenSearchIndexing({
       httpClient,
       openSearchClient,
@@ -170,27 +318,127 @@ async function validateSuccessfulIndexingAndStableIds(): Promise<void> {
     });
     assertEqual(
       secondRun.indexedCount,
-      2,
-      "expected a repeated indexing run to still report the same indexed count",
+      3,
+      "expected a repeated run to report the same indexed count",
     );
-
-    const searchResults = (await openSearchClient.search(firstRun.targetIndex, {
-      query: { multi_match: { query: "개인정보" } },
+    const rerunSearch = (await openSearchClient.search(summary.targetIndex, {
+      query: { multi_match: { query: "개인정보 정보통신망" } },
+      size: 10,
     })) as { hits: { hits: unknown[] } };
     assertEqual(
-      searchResults.hits.hits.length,
-      1,
-      "expected stable document ids: re-indexing the same source data must overwrite, not duplicate, documents",
+      rerunSearch.hits.hits.length,
+      3,
+      "expected stable document ids: re-indexing must overwrite, not duplicate, documents",
     );
   });
 }
 
-async function validatePartialFailureIsReported(): Promise<void> {
+async function validateDetailParserOrderingAndIdentity(): Promise<void> {
+  const parser = new LawGoKrStatuteDetailParser();
+  const rawData: RawLegalData = {
+    id: "law.go.kr:statute-detail:law-1",
+    sourceSystem: "law.go.kr",
+    sourceId: "law-1",
+    rawFormat: "json",
+    content: LAW_1_DETAIL_RESPONSE,
+    collectedAt: "2026-07-13T00:00:00Z",
+  };
+
+  const parsed = await parser.parse(rawData);
+
+  assertEqual(parsed.length, 2, "expected 2 usable articles (blank article-3 skipped)");
+  assertEqual(
+    parsed[0].document.id,
+    "law-1:2",
+    "expected deterministic ordering: article 2 must come first",
+  );
+  assertEqual(
+    parsed[1].document.id,
+    "law-1:15-2",
+    "expected deterministic ordering: article 15-2 must come second",
+  );
+  assertEqual(
+    parsed[0].document.sourceRef.sourceId,
+    "law-1:2",
+    "expected sourceRef.sourceId to match the composite article id",
+  );
+  assertEqual(
+    parsed[0].document.metadata.sourceId,
+    "law-1",
+    "expected metadata.sourceId to preserve the original law.go.kr statute identifier separately",
+  );
+  assertTruthy(
+    parsed[0].document.metadata.sourceUrl.includes("lawService.do"),
+    "expected a deterministic law.go.kr source URL to be populated",
+  );
+
+  // Re-parsing the same content must not introduce duplicate documents.
+  const reparsed = await parser.parse(rawData);
+  assertEqual(reparsed.length, 2, "expected re-parsing identical content to be idempotent");
+}
+
+async function validateEmptyOrMetadataOnlyDetailIsSkipped(): Promise<void> {
+  const parser = new LawGoKrStatuteDetailParser();
+  const rawData: RawLegalData = {
+    id: "law.go.kr:statute-detail:law-3",
+    sourceSystem: "law.go.kr",
+    sourceId: "law-3",
+    rawFormat: "json",
+    content: METADATA_ONLY_DETAIL_RESPONSE,
+    collectedAt: "2026-07-13T00:00:00Z",
+  };
+
+  const parsed = await parser.parse(rawData);
+  assertEqual(
+    parsed.length,
+    0,
+    "expected a metadata-only detail response (no 조문 section) to produce zero documents",
+  );
+}
+
+async function validateDetailFetchPartialFailureIsReported(): Promise<void> {
   await withLawGoKrEnv(async () => {
-    const httpClient = new FakeLawGoKrHttpClient(TWO_STATUTE_RESPONSE);
+    const httpClient = new RoutedFakeLawGoKrHttpClient(
+      SEARCH_RESPONSE,
+      { "law-1": LAW_1_DETAIL_RESPONSE, "law-2": LAW_2_DETAIL_RESPONSE },
+      new Set(["law-2"]),
+    );
+    const openSearchClient = new FakeOpenSearchClient();
+
+    const summary = await runLawGoKrOpenSearchIndexing({
+      httpClient,
+      openSearchClient,
+      query: "개인정보",
+    });
+
+    assertEqual(summary.statuteCount, 2, "expected both statutes to be found by search");
+    assertEqual(
+      summary.detailFailedStatuteIds.includes("law-2"),
+      true,
+      "expected the failed detail fetch for law-2 to be reported",
+    );
+    assertEqual(
+      summary.totalCount,
+      2,
+      "expected only law-1's 2 usable articles to be indexed after law-2's detail fetch failed",
+    );
+    assertEqual(summary.indexedCount, 2, "expected law-1's articles to still be indexed");
+    assertTruthy(
+      summary.detailFailedStatuteIds.length > 0,
+      "expected the summary to avoid falsely reporting complete success",
+    );
+  });
+}
+
+async function validateBulkIndexPartialFailureIsReported(): Promise<void> {
+  await withLawGoKrEnv(async () => {
+    const httpClient = new RoutedFakeLawGoKrHttpClient(SEARCH_RESPONSE, {
+      "law-1": LAW_1_DETAIL_RESPONSE,
+      "law-2": LAW_2_DETAIL_RESPONSE,
+    });
     const openSearchClient = new AlwaysFailingIdOpenSearchClient(
       new FakeOpenSearchClient(),
-      "law-2",
+      "law-1:15-2",
     );
 
     const summary = await runLawGoKrOpenSearchIndexing({
@@ -199,13 +447,13 @@ async function validatePartialFailureIsReported(): Promise<void> {
       query: "개인정보",
     });
 
-    assertEqual(summary.totalCount, 2, "expected two parsed statute documents");
-    assertEqual(summary.indexedCount, 1, "expected exactly one document to succeed");
+    assertEqual(summary.totalCount, 3, "expected 3 article-level documents to be attempted");
+    assertEqual(summary.indexedCount, 2, "expected exactly two documents to succeed");
     assertEqual(summary.failedCount, 1, "expected exactly one document to fail");
     assertEqual(
-      summary.failedDocumentIds.includes("law-2"),
+      summary.failedDocumentIds.includes("law-1:15-2"),
       true,
-      "expected the failing document id to be reported in failedDocumentIds",
+      "expected the failing article document id to be reported in failedDocumentIds",
     );
     assertEqual(
       summary.indexedCount + summary.failedCount,
@@ -215,9 +463,9 @@ async function validatePartialFailureIsReported(): Promise<void> {
   });
 }
 
-async function validateEmptyResultIsRejected(): Promise<void> {
+async function validateEmptySearchResultIsRejected(): Promise<void> {
   await withLawGoKrEnv(async () => {
-    const httpClient = new FakeLawGoKrHttpClient(EMPTY_RESPONSE);
+    const httpClient = new RoutedFakeLawGoKrHttpClient(EMPTY_SEARCH_RESPONSE, {});
     const openSearchClient = new FakeOpenSearchClient();
 
     let threw = false;
@@ -233,10 +481,44 @@ async function validateEmptyResultIsRejected(): Promise<void> {
       message = error instanceof Error ? error.message : String(error);
     }
 
-    assertTruthy(threw, "expected an empty parsed result to reject rather than report success");
+    assertTruthy(threw, "expected an empty search result to reject rather than report success");
     assertTruthy(
       message.includes("empty result"),
       "expected the empty-result error to clearly identify the empty-result stage",
+    );
+  });
+}
+
+async function validateAllStatutesWithoutArticlesIsRejected(): Promise<void> {
+  await withLawGoKrEnv(async () => {
+    const singleStatuteSearchResponse = JSON.stringify({
+      LawSearch: { law: [{ 법령ID: "law-3", 법령명한글: "메타데이터만있는법" }] },
+    });
+    const httpClient = new RoutedFakeLawGoKrHttpClient(singleStatuteSearchResponse, {
+      "law-3": METADATA_ONLY_DETAIL_RESPONSE,
+    });
+    const openSearchClient = new FakeOpenSearchClient();
+
+    let threw = false;
+    let message = "";
+    try {
+      await runLawGoKrOpenSearchIndexing({
+        httpClient,
+        openSearchClient,
+        query: "메타데이터",
+      });
+    } catch (error) {
+      threw = true;
+      message = error instanceof Error ? error.message : String(error);
+    }
+
+    assertTruthy(
+      threw,
+      "expected a metadata-only detail response (no usable articles) to reject rather than index a low-quality document",
+    );
+    assertTruthy(
+      message.includes("empty result"),
+      "expected the no-usable-articles error to clearly identify the empty-result stage",
     );
   });
 }
@@ -251,7 +533,10 @@ async function validateSameIndexConfigurationSource(): Promise<void> {
     let summary: LawGoKrOpenSearchIndexingSummary;
     await withLawGoKrEnv(async () => {
       summary = await runLawGoKrOpenSearchIndexing({
-        httpClient: new FakeLawGoKrHttpClient(TWO_STATUTE_RESPONSE),
+        httpClient: new RoutedFakeLawGoKrHttpClient(SEARCH_RESPONSE, {
+          "law-1": LAW_1_DETAIL_RESPONSE,
+          "law-2": LAW_2_DETAIL_RESPONSE,
+        }),
         openSearchClient: new FakeOpenSearchClient(),
         query: "개인정보",
       });
@@ -268,6 +553,17 @@ async function validateSameIndexConfigurationSource(): Promise<void> {
   }
 }
 
+function assertUrlBuilderUsesDocumentedParameters(): void {
+  const url = new URL(
+    buildLawGoKrStatuteDetailUrl({ baseUrl: "https://www.law.go.kr", oc: FAKE_OC }, "law-1"),
+  );
+  assertEqual(url.pathname, "/DRF/lawService.do", "expected the documented detail endpoint path");
+  assertEqual(url.searchParams.get("OC"), FAKE_OC, "expected the OC parameter to be forwarded");
+  assertEqual(url.searchParams.get("target"), "law", "expected target=law");
+  assertEqual(url.searchParams.get("type"), "JSON", "expected type=JSON");
+  assertEqual(url.searchParams.get("ID"), "law-1", "expected the statute id forwarded as ID");
+}
+
 async function main(): Promise<void> {
   console.log(
     "[pipeline] No external services required: law.go.kr and OpenSearch are both replaced with injected fakes.",
@@ -276,23 +572,44 @@ async function main(): Promise<void> {
   console.log("[pipeline] Checking the runner reuses the existing pipeline components...");
   assertExistingPipelineReuse();
 
+  console.log("[pipeline] Checking the detail URL builder uses the documented request parameters...");
+  assertUrlBuilderUsesDocumentedParameters();
+
   console.log(
-    "[pipeline] Checking successful indexing and stable document ids across repeated runs...",
+    "[pipeline] Checking the full search-to-detail-to-indexing flow: dedupe, stable ids, full article text, blank-article skipping, idempotent re-indexing...",
   );
-  await validateSuccessfulIndexingAndStableIds();
+  await validateFullContentIndexingEndToEnd();
 
-  console.log("[pipeline] Checking partial bulk-indexing failure is reported accurately...");
-  await validatePartialFailureIsReported();
+  console.log(
+    "[pipeline] Checking the detail parser preserves article ordering and stable composite ids...",
+  );
+  await validateDetailParserOrderingAndIdentity();
 
-  console.log("[pipeline] Checking an empty parsed result is rejected, not reported as success...");
-  await validateEmptyResultIsRejected();
+  console.log(
+    "[pipeline] Checking a metadata-only detail response is skipped rather than producing a low-quality document...",
+  );
+  await validateEmptyOrMetadataOnlyDetailIsSkipped();
+
+  console.log("[pipeline] Checking a partial detail-fetch failure is reported accurately...");
+  await validateDetailFetchPartialFailureIsReported();
+
+  console.log("[pipeline] Checking a partial bulk-indexing failure is reported accurately...");
+  await validateBulkIndexPartialFailureIsReported();
+
+  console.log("[pipeline] Checking an empty search result is rejected, not reported as success...");
+  await validateEmptySearchResultIsRejected();
+
+  console.log(
+    "[pipeline] Checking that statutes with no usable articles at all are rejected, not reported as success...",
+  );
+  await validateAllStatutesWithoutArticlesIsRejected();
 
   console.log(
     "[pipeline] Checking the runner targets the same createOpenSearchConfigFromEnv() index used by the search runtime...",
   );
   await validateSameIndexConfigurationSource();
 
-  console.log("Law.go.kr OpenSearch indexing pipeline validation succeeded.");
+  console.log("Law.go.kr full-content OpenSearch indexing pipeline validation succeeded.");
 }
 
 main();

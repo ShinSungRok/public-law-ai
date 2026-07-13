@@ -1,7 +1,10 @@
+import type { LegalDocument } from "../domain";
 import type { HttpClient } from "./http";
 import { FetchHttpClient } from "./http";
 import { PublicLegalDataPipeline } from "./index";
 import {
+  LawGoKrStatuteDetailDownloader,
+  LawGoKrStatuteDetailParser,
   LawGoKrStatuteSearchDownloader,
   LawGoKrStatuteSearchParser,
   assertLawGoKrConfig,
@@ -27,10 +30,18 @@ export interface LawGoKrOpenSearchIndexingDependencies {
 
 export interface LawGoKrOpenSearchIndexingSummary {
   targetIndex: string;
+  /** Distinct statutes returned by the law.go.kr search stage. */
+  statuteCount: number;
+  /** Article-level documents produced by the detail stage and attempted for indexing. */
   totalCount: number;
   indexedCount: number;
   failedCount: number;
+  /** Article-level document ids that failed bulk indexing. */
   failedDocumentIds: string[];
+  /** Statute ids whose detail fetch/parse threw an error. */
+  detailFailedStatuteIds: string[];
+  /** Statute ids whose detail response contained no usable article content. */
+  detailEmptyStatuteIds: string[];
 }
 
 function redactSecrets(message: string, secrets: Array<string | undefined>): string {
@@ -52,6 +63,11 @@ function stageError(
   return new Error(`[${stage}] ${redactSecrets(rawMessage, secrets)}`);
 }
 
+/** Preserves first-seen order while removing duplicate/historical-version repeats. */
+function dedupeStatuteIds(ids: string[]): string[] {
+  return Array.from(new Set(ids));
+}
+
 export async function runLawGoKrOpenSearchIndexing(
   dependencies: LawGoKrOpenSearchIndexingDependencies = {},
 ): Promise<LawGoKrOpenSearchIndexingSummary> {
@@ -68,7 +84,8 @@ export async function runLawGoKrOpenSearchIndexing(
   const query = dependencies.query ?? process.env.LAW_GO_KR_QUERY ?? DEFAULT_QUERY;
   const source = createLawGoKrSource();
   const httpClient = dependencies.httpClient ?? new FetchHttpClient();
-  const pipeline = new PublicLegalDataPipeline(
+
+  const searchPipeline = new PublicLegalDataPipeline(
     new LawGoKrStatuteSearchDownloader(httpClient, lawGoKrConfig, query),
     new LawGoKrStatuteSearchParser(),
   );
@@ -87,28 +104,73 @@ export async function runLawGoKrOpenSearchIndexing(
     throw stageError("index setup", error, secrets);
   }
 
-  console.log(`[index:law-go-kr:opensearch] Downloading and parsing query "${query}"...`);
-  let parsedResults;
+  console.log(`[index:law-go-kr:opensearch] Searching statutes for query "${query}"...`);
+  let searchResults;
   try {
-    parsedResults = await pipeline.run(source);
+    searchResults = await searchPipeline.run(source);
   } catch (error) {
-    throw stageError("download/parse", error, secrets);
+    throw stageError("search", error, secrets);
   }
 
-  const documents = parsedResults.map((parsed) => parsed.document);
+  const statuteIds = dedupeStatuteIds(searchResults.map((parsed) => parsed.document.id));
 
-  if (documents.length === 0) {
+  if (statuteIds.length === 0) {
     throw new Error(
-      `[empty result] law.go.kr query "${query}" produced no legal documents; skipped indexing rather than reporting a false success`,
+      `[empty result] law.go.kr query "${query}" produced no statute search results; skipped indexing rather than reporting a false success`,
     );
   }
 
   console.log(
-    `[index:law-go-kr:opensearch] Indexing ${documents.length} document(s) into "${openSearchConfig.indexName}"...`,
+    `[index:law-go-kr:opensearch] Fetching full statute detail for ${statuteIds.length} statute(s)...`,
+  );
+  const detailParser = new LawGoKrStatuteDetailParser();
+  const articleDocuments: LegalDocument[] = [];
+  const detailFailedStatuteIds: string[] = [];
+  const detailEmptyStatuteIds: string[] = [];
+
+  for (const statuteId of statuteIds) {
+    const detailPipeline = new PublicLegalDataPipeline(
+      new LawGoKrStatuteDetailDownloader(httpClient, lawGoKrConfig, statuteId),
+      detailParser,
+    );
+
+    let detailResults;
+    try {
+      detailResults = await detailPipeline.run(source);
+    } catch (error) {
+      console.error(
+        `[index:law-go-kr:opensearch] Detail fetch failed for statute "${statuteId}": ${redactSecrets(
+          error instanceof Error ? error.message : String(error),
+          secrets,
+        )}`,
+      );
+      detailFailedStatuteIds.push(statuteId);
+      continue;
+    }
+
+    if (detailResults.length === 0) {
+      console.warn(
+        `[index:law-go-kr:opensearch] Statute "${statuteId}" detail response had no usable article content; skipped`,
+      );
+      detailEmptyStatuteIds.push(statuteId);
+      continue;
+    }
+
+    articleDocuments.push(...detailResults.map((parsed) => parsed.document));
+  }
+
+  if (articleDocuments.length === 0) {
+    throw new Error(
+      `[empty result] law.go.kr query "${query}" produced ${statuteIds.length} statute(s) but no usable full-text articles; skipped indexing rather than reporting a false success`,
+    );
+  }
+
+  console.log(
+    `[index:law-go-kr:opensearch] Indexing ${articleDocuments.length} article document(s) into "${openSearchConfig.indexName}"...`,
   );
   let result;
   try {
-    result = await indexer.indexAll(documents, {
+    result = await indexer.indexAll(articleDocuments, {
       batchSize: BATCH_SIZE,
       maxRetries: MAX_RETRIES,
     });
@@ -118,10 +180,13 @@ export async function runLawGoKrOpenSearchIndexing(
 
   return {
     targetIndex: openSearchConfig.indexName,
+    statuteCount: statuteIds.length,
     totalCount: result.totalCount,
     indexedCount: result.indexedCount,
     failedCount: result.failedCount,
     failedDocumentIds: result.failedDocumentIds,
+    detailFailedStatuteIds,
+    detailEmptyStatuteIds,
   };
 }
 
@@ -129,12 +194,23 @@ function printSummary(summary: LawGoKrOpenSearchIndexingSummary): void {
   const failedPreview = summary.failedDocumentIds.slice(0, FAILED_ID_PREVIEW_LIMIT);
   console.log("[index:law-go-kr:opensearch] Indexing summary:");
   console.log(`  Target index: ${summary.targetIndex}`);
-  console.log(`  Total: ${summary.totalCount}`);
+  console.log(`  Statutes searched: ${summary.statuteCount}`);
+  console.log(`  Article documents: ${summary.totalCount}`);
   console.log(`  Indexed: ${summary.indexedCount}`);
-  console.log(`  Failed: ${summary.failedCount}`);
+  console.log(`  Failed (bulk indexing): ${summary.failedCount}`);
   if (summary.failedCount > 0) {
     console.log(
       `  Failed document ids (showing up to ${FAILED_ID_PREVIEW_LIMIT} of ${summary.failedCount}): ${failedPreview.join(", ")}`,
+    );
+  }
+  if (summary.detailFailedStatuteIds.length > 0) {
+    console.log(
+      `  Statutes with failed detail fetch: ${summary.detailFailedStatuteIds.join(", ")}`,
+    );
+  }
+  if (summary.detailEmptyStatuteIds.length > 0) {
+    console.log(
+      `  Statutes with no usable article content: ${summary.detailEmptyStatuteIds.join(", ")}`,
     );
   }
 }

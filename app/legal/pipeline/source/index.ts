@@ -4,6 +4,12 @@ export {
   createLawGoKrConfigFromEnv,
   assertLawGoKrConfig,
 } from "./LawGoKrConfigFactory";
-export { buildLawGoKrStatuteSearchUrl } from "./LawGoKrUrlBuilder";
+export {
+  buildLawGoKrStatuteSearchUrl,
+  buildLawGoKrStatuteDetailUrl,
+  buildLawGoKrStatuteDetailViewUrl,
+} from "./LawGoKrUrlBuilder";
 export { LawGoKrStatuteSearchDownloader } from "./LawGoKrStatuteSearchDownloader";
 export { LawGoKrStatuteSearchParser } from "./LawGoKrStatuteSearchParser";
+export { LawGoKrStatuteDetailDownloader } from "./LawGoKrStatuteDetailDownloader";
+export { LawGoKrStatuteDetailParser } from "./LawGoKrStatuteDetailParser";
