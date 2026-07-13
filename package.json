@@ -90,6 +90,7 @@
     "validate:evaluation:retrieval-metrics": "tsx app/legal/evaluation/runRetrievalMetricsValidation.ts",
     "validate:evaluation:retrieval-failures": "tsx app/legal/evaluation/runRetrievalFailureAnalysisValidation.ts",
     "validate:evaluation:grounding": "tsx app/legal/evaluation/runGroundingMetricsValidation.ts",
+    "validate:evaluation:unified-report": "tsx app/legal/evaluation/runUnifiedEvaluationReportValidation.ts",
     "validate:evaluation": "tsx app/legal/evaluation/runEvaluationMilestoneValidation.ts",
     "validate:observability:foundation": "tsx app/legal/observability/runObservabilityFoundationValidation.ts",
     "validate:observability:integration": "tsx app/legal/observability/runObservabilityIntegrationValidation.ts",

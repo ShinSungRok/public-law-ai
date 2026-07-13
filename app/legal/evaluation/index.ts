@@ -74,3 +74,13 @@ export {
   buildGroundingMetricsReport,
   formatGroundingMetricsReport,
 } from "./GroundingMetricsReport";
+export type {
+  UnifiedEvaluationDatasetSummary,
+  UnifiedEvaluationOverallSummary,
+  UnifiedEvaluationReport,
+} from "./UnifiedEvaluationReport";
+export {
+  buildUnifiedEvaluationReport,
+  formatUnifiedEvaluationReport,
+} from "./UnifiedEvaluationReport";
+export { UnifiedEvaluationRunner } from "./UnifiedEvaluationRunner";
