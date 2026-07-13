@@ -54,3 +54,23 @@ export {
   buildRetrievalFailureReport,
   formatRetrievalFailureReport,
 } from "./RetrievalFailureReport";
+export type { GroundingClaimAnalysis } from "./GroundingAnalyzer";
+export { analyzeClaims, computeClaimOverlapRatio } from "./GroundingAnalyzer";
+export {
+  computeCitationCoverage,
+  computeContextCoverage,
+  computeGroundedAnswerScore,
+  computeUnsupportedClaimCount,
+} from "./GroundingMetricsCalculator";
+export {
+  CITATION_COVERAGE_METRIC_NAME,
+  CONTEXT_COVERAGE_METRIC_NAME,
+  GROUNDED_ANSWER_METRIC_NAME,
+  GroundingMetricsEvaluationRunner,
+  UNSUPPORTED_CLAIMS_METRIC_NAME,
+} from "./GroundingMetricsEvaluationRunner";
+export type { GroundingMetricsReport } from "./GroundingMetricsReport";
+export {
+  buildGroundingMetricsReport,
+  formatGroundingMetricsReport,
+} from "./GroundingMetricsReport";
