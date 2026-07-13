@@ -94,6 +94,49 @@ const LAW_2_DETAIL_RESPONSE = JSON.stringify({
   },
 });
 
+// law-4 detail: reproduces the real production collision (see
+// public-law-ai-local docs "011357:15/29/35") — a 장(chapter) heading
+// pseudo-entry ("제4장 개인정보의 안전한 관리") shares 조문번호="29" with the
+// real 제29조(안전조치의무) article that starts that chapter. Before the
+// fix, whichever of the two happened to be seen first for a given id "won"
+// and the other was silently dropped; here the heading appears first, so it
+// used to overwrite/shadow the real article.
+const LAW_4_CHAPTER_HEADING_COLLISION_DETAIL_RESPONSE = JSON.stringify({
+  법령: {
+    기본정보: {
+      법령명_한글: "개인정보 보호법",
+      공포일자: "20250401",
+      시행일자: "20251002",
+    },
+    조문: {
+      조문단위: [
+        {
+          조문번호: "28",
+          조문가지번호: "9",
+          조문제목: "개인정보의 국외 이전 중지 명령",
+          조문내용:
+            "제28조의9(개인정보의 국외 이전 중지 명령) 보호위원회는 국외 이전이 개인정보를 부당하게 낮은 수준으로 보호할 우려가 있다고 인정하는 경우 그 중지를 명할 수 있다.",
+        },
+        {
+          // Chapter-heading pseudo-entry: no 조문제목, no 항, and its
+          // 조문내용 is purely a "제N장 ..." heading line — collides on
+          // 조문번호="29" with the real article below.
+          조문번호: "29",
+          조문가지번호: "0",
+          조문내용: "제4장 개인정보의 안전한 관리",
+        },
+        {
+          조문번호: "29",
+          조문가지번호: "0",
+          조문제목: "안전조치의무",
+          조문내용:
+            "제29조(안전조치의무) 개인정보처리자는 개인정보가 분실ㆍ도난ㆍ유출ㆍ위조ㆍ변조 또는 훼손되지 아니하도록 내부 관리계획 수립, 접속기록 보관 등 대통령령으로 정하는 바에 따라 안전성 확보에 필요한 기술적ㆍ관리적 및 물리적 조치를 하여야 한다.",
+        },
+      ],
+    },
+  },
+});
+
 // law-3 detail: metadata only, no 조문 section at all.
 const METADATA_ONLY_DETAIL_RESPONSE = JSON.stringify({
   법령: {
@@ -396,6 +439,65 @@ async function validateEmptyOrMetadataOnlyDetailIsSkipped(): Promise<void> {
   );
 }
 
+async function validateChapterHeadingsDoNotOverwriteArticles(): Promise<void> {
+  const parser = new LawGoKrStatuteDetailParser();
+  const rawData: RawLegalData = {
+    id: "law.go.kr:statute-detail:law-4",
+    sourceSystem: "law.go.kr",
+    sourceId: "law-4",
+    rawFormat: "json",
+    content: LAW_4_CHAPTER_HEADING_COLLISION_DETAIL_RESPONSE,
+    collectedAt: "2026-07-13T00:00:00Z",
+  };
+
+  const parsed = await parser.parse(rawData);
+
+  // Only the two real articles (28-9, 29) should be produced — the chapter
+  // heading pseudo-entry must not become a document of its own.
+  assertEqual(
+    parsed.length,
+    2,
+    "expected only the two real articles to be produced (chapter heading skipped)",
+  );
+
+  const ids = parsed.map((p) => p.document.id);
+  assertEqual(
+    new Set(ids).size,
+    ids.length,
+    "expected no duplicate document ids even though the heading and the real article shared 조문번호=29",
+  );
+  assertTruthy(
+    !ids.some((id) => id === "law-4:4"),
+    "chapter number itself (4) must never be produced as an article id",
+  );
+
+  const article29 = parsed.find((p) => p.document.id === "law-4:29");
+  assertTruthy(article29, "expected the real 제29조 article to be retained under id law-4:29");
+  assertTruthy(
+    article29!.document.text.includes("안전성 확보에 필요한 기술적ㆍ관리적 및 물리적 조치"),
+    "expected law-4:29 to carry the real article body text",
+  );
+  assertTruthy(
+    !article29!.document.text.includes("제4장 개인정보의 안전한 관리"),
+    "expected law-4:29 not to be shadowed by the chapter-heading text",
+  );
+  assertEqual(
+    article29!.document.title,
+    "개인정보 보호법 제29조(안전조치의무)",
+    "expected the real article's title, not a heading-derived title",
+  );
+
+  const article28_9 = parsed.find((p) => p.document.id === "law-4:28-9");
+  assertTruthy(
+    article28_9,
+    "expected the unrelated preceding article (28-9) to be parsed normally, unaffected by the collision",
+  );
+  assertTruthy(
+    article28_9!.document.text.includes("보호위원회는 국외 이전이"),
+    "expected law-4:28-9 to retain its own real body text",
+  );
+}
+
 async function validateDetailFetchPartialFailureIsReported(): Promise<void> {
   await withLawGoKrEnv(async () => {
     const httpClient = new RoutedFakeLawGoKrHttpClient(
@@ -589,6 +691,11 @@ async function main(): Promise<void> {
     "[pipeline] Checking a metadata-only detail response is skipped rather than producing a low-quality document...",
   );
   await validateEmptyOrMetadataOnlyDetailIsSkipped();
+
+  console.log(
+    "[pipeline] Checking chapter/section heading pseudo-entries do not overwrite real articles that share their id...",
+  );
+  await validateChapterHeadingsDoNotOverwriteArticles();
 
   console.log("[pipeline] Checking a partial detail-fetch failure is reported accurately...");
   await validateDetailFetchPartialFailureIsReported();

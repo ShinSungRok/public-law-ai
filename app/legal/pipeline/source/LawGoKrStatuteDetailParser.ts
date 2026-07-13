@@ -57,6 +57,36 @@ function padJoSegment(value: string, length: number): string {
   return digits.padStart(length, "0").slice(-length);
 }
 
+// law.go.kr's 조문단위 array interleaves 편/장/절/관 (Part/Chapter/Section/
+// Subsection) heading pseudo-entries alongside real articles, and a heading
+// entry shares 조문번호/조문가지번호 with the real article that follows it
+// (e.g. a "제4장 ..." heading and the real 제29조 both report 조문번호="29").
+// That collision on the same `<statuteId>:<articleNo>` id is what let a
+// heading silently take the place of the real article. Headings carry no
+// 조문제목 and no 항 substructure — only a chapter/section title as their
+// 조문내용 — so they are detected structurally and skipped entirely: they
+// are not meaningful standalone RAG documents.
+const HEADING_CONTENT_PATTERN = /^제\s*\d+\s*(편|장|절|관)\b/;
+
+function looksLikeStructuralHeading(
+  articleContent: string | undefined,
+  articleTitle: string | undefined,
+  paragraphCount: number,
+): boolean {
+  if (articleTitle || paragraphCount > 0 || !articleContent) {
+    return false;
+  }
+  return HEADING_CONTENT_PATTERN.test(articleContent.trim());
+}
+
+function contentRichness(
+  articleContent: string | undefined,
+  paragraphLines: string[],
+): number {
+  const paragraphScore = paragraphLines.length > 0 ? 1 : 0;
+  return paragraphScore * 2 + (articleContent?.length ?? 0) / 10_000;
+}
+
 function findStatuteRoot(parsed: unknown): Record<string, unknown> {
   if (!isRecord(parsed)) {
     return {};
@@ -186,8 +216,11 @@ export class LawGoKrStatuteDetailParser implements PublicLegalDataParser {
     const enforcementDate = toDisplayString(basicInfo["시행일자"]);
 
     const articleItems = findArticleItems(root);
-    const seenArticleIds = new Set<string>();
-    const results: ParsedLegalData[] = [];
+    const orderedIds: string[] = [];
+    const bestByDocumentId = new Map<
+      string,
+      { parsed: ParsedLegalData; richness: number }
+    >();
 
     for (const item of articleItems) {
       const identity = resolveArticleIdentity(item);
@@ -195,14 +228,25 @@ export class LawGoKrStatuteDetailParser implements PublicLegalDataParser {
         continue;
       }
 
-      const documentId = `${data.sourceId}:${identity.display}`;
-      if (seenArticleIds.has(documentId)) {
-        continue;
-      }
-
       const articleTitle = toNonEmptyString(item["조문제목"]);
       const articleContent = toNonEmptyString(item["조문내용"]);
       const paragraphLines = flattenParagraphs(toItemArray(item["항"]));
+
+      if (looksLikeStructuralHeading(articleContent, articleTitle, paragraphLines.length)) {
+        continue;
+      }
+
+      const hasUsableContent = Boolean(articleContent) || paragraphLines.length > 0;
+      if (!hasUsableContent) {
+        continue;
+      }
+
+      const documentId = `${data.sourceId}:${identity.display}`;
+      const richness = contentRichness(articleContent, paragraphLines);
+      const existing = bestByDocumentId.get(documentId);
+      if (existing && existing.richness >= richness) {
+        continue;
+      }
 
       const text = buildArticleText({
         statuteTitle,
@@ -213,13 +257,6 @@ export class LawGoKrStatuteDetailParser implements PublicLegalDataParser {
         articleContent,
         paragraphLines,
       });
-
-      const hasUsableContent = Boolean(articleContent) || paragraphLines.length > 0;
-      if (!hasUsableContent) {
-        continue;
-      }
-
-      seenArticleIds.add(documentId);
 
       const title = `${statuteTitle} 제${identity.display}조${articleTitle ? `(${articleTitle})` : ""}`.trim();
 
@@ -240,13 +277,19 @@ export class LawGoKrStatuteDetailParser implements PublicLegalDataParser {
         },
       };
 
-      results.push({
-        sourceSystem: data.sourceSystem,
-        sourceId: data.sourceId,
-        document,
+      if (!existing) {
+        orderedIds.push(documentId);
+      }
+      bestByDocumentId.set(documentId, {
+        parsed: {
+          sourceSystem: data.sourceSystem,
+          sourceId: data.sourceId,
+          document,
+        },
+        richness,
       });
     }
 
-    return results;
+    return orderedIds.map((documentId) => bestByDocumentId.get(documentId)!.parsed);
   }
 }
