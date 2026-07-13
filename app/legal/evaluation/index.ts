@@ -38,3 +38,19 @@ export {
   buildRetrievalMetricsReport,
   formatRetrievalMetricsReport,
 } from "./RetrievalMetricsReport";
+export {
+  RETRIEVAL_FAILURE_CATEGORIES,
+} from "./RetrievalFailureCategory";
+export type { RetrievalFailureCategory } from "./RetrievalFailureCategory";
+export type { RetrievalCaseAnalysis } from "./RetrievalFailureAnalyzer";
+export { analyzeRetrievalFailures } from "./RetrievalFailureAnalyzer";
+export type {
+  FailureCategoryCount,
+  FailedQuestionSummary,
+  MissedArticleCount,
+  RetrievalFailureReport,
+} from "./RetrievalFailureReport";
+export {
+  buildRetrievalFailureReport,
+  formatRetrievalFailureReport,
+} from "./RetrievalFailureReport";
