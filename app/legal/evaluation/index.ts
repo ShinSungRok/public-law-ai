@@ -111,3 +111,11 @@ export {
   formatBm25RetrievalBenchmarkComparison,
 } from "./Bm25RetrievalBenchmarkComparator";
 export { buildLegacyBm25SearchBody, LegacyBm25SearchEngine } from "./LegacyBm25SearchEngine";
+export type {
+  HybridRrfTuningCandidate,
+  HybridRrfTuningResult,
+} from "./HybridRetrievalBenchmark";
+export {
+  selectBestHybridRrfCandidate,
+  tuneHybridRrfK,
+} from "./HybridRetrievalBenchmark";
