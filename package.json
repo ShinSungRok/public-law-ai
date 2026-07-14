@@ -89,6 +89,7 @@
     "validate:evaluation:rag-dataset": "tsx app/legal/evaluation/runRagEvaluationDatasetValidation.ts",
     "validate:evaluation:retrieval-metrics": "tsx app/legal/evaluation/runRetrievalMetricsValidation.ts",
     "validate:evaluation:retrieval-failures": "tsx app/legal/evaluation/runRetrievalFailureAnalysisValidation.ts",
+    "validate:evaluation:bm25-optimization": "tsx app/legal/evaluation/runOpenSearchBm25OptimizationValidation.ts",
     "validate:evaluation:grounding": "tsx app/legal/evaluation/runGroundingMetricsValidation.ts",
     "validate:evaluation:unified-report": "tsx app/legal/evaluation/runUnifiedEvaluationReportValidation.ts",
     "validate:evaluation:report-regression": "tsx app/legal/evaluation/runUnifiedReportRegressionValidation.ts",
