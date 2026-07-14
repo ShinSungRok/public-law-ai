@@ -97,6 +97,7 @@
     "validate:evaluation:vector-benchmark": "tsx app/legal/evaluation/runVectorRetrievalBenchmarkValidation.ts",
     "validate:evaluation:hybrid-benchmark": "tsx app/legal/evaluation/runHybridRetrievalBenchmarkValidation.ts",
     "validate:evaluation:reranking-benchmark": "tsx app/legal/evaluation/runReRankingBenchmarkValidation.ts",
+    "validate:evaluation:production-benchmark": "tsx app/legal/evaluation/runProductionBenchmarkValidation.ts",
     "validate:evaluation:grounding": "tsx app/legal/evaluation/runGroundingMetricsValidation.ts",
     "validate:evaluation:unified-report": "tsx app/legal/evaluation/runUnifiedEvaluationReportValidation.ts",
     "validate:evaluation:report-regression": "tsx app/legal/evaluation/runUnifiedReportRegressionValidation.ts",

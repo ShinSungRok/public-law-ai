@@ -128,3 +128,17 @@ export {
   selectBestReRankingCandidate,
   tuneReRanking,
 } from "./ReRankingBenchmark";
+export type {
+  LatencyStatistics,
+  ProductionBenchmarkVariantConfig,
+  ProductionBenchmarkOptions,
+  ProductionBenchmarkVariantResult,
+  ProductionBenchmarkReport,
+} from "./ProductionBenchmark";
+export {
+  computeLatencyStatistics,
+  runProductionBenchmarkVariant,
+  runProductionBenchmark,
+  formatProductionBenchmarkVariant,
+  formatProductionBenchmarkReport,
+} from "./ProductionBenchmark";
