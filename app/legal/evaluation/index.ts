@@ -84,3 +84,14 @@ export {
   formatUnifiedEvaluationReport,
 } from "./UnifiedEvaluationReport";
 export { UnifiedEvaluationRunner } from "./UnifiedEvaluationRunner";
+export type {
+  MetricRegressionComparison,
+  MetricRegressionStatus,
+  UnifiedEvaluationReportMetricsView,
+  UnifiedReportRegressionComparison,
+} from "./UnifiedReportRegressionComparator";
+export {
+  DEFAULT_REGRESSION_THRESHOLD,
+  compareUnifiedEvaluationReports,
+  formatUnifiedReportRegressionComparison,
+} from "./UnifiedReportRegressionComparator";
