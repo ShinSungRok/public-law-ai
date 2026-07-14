@@ -24,13 +24,18 @@ documented phase by phase, the way a real team would sequence the work.
   deterministic `FakeAiProvider` for zero-cost, zero-network validation;
   swapping providers touches configuration, not business logic.
 - **Search & retrieval engineering** — a `SearchEngine` abstraction
-  spanning keyword, vector, and hybrid (reciprocal rank fusion) strategies,
-  with OpenSearch as the production backend and a full embedding/chunking
-  pipeline behind it.
+  spanning keyword, vector, hybrid (reciprocal rank fusion), and re-ranked
+  hybrid strategies, with OpenSearch as the production backend and a full
+  embedding/chunking pipeline behind it, each strategy plugged into the
+  same, unmodified `SearchEngineRetriever` as a decorator/composition
+  (`docs/benchmark-report.md` §4).
 - **Evaluation-driven quality** — a generic evaluation framework
   (`EvaluationCase`/`EvaluationResult`/`EvaluationRunner`) with concrete
   precision/recall evaluators for retrieval, search, and RAG-answer
-  quality, plus a regression runner that dispatches across targets.
+  quality, plus a regression runner that dispatches across targets, and a
+  production benchmark framework comparing every retrieval variant on
+  quality, grounding, and latency with a documented, deterministic
+  recommendation rule (`docs/benchmark-report.md`).
 - **Production reliability engineering** — hand-rolled, dependency-free
   retry, timeout, and circuit-breaker primitives with injectable
   clocks/delays for fully deterministic validation — the same concepts
@@ -87,10 +92,17 @@ PostgreSQL, OpenAI API, Anthropic API, Docker/docker-compose, pnpm, ESLint,
   change to `Retriever`, `GenerateRagAnswerUseCase`, or anything downstream.
 - **"What would you do next?"** Bind a real socket-listening server to
   `ProductionServerRuntime`, wire `SecurityReliabilityService`/
-  `ObservabilityService` into the live request path, add authn/authz, and
-  add ranking metrics (MRR/NDCG) to evaluation — all named explicitly as
+  `ObservabilityService` into the live request path, add authn/authz, add
+  NDCG to evaluation, and swap the deterministic fake embedding
+  model/re-ranker for real ones and re-benchmark — all named explicitly as
   future work rather than silently missing (`README.md` "Future
-  Improvements").
+  Improvements", `docs/benchmark-report.md` §8).
+- **"Which retrieval strategy would you actually ship?"** Walk through
+  `docs/benchmark-report.md` §6–7: the benchmark recommends BM25 today
+  because embeddings and re-ranking are deterministic fakes, not because
+  BM25 is expected to beat a real embedding model in production — a good
+  benchmark states that limitation next to the numbers instead of letting a
+  misleading headline result stand alone.
 - **"Why phases instead of one big PR?"** Each phase has an explicit scope
   and non-goal list, its own validation runner(s), and its own doc — the
   same discipline a real team applies to keep large systems reviewable and

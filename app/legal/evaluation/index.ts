@@ -142,3 +142,10 @@ export {
   formatProductionBenchmarkVariant,
   formatProductionBenchmarkReport,
 } from "./ProductionBenchmark";
+export type { FinalBenchmarkReport } from "./FinalBenchmarkReport";
+export {
+  KNOWN_BENCHMARK_LIMITATIONS,
+  selectRecommendedProductionVariant,
+  runFinalBenchmarkReport,
+  formatFinalBenchmarkReport,
+} from "./FinalBenchmarkReport";

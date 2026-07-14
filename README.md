@@ -7,9 +7,11 @@ roles.
 
 ## Release Status
 
-**Status:** Phases 0–23 complete — feature-complete for its portfolio
-scope. Phase 23 closes the project out with a final project-wide
-validation pass and no new features.
+**Status:** Phases 0–30 complete. Phase 23 closed the original portfolio
+scope out with a final project-wide validation pass; Phases 24–30 extended
+retrieval quality (real production wiring, BM25 optimization, vector +
+hybrid + re-ranked retrieval, and a production benchmark framework with a
+final benchmark report).
 
 Run the full release validation suite with:
 
@@ -19,7 +21,8 @@ pnpm validate:release
 
 See [`docs/release.md`](docs/release.md) for the completed phase list,
 validation strategy, known limitations, and future production
-improvements.
+improvements, and [`docs/benchmark-report.md`](docs/benchmark-report.md)
+for the final retrieval benchmark results and recommended configuration.
 
 ## Overview
 
@@ -141,6 +144,13 @@ repository follows.
 | 21 | Security & reliability foundation (retry, timeout, circuit breaker, rate limiting, input validation) |
 | 22 | Portfolio packaging (README, architecture/module/development/deployment/portfolio docs) |
 | 23 | Final production release (release docs, project-wide validation) |
+| 24 | Production RAG runtime integration (real OpenSearch retriever + real Anthropic provider wired into the composition root) |
+| 25 | RAG evaluation against real production data (retrieval metrics, failure analysis, grounding metrics, unified report, regression evaluation) |
+| 26 | BM25 retrieval optimization + benchmark |
+| 27 | Embedding pipeline + vector retrieval |
+| 28 | Hybrid retrieval (Reciprocal Rank Fusion) + benchmark |
+| 29 | Re-ranking pipeline + benchmark |
+| 30 | Production benchmark framework + final benchmark report (see [`docs/benchmark-report.md`](docs/benchmark-report.md)) |
 
 Each completed phase has a corresponding doc under `docs/` and one or more
 `pnpm validate:*` scripts that prove it in-memory.

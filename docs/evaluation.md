@@ -282,7 +282,42 @@ already used by `runInfraMilestoneValidation.ts`,
 introduces no new scoring logic; it only proves the whole framework is wired
 together and still requires no external services.
 
-## 12. Future tasks
+## 12. Retrieval quality upgrade & production benchmarking (Phases 26–30)
+
+Phases 26–30 build on this framework's `retrieval` target (§6) without
+modifying any of its core types (`EvaluationCase`, `EvaluationResult`,
+`EvaluationRunner`) or its scoring functions (`buildRetrievalMetricsReport`,
+`buildRetrievalFailureReport`):
+
+- **Phase 26** — BM25 query tuning, then `Bm25RetrievalBenchmark`
+  (`runBm25RetrievalBenchmarkVariant`), the reusable "run this retriever
+  against a dataset, package metrics + failure analysis into one labeled
+  result" function every later benchmark below calls unmodified.
+- **Phase 27** — the `embedding` module (chunking, embedding, vector
+  indexing) and `VectorSearchEngine`/`OpenSearchVectorSearchEngine`,
+  benchmarked with the same `runBm25RetrievalBenchmarkVariant`.
+- **Phase 28** — `HybridSearchEngine`/`ReciprocalRankFusionStrategy`
+  (BM25 + Vector fusion) and `HybridRetrievalBenchmark`
+  (`tuneHybridRrfK`/`selectBestHybridRrfCandidate`), which benchmarks a
+  small deterministic set of RRF `k` candidates and picks the best by a
+  documented rule: highest Hit Rate, then fewest failures, then highest MRR.
+- **Phase 29** — `ReRankingSearchEngine`/`FakeReRanker` (a candidate-source
+  decorator over any `SearchEngine`) and `ReRankingBenchmark`
+  (`tuneReRanking`/`selectBestReRankingCandidate`), the same tuning-and-select
+  shape as Phase 28 applied to `(candidateTopK, finalTopN)` configurations.
+- **Phase 30** — `ProductionBenchmark` (quality + grounding + retrieval/
+  end-to-end latency for BM25/Vector/Hybrid/Re-ranked Hybrid in one report)
+  and `FinalBenchmarkReport` (that report plus a recommended configuration,
+  selected by the same documented rule, plus documented benchmark
+  limitations).
+
+See [`docs/benchmark-report.md`](benchmark-report.md) for the full
+retrieval-evolution table, the final benchmark numbers, the recommended
+configuration, and — critically — what those numbers do and do not prove
+given this validation suite's deterministic fake embeddings and fake
+re-ranking.
+
+## 13. Future tasks
 
 - **Citation Accuracy Evaluation** — a concrete, standalone `EvaluationRunner`
   for the `citation` target built directly on `CitationExtractor` (not
@@ -291,7 +326,7 @@ together and still requires no external services.
   `RegressionEvaluationRunner`'s `EvaluationRunnerRegistry` like the other
   three targets.
 
-## 13. Scripts
+## 14. Scripts
 
 | Script | Runs | Purpose |
 |---|---|---|
@@ -301,3 +336,9 @@ together and still requires no external services.
 | `pnpm validate:evaluation:rag` | `tsx app/legal/evaluation/runRagAnswerEvaluationValidation.ts` | Validates `RagAnswerEvaluationRunner`'s answer/citation metrics and summary aggregation against `GenerateRagAnswerUseCase` running on fake/in-memory dependencies. |
 | `pnpm validate:evaluation:regression` | `tsx app/legal/evaluation/runRegressionEvaluationValidation.ts` | Validates `RegressionEvaluationRunner` dispatching across retrieval/search/rag-answer cases, cross-target summary aggregation, and the missing-runner error path. |
 | `pnpm validate:evaluation` | `tsx app/legal/evaluation/runEvaluationMilestoneValidation.ts` | Phase 19 milestone runner: sequences all validators above and confirms the framework's scripts/docs are wired together. |
+| `pnpm validate:evaluation:bm25-benchmark` | `tsx app/legal/evaluation/runBm25RetrievalBenchmarkValidation.ts` | Phase 26: BM25 benchmark, reused unmodified by every later benchmark below. |
+| `pnpm validate:evaluation:vector-benchmark` | `tsx app/legal/evaluation/runVectorRetrievalBenchmarkValidation.ts` | Phase 27: Vector retrieval benchmarked against the BM25 baseline. |
+| `pnpm validate:evaluation:hybrid-benchmark` | `tsx app/legal/evaluation/runHybridRetrievalBenchmarkValidation.ts` | Phase 28: Hybrid (RRF) `k` tuning sweep and selection. |
+| `pnpm validate:evaluation:reranking-benchmark` | `tsx app/legal/evaluation/runReRankingBenchmarkValidation.ts` | Phase 29: Re-ranking `(candidateTopK, finalTopN)` tuning sweep and selection. |
+| `pnpm validate:evaluation:production-benchmark` | `tsx app/legal/evaluation/runProductionBenchmarkValidation.ts` | Phase 30 Task 1: quality + grounding + latency for BM25/Vector/Hybrid/Re-ranked Hybrid. |
+| `pnpm validate:evaluation:final-benchmark-report` | `tsx app/legal/evaluation/runFinalBenchmarkReportValidation.ts` | Phase 30 Task 2: the final report — see [`docs/benchmark-report.md`](benchmark-report.md). |
