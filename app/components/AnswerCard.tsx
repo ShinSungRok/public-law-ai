@@ -1,19 +1,16 @@
-import { CitationList } from "./CitationList";
-
 interface AnswerCardProps {
   loading: boolean;
   answer: string;
-  citations: string[];
 }
 
-export function AnswerCard({ loading, answer, citations }: AnswerCardProps) {
+export function AnswerCard({ loading, answer }: AnswerCardProps) {
   if (!loading && !answer) {
     return null;
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-navy-900/10 border-l-[6px] border-l-gold-600 bg-white shadow-sm shadow-navy-900/5">
-      <div className="px-5 py-5 sm:px-6">
+    <div className="animate-fade-in-up overflow-hidden rounded-2xl border border-navy-900/10 border-l-[6px] border-l-gold-600 bg-white shadow-sm shadow-navy-900/5">
+      <div className="px-6 py-6 sm:px-8">
         <div className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-navy-700 uppercase">
           <span
             aria-hidden="true"
@@ -25,7 +22,7 @@ export function AnswerCard({ loading, answer, citations }: AnswerCardProps) {
         </div>
 
         {loading && !answer ? (
-          <div role="status" aria-live="polite" className="flex flex-col gap-2.5">
+          <div role="status" aria-live="polite" className="flex max-w-3xl flex-col gap-2.5">
             <span className="sr-only">Consulting retrieved statutes…</span>
             <div aria-hidden="true" className="h-3.5 w-11/12 animate-pulse rounded bg-mist-200" />
             <div aria-hidden="true" className="h-3.5 w-4/5 animate-pulse rounded bg-mist-200" />
@@ -37,7 +34,7 @@ export function AnswerCard({ loading, answer, citations }: AnswerCardProps) {
         ) : (
           <div
             aria-live="polite"
-            className="text-[15px] leading-relaxed whitespace-pre-wrap text-navy-900"
+            className="max-w-3xl text-[15px] leading-relaxed whitespace-pre-wrap text-navy-900"
           >
             {answer}
             {loading && (
@@ -48,8 +45,6 @@ export function AnswerCard({ loading, answer, citations }: AnswerCardProps) {
           </div>
         )}
       </div>
-
-      <CitationList citations={citations} />
     </div>
   );
 }

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8fa;
-  --foreground: #14264a;
+  --background: #fffdf9;
+  --foreground: #162447;
 }
 
 @theme inline {
@@ -12,31 +12,82 @@
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-lora);
 
-  /* Legal-tech brand palette: navy, ivory, muted gold, soft gray. */
-  --color-navy-950: #0b1830;
-  --color-navy-900: #0f2145;
-  --color-navy-800: #14264a;
-  --color-navy-700: #1f3763;
-  --color-navy-600: #2a4f92;
-  --color-navy-500: #3a63ac;
+  /* Legal-tech SaaS brand palette: deep navy, warm gold, ivory, soft gray. */
+  --color-navy-950: #0c1730;
+  --color-navy-900: #101d3a;
+  --color-navy-800: #162447;
+  --color-navy-700: #24356b;
+  --color-navy-600: #35497a;
+  --color-navy-500: #4a5f96;
 
-  --color-gold-400: #e3cd94;
-  --color-gold-500: #cbab63;
-  --color-gold-600: #b99a5b;
-  --color-gold-700: #96773d;
+  --color-gold-700: #96772a;
+  --color-gold-600: #c9a227;
+  --color-gold-500: #d7b656;
+  --color-gold-400: #e6ce8a;
 
-  --color-ivory-50: #fdfcf8;
-  --color-ivory-100: #f8efdd;
-  --color-ivory-200: #f1e3c6;
+  --color-ivory-50: #fffdf9;
+  --color-ivory-100: #fbf3e3;
+  --color-ivory-200: #f3e4c4;
 
-  --color-mist-50: #f7f8fa;
-  --color-mist-100: #eef0f3;
-  --color-mist-200: #e2e5ea;
-  --color-mist-300: #cdd2da;
+  --color-mist-50: #f7f7f8;
+  --color-mist-100: #eeeff1;
+  --color-mist-200: #e1e3e7;
+  --color-mist-300: #c9ccd2;
+
+  --animate-fade-in-up: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.7s ease-out both;
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

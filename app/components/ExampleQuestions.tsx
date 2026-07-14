@@ -23,7 +23,7 @@ export function ExampleQuestions({ onSelect, disabled }: ExampleQuestionsProps) 
             type="button"
             disabled={disabled}
             onClick={() => onSelect(question)}
-            className="rounded-full border border-navy-900/15 bg-white px-3.5 py-1.5 text-sm text-navy-800 transition-colors hover:border-gold-600/50 hover:bg-gold-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-navy-900/15 bg-white px-3.5 py-1.5 text-sm text-navy-800 shadow-sm transition-all hover:-translate-y-0.5 hover:border-gold-600/50 hover:bg-gold-500/10 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             {question}
           </button>
