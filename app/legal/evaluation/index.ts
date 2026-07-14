@@ -95,3 +95,19 @@ export {
   compareUnifiedEvaluationReports,
   formatUnifiedReportRegressionComparison,
 } from "./UnifiedReportRegressionComparator";
+export type { Bm25BenchmarkVariantResult } from "./Bm25RetrievalBenchmark";
+export {
+  buildBm25BenchmarkVariantResult,
+  runBm25RetrievalBenchmarkVariant,
+  formatBm25BenchmarkVariant,
+  formatBm25BenchmarkVariantDetailed,
+} from "./Bm25RetrievalBenchmark";
+export type {
+  Bm25BenchmarkMetricDelta,
+  Bm25RetrievalBenchmarkComparison,
+} from "./Bm25RetrievalBenchmarkComparator";
+export {
+  compareBm25BenchmarkVariants,
+  formatBm25RetrievalBenchmarkComparison,
+} from "./Bm25RetrievalBenchmarkComparator";
+export { buildLegacyBm25SearchBody, LegacyBm25SearchEngine } from "./LegacyBm25SearchEngine";
