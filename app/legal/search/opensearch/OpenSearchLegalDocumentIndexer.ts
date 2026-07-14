@@ -21,6 +21,19 @@ export class OpenSearchLegalDocumentIndexer {
     );
   }
 
+  /** Same keyword fields as {@link index}, plus the document's dense vector. */
+  async indexWithEmbedding(
+    document: LegalDocument,
+    embedding: number[],
+  ): Promise<void> {
+    const converted = toOpenSearchLegalDocument(document, embedding);
+    await this.client.indexDocument(
+      this.config.indexName,
+      converted.id,
+      converted,
+    );
+  }
+
   async indexAll(
     documents: LegalDocument[],
     options: OpenSearchBatchIndexOptions = {},
@@ -36,7 +49,7 @@ export class OpenSearchLegalDocumentIndexer {
       console.log(`[indexAll] Batch ${batchNumber}/${totalBatchCount}`);
 
       const chunk = documents.slice(offset, offset + batchSize);
-      let remaining = chunk.map(toOpenSearchLegalDocument);
+      let remaining = chunk.map((document) => toOpenSearchLegalDocument(document));
 
       for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
         if (remaining.length === 0) {

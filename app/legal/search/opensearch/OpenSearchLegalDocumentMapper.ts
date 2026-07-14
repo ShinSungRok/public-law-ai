@@ -3,6 +3,7 @@ import type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
 
 export function toOpenSearchLegalDocument(
   document: LegalDocument,
+  embedding?: number[],
 ): OpenSearchLegalDocument {
   return {
     id: document.id,
@@ -11,5 +12,6 @@ export function toOpenSearchLegalDocument(
     text: document.text,
     sourceType: document.sourceRef.sourceType,
     sourceId: document.sourceRef.sourceId,
+    ...(embedding !== undefined ? { embedding } : {}),
   };
 }

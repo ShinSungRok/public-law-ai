@@ -5,4 +5,6 @@ export interface OpenSearchLegalDocument {
   text: string;
   sourceType: string;
   sourceId: string;
+  /** Dense vector for kNN retrieval; absent for keyword-only indexed documents. */
+  embedding?: number[];
 }

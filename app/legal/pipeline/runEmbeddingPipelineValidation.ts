@@ -5,7 +5,7 @@ import {
   BatchEmbeddingService,
   ChunkEmbeddingPipeline,
   EmbeddingService,
-  FakeEmbeddingModel,
+  FakeEmbeddingProvider,
   FakeVectorIndexer,
   SingleChunkChunkingService,
 } from "../embedding";
@@ -28,8 +28,8 @@ async function main(): Promise<void> {
     },
   };
 
-  const embeddingModel = new FakeEmbeddingModel();
-  const embeddingService = new EmbeddingService(embeddingModel);
+  const embeddingProvider = new FakeEmbeddingProvider();
+  const embeddingService = new EmbeddingService(embeddingProvider);
   const batchEmbeddingService = new BatchEmbeddingService(embeddingService);
   const chunkingService = new SingleChunkChunkingService();
   const chunkEmbeddingPipeline = new ChunkEmbeddingPipeline(

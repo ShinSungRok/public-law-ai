@@ -1,5 +1,6 @@
-export type { EmbeddingModel } from "./EmbeddingModel";
-export { FakeEmbeddingModel } from "./FakeEmbeddingModel";
+export type { EmbeddingProvider } from "./EmbeddingProvider";
+export { FakeEmbeddingProvider } from "./FakeEmbeddingProvider";
+export { EMBEDDING_VECTOR_DIMENSION } from "./EmbeddingVectorDimension";
 export type { EmbeddingVector } from "./EmbeddingVector";
 export { EmbeddingService } from "./EmbeddingService";
 export { BatchEmbeddingService } from "./BatchEmbeddingService";
