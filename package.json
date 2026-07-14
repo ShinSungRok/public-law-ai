@@ -19,6 +19,7 @@
     "pipeline:law:search:postgres": "tsx app/legal/pipeline/runLawGoKrStatuteSearchWithPostgreSQLPersistence.ts",
     "pipeline:law:search:opensearch": "tsx app/legal/pipeline/runLawGoKrOpenSearchIndexing.ts",
     "validate:pipeline:law-go-kr-opensearch-indexing": "tsx app/legal/pipeline/runLawGoKrOpenSearchIndexingValidation.ts",
+    "validate:pipeline:law-go-kr-postgresql-persistence": "tsx app/legal/pipeline/runLawGoKrPostgreSQLPersistenceValidation.ts",
     "db:legal:init": "tsx app/legal/pipeline/runPostgreSQLLegalDocumentSchemaInit.ts",
     "db:legal:reindex": "tsx app/legal/pipeline/runPostgreSQLLegalDocumentReindex.ts",
     "db:legal:init:all": "tsx app/legal/pipeline/runPostgreSQLLegalSchemaInitAll.ts",
