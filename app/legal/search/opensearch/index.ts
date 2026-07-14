@@ -13,11 +13,16 @@ export type { OpenSearchClient } from "./OpenSearchClient";
 export { OpenSearchIndexManager } from "./OpenSearchIndexManager";
 export { OpenSearchLegalDocumentIndexer } from "./OpenSearchLegalDocumentIndexer";
 export { buildOpenSearchKeywordSearchBody } from "./OpenSearchSearchBodyBuilder";
+export { buildOpenSearchVectorSearchBody } from "./OpenSearchVectorSearchBodyBuilder";
 export { OpenSearchSearchEngine } from "./OpenSearchSearchEngine";
+export { OpenSearchVectorSearchEngine } from "./OpenSearchVectorSearchEngine";
 export type {
   OpenSearchHit,
   OpenSearchSearchResponse,
 } from "./OpenSearchSearchResponse";
 export { FakeOpenSearchClient } from "./FakeOpenSearchClient";
-export { toSearchResults } from "./OpenSearchSearchResponseMapper";
+export {
+  isOpenSearchSearchResponse,
+  toSearchResults,
+} from "./OpenSearchSearchResponseMapper";
 export { OpenSearchSdkClient } from "./OpenSearchSdkClient";

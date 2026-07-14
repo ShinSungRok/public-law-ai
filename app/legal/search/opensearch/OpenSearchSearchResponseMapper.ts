@@ -4,6 +4,19 @@ import type { SearchHit } from "../SearchHit";
 import type { OpenSearchHit, OpenSearchSearchResponse } from "./OpenSearchSearchResponse";
 import type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
 
+/** Shared by every OpenSearchClient.search() caller (keyword, vector, ...) to validate the raw response shape before mapping it. */
+export function isOpenSearchSearchResponse(
+  value: unknown,
+): value is OpenSearchSearchResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "hits" in value &&
+    typeof (value as { hits: unknown }).hits === "object" &&
+    (value as { hits: unknown }).hits !== null
+  );
+}
+
 function toLegalDocument(source: OpenSearchLegalDocument): LegalDocument {
   return {
     id: source.id,

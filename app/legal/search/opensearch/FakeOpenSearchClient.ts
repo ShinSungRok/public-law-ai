@@ -183,6 +183,58 @@ function scoreDocument(
   return best + tieBreaker * rest;
 }
 
+interface KnnSearchBodyShape {
+  size?: number;
+  query?: {
+    knn?: Record<string, { vector?: number[]; k?: number }>;
+  };
+}
+
+interface KnnQuery {
+  field: string;
+  vector: number[];
+  k: number;
+}
+
+function extractKnnQuery(body: unknown): KnnQuery | undefined {
+  if (typeof body !== "object" || body === null) {
+    return undefined;
+  }
+  const knn = (body as KnnSearchBodyShape).query?.knn;
+  if (!knn) {
+    return undefined;
+  }
+
+  const [field, clause] = Object.entries(knn)[0] ?? [];
+  if (!field || !clause?.vector) {
+    return undefined;
+  }
+
+  return { field, vector: clause.vector, k: clause.k ?? extractSize(body) };
+}
+
+function dotProduct(a: number[], b: number[]): number {
+  return a.reduce((sum, value, index) => sum + value * (b[index] ?? 0), 0);
+}
+
+function magnitude(vector: number[]): number {
+  return Math.sqrt(dotProduct(vector, vector));
+}
+
+/** Cosine similarity in [-1, 1]; 0 when either vector has no magnitude to compare a direction against. */
+function cosineSimilarity(a: number[], b: number[]): number {
+  const denominator = magnitude(a) * magnitude(b);
+  return denominator === 0 ? 0 : dotProduct(a, b) / denominator;
+}
+
+function vectorFieldValue(
+  document: OpenSearchLegalDocument,
+  field: string,
+): number[] | undefined {
+  const value = (document as unknown as Record<string, unknown>)[field];
+  return Array.isArray(value) ? (value as number[]) : undefined;
+}
+
 export class FakeOpenSearchClient implements OpenSearchClient {
   private readonly indices = new Map<string, unknown>();
   private readonly documents = new Map<
@@ -226,6 +278,11 @@ export class FakeOpenSearchClient implements OpenSearchClient {
       return { hits: { hits: [] } };
     }
 
+    const knnQuery = extractKnnQuery(body);
+    if (knnQuery) {
+      return this.searchByVector(Array.from(indexDocuments.values()), knnQuery);
+    }
+
     const tokens = tokenize(extractQueryText(body));
     const size = extractSize(body);
     const fields = extractFieldBoosts(body);
@@ -250,6 +307,30 @@ export class FakeOpenSearchClient implements OpenSearchClient {
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, size)
+      .map(({ document, score }) => ({
+        _id: document.id,
+        _score: score,
+        _source: document,
+      }));
+
+    return { hits: { hits } };
+  }
+
+  /** Deterministic kNN stand-in: ranks by cosine similarity against each document's stored vector field. */
+  private searchByVector(
+    documents: OpenSearchLegalDocument[],
+    knnQuery: KnnQuery,
+  ): { hits: { hits: OpenSearchHit[] } } {
+    const hits: OpenSearchHit[] = documents
+      .map((document) => {
+        const vector = vectorFieldValue(document, knnQuery.field);
+        return vector === undefined
+          ? undefined
+          : { document, score: cosineSimilarity(knnQuery.vector, vector) };
+      })
+      .filter((entry): entry is { document: OpenSearchLegalDocument; score: number } => entry !== undefined)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, knnQuery.k)
       .map(({ document, score }) => ({
         _id: document.id,
         _score: score,

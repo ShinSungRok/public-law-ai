@@ -3,21 +3,11 @@ import type { SearchHit } from "../SearchHit";
 import type { SearchQuery } from "../SearchQuery";
 import type { OpenSearchClient } from "./OpenSearchClient";
 import type { OpenSearchConfig } from "./OpenSearchConfig";
-import type { OpenSearchSearchResponse } from "./OpenSearchSearchResponse";
 import { buildOpenSearchKeywordSearchBody } from "./OpenSearchSearchBodyBuilder";
-import { toSearchResults } from "./OpenSearchSearchResponseMapper";
-
-function isOpenSearchSearchResponse(
-  value: unknown,
-): value is OpenSearchSearchResponse {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "hits" in value &&
-    typeof (value as { hits: unknown }).hits === "object" &&
-    (value as { hits: unknown }).hits !== null
-  );
-}
+import {
+  isOpenSearchSearchResponse,
+  toSearchResults,
+} from "./OpenSearchSearchResponseMapper";
 
 export class OpenSearchSearchEngine implements SearchEngine {
   constructor(

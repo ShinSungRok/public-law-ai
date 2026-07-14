@@ -28,7 +28,10 @@ export {
   OpenSearchIndexManager,
   OpenSearchLegalDocumentIndexer,
   buildOpenSearchKeywordSearchBody,
+  buildOpenSearchVectorSearchBody,
   OpenSearchSearchEngine,
+  OpenSearchVectorSearchEngine,
   FakeOpenSearchClient,
+  isOpenSearchSearchResponse,
   toSearchResults,
 } from "./opensearch";
