@@ -12,3 +12,15 @@ export function toSearchResult(
     source,
   };
 }
+
+/** Inverse of toSearchResult — lets a SearchResult-based pipeline (e.g. HybridSearchEngine) still satisfy the SearchEngine/SearchHit contract. */
+export function toSearchHit(searchResult: SearchResult): SearchHit {
+  return {
+    id: searchResult.document.id,
+    document: searchResult.document,
+    score: searchResult.score,
+    highlights: [],
+    matchedFields: [],
+    metadata: { source: searchResult.source },
+  };
+}

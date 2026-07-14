@@ -15,6 +15,8 @@ export { DefaultSearchResultFilter } from "./DefaultSearchResultFilter";
 export type { SearchResultSorter } from "./SearchResultSorter";
 export { ScoreDescendingSearchResultSorter } from "./ScoreDescendingSearchResultSorter";
 export { toRetrievalResult } from "./SearchResultMapper";
+export type { SearchResult, SearchSource } from "./model";
+export { toSearchResult, toSearchHit } from "./model";
 export type {
   OpenSearchConfig,
   OpenSearchLegalDocument,
