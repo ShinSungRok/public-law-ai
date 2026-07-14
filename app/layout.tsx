@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,9 +12,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "Public Law AI",
-  description: "Prototype legal Q&A assistant",
+  title: "Public Law AI — Your AI Law Professor",
+  description:
+    "Ask Korean legal questions and get grounded, cited answers from an AI legal assistant backed by real statute retrieval.",
 };
 
 export default function RootLayout({
@@ -25,9 +31,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col bg-mist-50 text-navy-800">
+        {children}
+      </body>
     </html>
   );
 }

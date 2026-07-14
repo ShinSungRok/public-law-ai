@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
+import { AnswerCard } from "@/app/components/AnswerCard";
+import { ExampleQuestions } from "@/app/components/ExampleQuestions";
+import { HeroSection } from "@/app/components/HeroSection";
+import { LegalDisclaimer } from "@/app/components/LegalDisclaimer";
+import { SiteHeader } from "@/app/components/SiteHeader";
+import { extractCitations } from "@/app/lib/citationExtractor";
 
 export default function Home() {
   const [question, setQuestion] = useState("");
@@ -8,10 +14,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!question.trim() || loading) return;
+  const citations = useMemo(() => extractCitations(answer), [answer]);
 
+  async function ask(query: string) {
+    if (!query.trim() || loading) return;
+
+    setQuestion(query);
     setLoading(true);
     setError("");
     setAnswer("");
@@ -20,7 +28,7 @@ export default function Home() {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: query }),
       });
 
       if (!res.ok || !res.body) {
@@ -42,52 +50,83 @@ export default function Home() {
     }
   }
 
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    void ask(question);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex w-full max-w-2xl flex-col gap-6 px-6 py-16">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-            Legal Q&A (Prototype)
-          </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Ask a general legal question. This is an early prototype.
-          </p>
-        </div>
+    <div className="flex flex-1 flex-col">
+      <SiteHeader />
+      <HeroSection />
 
-        <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-          <strong>Not legal advice.</strong> This answer is generated
-          directly by an AI model from its general training data. It is{" "}
-          <strong>not</strong> based on retrieved statutes, case law, or any
-          verified legal source, and may be inaccurate or out of date. Always
-          verify with a licensed attorney or primary source.
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <textarea
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="e.g. What is the statute of limitations for a contract dispute?"
-            rows={3}
-            className="w-full resize-none rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 outline-none focus:border-zinc-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
-          />
-          <button
-            type="submit"
-            disabled={loading || !question.trim()}
-            className="self-start rounded-full bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-300"
+      <main id="ask" className="flex w-full flex-1 justify-center px-6 py-12 sm:py-16">
+        <div className="flex w-full max-w-2xl flex-col gap-6">
+          <section
+            aria-labelledby="ask-heading"
+            className="flex flex-col gap-4 rounded-2xl border border-navy-900/10 bg-white p-5 shadow-sm shadow-navy-900/5 sm:p-6"
           >
-            {loading ? "Thinking…" : "Ask"}
-          </button>
-        </form>
+            <div>
+              <h2 id="ask-heading" className="font-serif text-lg font-semibold text-navy-900">
+                Ask a legal question
+              </h2>
+              <p className="mt-1 text-sm text-navy-700/70">
+                Answers are grounded in retrieved statute text where available.
+              </p>
+            </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <label htmlFor="question" className="sr-only">
+                Your legal question
+              </label>
+              <textarea
+                id="question"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="e.g. 개인정보 보호법 제29조의 안전조치의무는 무엇인가?"
+                rows={3}
+                className="w-full resize-none rounded-xl border border-navy-900/15 bg-mist-50 px-4 py-3 text-sm text-navy-900 outline-none placeholder:text-navy-700/40 focus:border-gold-600/60 focus:bg-white focus:ring-2 focus:ring-gold-500/20"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={loading || !question.trim()}
+                  className="inline-flex items-center gap-2 self-start rounded-full bg-navy-800 px-5 py-2.5 text-sm font-medium text-ivory-50 shadow-sm transition-colors hover:bg-navy-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <span
+                        aria-hidden="true"
+                        className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ivory-50/40 border-t-ivory-50"
+                      />
+                      Consulting…
+                    </>
+                  ) : (
+                    "Ask the professor"
+                  )}
+                </button>
+              </div>
+            </form>
 
-        {(answer || loading) && (
-          <div className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap text-zinc-900 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50">
-            {answer}
-            {loading && <span className="animate-pulse">▍</span>}
-          </div>
-        )}
+            <ExampleQuestions onSelect={(q) => void ask(q)} disabled={loading} />
+          </section>
+
+          {error && (
+            <p role="alert" className="text-sm font-medium text-red-700">
+              {error}
+            </p>
+          )}
+
+          <AnswerCard loading={loading} answer={answer} citations={citations} />
+
+          <LegalDisclaimer />
+        </div>
       </main>
+
+      <footer className="border-t border-navy-900/10 bg-ivory-50 px-6 py-6 text-center text-xs text-navy-700/60">
+        Public Law AI — retrieval-augmented legal Q&amp;A, built as a portfolio
+        project.
+      </footer>
     </div>
   );
 }

@@ -1,0 +1,77 @@
+<svg viewBox="0 0 400 480" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="professorTitle">
+  <title id="professorTitle">Illustration of a calm, dignified AI law professor in a doctoral gown with round glasses and a law book</title>
+
+  <!-- backdrop medallion -->
+  <circle cx="200" cy="244" r="196" fill="#EEF0F3" />
+  <circle cx="200" cy="244" r="196" fill="none" stroke="#B99A5B" stroke-opacity="0.35" stroke-width="2" />
+
+  <!-- academic hood behind shoulders -->
+  <path d="M108 296 C 126 380, 274 380, 292 296 L 302 424 C 250 462, 150 462, 98 424 Z" fill="#B99A5B" />
+  <path d="M120 300 C 136 372, 264 372, 280 300 L 288 402 C 244 434, 156 434, 112 402 Z" fill="#14264A" />
+
+  <!-- gown shoulders / body -->
+  <path d="M92 362 C 92 300, 140 258, 200 258 C 260 258, 308 300, 308 362 L 324 478 L 76 478 Z" fill="#14264A" />
+
+  <!-- gown center placket + buttons -->
+  <path d="M200 264 L 190 478 L 210 478 L 200 264 Z" fill="#1F3763" />
+  <circle cx="200" cy="332" r="4" fill="#B99A5B" />
+  <circle cx="200" cy="372" r="4" fill="#B99A5B" />
+  <circle cx="200" cy="412" r="4" fill="#B99A5B" />
+
+  <!-- neck -->
+  <rect x="184" y="214" width="32" height="48" rx="10" fill="#F1E3C6" />
+
+  <!-- gold collar trim -->
+  <path d="M150 270 C 165 294, 235 294, 250 270 L 240 258 C 226 273, 174 273, 160 258 Z" fill="#B99A5B" />
+
+  <!-- book held at chest -->
+  <g>
+    <rect x="150" y="360" width="100" height="72" rx="6" fill="#F8EFDD" stroke="#B99A5B" stroke-width="3" />
+    <rect x="150" y="360" width="14" height="72" rx="4" fill="#14264A" />
+    <line x1="176" y1="378" x2="234" y2="378" stroke="#B99A5B" stroke-width="2" />
+    <line x1="176" y1="394" x2="234" y2="394" stroke="#B99A5B" stroke-width="2" opacity="0.7" />
+    <line x1="176" y1="410" x2="220" y2="410" stroke="#B99A5B" stroke-width="2" opacity="0.7" />
+  </g>
+
+  <!-- head -->
+  <circle cx="200" cy="172" r="80" fill="#F1E3C6" />
+
+  <!-- ears -->
+  <circle cx="122" cy="176" r="11" fill="#F1E3C6" />
+  <circle cx="278" cy="176" r="11" fill="#F1E3C6" />
+
+  <!-- hair -->
+  <path d="M124 150 C 116 90, 160 56, 200 56 C 240 56, 284 90, 276 150 C 266 128, 240 118, 200 118 C 160 118, 134 128, 124 150 Z" fill="#AEB4BF" />
+
+  <!-- eyebrows -->
+  <path d="M154 168 C 164 160, 180 160, 190 166" stroke="#14264A" stroke-width="4" stroke-linecap="round" />
+  <path d="M210 166 C 220 160, 236 160, 246 168" stroke="#14264A" stroke-width="4" stroke-linecap="round" />
+
+  <!-- glasses -->
+  <rect x="146" y="178" width="46" height="34" rx="14" fill="#F8EFDD" fill-opacity="0.35" stroke="#B99A5B" stroke-width="4" />
+  <rect x="208" y="178" width="46" height="34" rx="14" fill="#F8EFDD" fill-opacity="0.35" stroke="#B99A5B" stroke-width="4" />
+  <line x1="192" y1="194" x2="208" y2="194" stroke="#B99A5B" stroke-width="4" />
+  <line x1="146" y1="186" x2="128" y2="182" stroke="#B99A5B" stroke-width="3" stroke-linecap="round" />
+  <line x1="254" y1="186" x2="272" y2="182" stroke="#B99A5B" stroke-width="3" stroke-linecap="round" />
+
+  <!-- eyes -->
+  <circle cx="169" cy="196" r="5" fill="#14264A" />
+  <circle cx="231" cy="196" r="5" fill="#14264A" />
+  <circle cx="171" cy="194" r="1.4" fill="#F8EFDD" />
+  <circle cx="233" cy="194" r="1.4" fill="#F8EFDD" />
+
+  <!-- nose -->
+  <path d="M200 202 C 198 211, 197 217, 202 220" stroke="#D8BE94" stroke-width="3" stroke-linecap="round" fill="none" />
+
+  <!-- mouth: calm, dignified, closed smile -->
+  <path d="M182 228 C 192 236, 208 236, 218 228" stroke="#14264A" stroke-width="4" stroke-linecap="round" fill="none" />
+
+  <!-- mortarboard cap -->
+  <g>
+    <path d="M200 40 L 300 78 L 200 116 L 100 78 Z" fill="#14264A" />
+    <ellipse cx="200" cy="80" rx="46" ry="14" fill="#1F3763" />
+    <circle cx="200" cy="80" r="7" fill="#B99A5B" />
+    <path d="M200 80 C 214 98, 214 120, 206 134" stroke="#B99A5B" stroke-width="3" fill="none" stroke-linecap="round" />
+    <circle cx="206" cy="136" r="5" fill="#B99A5B" />
+  </g>
+</svg>
