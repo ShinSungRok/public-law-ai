@@ -17,6 +17,14 @@ export const OPEN_SEARCH_LEGAL_INDEX_MAPPING = {
       embedding: {
         type: "knn_vector",
         dimension: EMBEDDING_VECTOR_DIMENSION,
+        // Explicit so a real OpenSearch cluster ranks by the same metric
+        // FakeOpenSearchClient's searchByVector already uses (cosine
+        // similarity) — space_type otherwise defaults to l2 (Euclidean).
+        method: {
+          name: "hnsw",
+          engine: "lucene",
+          space_type: "cosinesimil",
+        },
       },
     },
   },

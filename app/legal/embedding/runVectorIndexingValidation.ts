@@ -127,7 +127,7 @@ async function main(): Promise<void> {
   const embeddingFieldMapping = (
     OPEN_SEARCH_LEGAL_INDEX_MAPPING.mappings.properties as Record<
       string,
-      { type: string; dimension?: number }
+      { type: string; dimension?: number; method?: { name?: string; engine?: string; space_type?: string } }
     >
   ).embedding;
   assertTruthy(embeddingFieldMapping, "expected mapping to declare an `embedding` field");
@@ -136,6 +136,16 @@ async function main(): Promise<void> {
     embeddingFieldMapping.dimension,
     EMBEDDING_VECTOR_DIMENSION,
     "expected embedding field dimension to match EMBEDDING_VECTOR_DIMENSION",
+  );
+
+  console.log(
+    "[opensearch] Checking the mapping explicitly declares cosine similarity (matching FakeOpenSearchClient's cosine scoring)...",
+  );
+  assertTruthy(embeddingFieldMapping.method, "expected embedding field to declare a `method`");
+  assertEqual(
+    embeddingFieldMapping.method?.space_type,
+    "cosinesimil",
+    "expected embedding field method.space_type to be cosinesimil",
   );
 
   const client = new FakeOpenSearchClient();
