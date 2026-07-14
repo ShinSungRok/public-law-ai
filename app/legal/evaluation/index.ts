@@ -119,3 +119,12 @@ export {
   selectBestHybridRrfCandidate,
   tuneHybridRrfK,
 } from "./HybridRetrievalBenchmark";
+export type {
+  ReRankingTuningCandidateConfig,
+  ReRankingTuningCandidate,
+  ReRankingTuningResult,
+} from "./ReRankingBenchmark";
+export {
+  selectBestReRankingCandidate,
+  tuneReRanking,
+} from "./ReRankingBenchmark";
