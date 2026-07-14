@@ -210,6 +210,59 @@ function assertExistingPipelineReuse(): void {
   );
 }
 
+function readReindexRunnerSource(): string {
+  return readFileSync(
+    path.resolve(process.cwd(), "app/legal/pipeline/runPostgreSQLLegalDocumentReindex.ts"),
+    "utf8",
+  );
+}
+
+/**
+ * Proves the reindex CLI (pnpm db:legal:reindex) composes real dependencies
+ * — createOpenSearchConfigFromEnv/OpenSearchSdkClient, reused unmodified —
+ * rather than falling through to runPostgreSQLLegalDocumentReindex's own
+ * FakeOpenSearchClient default, which must still exist (and does — see
+ * validatePostgreSQLReindexProducesArticleLevelOpenSearchDocuments below,
+ * which exercises that exact default/injection path) for validations to
+ * keep working. A source-text check, not a live run: main() intentionally
+ * makes a real network/OpenSearch call, so it is exercised for real
+ * separately (pnpm db:legal:reindex against real infra), not from this
+ * dependency-free validation suite.
+ */
+function assertReindexCliUsesRealOpenSearchComposition(): void {
+  const source = readReindexRunnerSource();
+
+  for (const reference of ["createOpenSearchConfigFromEnv", "OpenSearchSdkClient"]) {
+    assertTruthy(
+      source.includes(reference),
+      `runPostgreSQLLegalDocumentReindex.ts does not reuse the existing ${reference}`,
+    );
+  }
+
+  const mainMatch = source.match(/async function main\(\): Promise<void> \{([\s\S]*?)\n\}\n\nif \(require\.main/);
+  assertTruthy(mainMatch, "runPostgreSQLLegalDocumentReindex.ts must define a main() entrypoint guarded by require.main");
+  const mainBody = mainMatch![1];
+
+  assertTruthy(
+    mainBody.includes("new OpenSearchSdkClient("),
+    "expected main() to construct the real OpenSearchSdkClient rather than relying on any default",
+  );
+  assertTruthy(
+    mainBody.includes("createOpenSearchConfigFromEnv()"),
+    "expected main() to read the real, environment-configured OpenSearchConfig",
+  );
+  assertTruthy(
+    !/runPostgreSQLLegalDocumentReindex\(\)/.test(mainBody),
+    "expected main() to pass explicit real dependencies (openSearchClient, openSearchConfig), not call runPostgreSQLLegalDocumentReindex() with its fake-defaulting no-args form",
+  );
+  assertTruthy(
+    !mainBody.includes("FakeOpenSearchClient"),
+    "expected main() to never reference FakeOpenSearchClient — the fake default must only be reachable via runPostgreSQLLegalDocumentReindex()'s own no-args default, used by validations/tests",
+  );
+
+  console.log("[pipeline] Reindex CLI composition validated: main() always wires the real OpenSearchSdkClient/createOpenSearchConfigFromEnv, never the fake default.");
+}
+
 async function validateFullPersistenceEndToEnd(): Promise<{
   repository: FakeLegalDocumentRepository;
   summary: LawGoKrPostgreSQLPersistenceSummary;
@@ -440,8 +493,11 @@ async function main(): Promise<void> {
   console.log("[pipeline] Checking the reused LawGoKrStatuteDetailParser's chapter-heading protection is unmodified...");
   await validateDetailParserChapterHeadingProtectionUnmodified();
 
-  console.log("[pipeline] Checking PostgreSQL reindex rebuilds article-level OpenSearch documents...");
+  console.log("[pipeline] Checking PostgreSQL reindex rebuilds article-level OpenSearch documents (injected fake dependencies)...");
   await validatePostgreSQLReindexProducesArticleLevelOpenSearchDocuments(repository);
+
+  console.log("[pipeline] Checking the reindex CLI (pnpm db:legal:reindex) composes the real OpenSearch client/config...");
+  assertReindexCliUsesRealOpenSearchComposition();
 
   console.log("Law.go.kr PostgreSQL persistence pipeline validation succeeded.");
 }

@@ -9,8 +9,10 @@ import {
 import { FakeOpenSearchClient } from "../search/opensearch/FakeOpenSearchClient";
 import type { OpenSearchClient } from "../search/opensearch/OpenSearchClient";
 import type { OpenSearchConfig } from "../search/opensearch/OpenSearchConfig";
+import { createOpenSearchConfigFromEnv } from "../search/opensearch/OpenSearchConfigFactory";
 import { OpenSearchIndexManager } from "../search/opensearch/OpenSearchIndexManager";
 import { OpenSearchLegalDocumentIndexer } from "../search/opensearch/OpenSearchLegalDocumentIndexer";
+import { OpenSearchSdkClient } from "../search/opensearch/OpenSearchSdkClient";
 import { OpenSearchSearchEngine } from "../search/opensearch/OpenSearchSearchEngine";
 
 const DEFAULT_QUERY = "개인정보";
@@ -95,8 +97,53 @@ function printSummary(summary: PostgreSQLLegalDocumentReindexSummary): void {
   console.log(`Search result count: ${summary.searchResultCount}`);
 }
 
+function redactSecrets(message: string, secrets: Array<string | undefined>): string {
+  let redacted = message;
+  for (const secret of secrets) {
+    if (secret) {
+      redacted = redacted.split(secret).join("[REDACTED]");
+    }
+  }
+  return redacted;
+}
+
+function stageError(stage: string, error: unknown, secrets: Array<string | undefined>): Error {
+  const rawMessage = error instanceof Error ? error.message : String(error);
+  return new Error(`[${stage}] ${redactSecrets(rawMessage, secrets)}`);
+}
+
+/**
+ * The CLI entrypoint (pnpm db:legal:reindex): unlike
+ * runPostgreSQLLegalDocumentReindex's own no-args default (a
+ * FakeOpenSearchClient, kept for validations/tests), main() always wires the
+ * real, environment-configured OpenSearchSdkClient — reusing
+ * createOpenSearchConfigFromEnv/OpenSearchSdkClient exactly as
+ * runLawGoKrOpenSearchIndexing.ts does — so a real `pnpm db:legal:reindex`
+ * run rebuilds the actual configured OpenSearch index from PostgreSQL.
+ * createOpenSearchConfigFromEnv() always resolves node/indexName (it falls
+ * back to documented defaults, same as runLawGoKrOpenSearchIndexing.ts
+ * relies on) — the only value worth guarding against ever reaching a log
+ * line or a rethrown error is the optional OPENSEARCH_PASSWORD, redacted
+ * below exactly as runLawGoKrOpenSearchIndexing.ts/
+ * runLawGoKrStatuteSearchWithPostgreSQLPersistence.ts already do for their
+ * own secrets.
+ */
 async function main(): Promise<void> {
-  const summary = await runPostgreSQLLegalDocumentReindex();
+  const openSearchConfig = createOpenSearchConfigFromEnv();
+  const secrets = [openSearchConfig.password];
+
+  console.log(
+    `[reindex] Rebuilding real OpenSearch index "${openSearchConfig.indexName}" at ${openSearchConfig.node} from PostgreSQL...`,
+  );
+
+  let summary: PostgreSQLLegalDocumentReindexSummary;
+  try {
+    const openSearchClient = new OpenSearchSdkClient(openSearchConfig);
+    summary = await runPostgreSQLLegalDocumentReindex({ openSearchClient, openSearchConfig });
+  } catch (error) {
+    throw stageError("reindex", error, secrets);
+  }
+
   printSummary(summary);
 }
 
