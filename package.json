@@ -25,6 +25,7 @@
     "legal:embedding:validate": "tsx app/legal/pipeline/runEmbeddingPipelineValidation.ts",
     "validate:embedding:vector-indexing": "tsx app/legal/embedding/runVectorIndexingValidation.ts",
     "validate:search:hybrid-retrieval": "tsx app/legal/search/runHybridRetrievalValidation.ts",
+    "validate:search:reranking": "tsx app/legal/search/runReRankingValidation.ts",
     "validate:rag": "tsx app/legal/pipeline/runRagAnswerValidation.ts",
     "validate:rag:api": "tsx app/legal/pipeline/runRagApiValidation.ts",
     "validate:rag:runtime-flow": "tsx app/legal/rag/runRagRuntimeFlowValidation.ts",
