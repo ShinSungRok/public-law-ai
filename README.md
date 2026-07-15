@@ -98,8 +98,29 @@ law.go.kr → Search API → Detail API → Article Parser → PostgreSQL (sourc
 Question → Retriever → BM25 / Vector / Hybrid search → Re-ranking → Prompt assembly → Claude → Grounded answer → Citation extraction
 ```
 
-> A visual architecture diagram is planned for this section — see
-> [Screenshots](#screenshots) above.
+```mermaid
+flowchart TD
+    subgraph Ingestion["Ingestion Pipeline"]
+        direction TB
+        A["law.go.kr"] --> B["Search API"]
+        B --> C["Detail API"]
+        C --> D["Article Parser"]
+        D --> E[("PostgreSQL — Source of Truth")]
+        E --> F[("OpenSearch")]
+    end
+
+    subgraph RAG["RAG Pipeline"]
+        direction TB
+        G["Retriever"] --> H["Hybrid Retrieval"]
+        H --> I["Re-ranking"]
+        I --> J["Claude"]
+        J --> K["Grounded Answer"]
+        K --> L["Citation"]
+    end
+
+    F --> G
+    L --> M(["Next.js UI"])
+```
 
 See [`docs/rag-runtime.md`](docs/rag-runtime.md) for the full request trace
 and [`docs/benchmark-report.md`](docs/benchmark-report.md) for how each
@@ -299,8 +320,8 @@ docker-compose.yml Dockerfile   local infra + application image
 - Ranking metrics (MRR, NDCG) for retrieval/search evaluation.
 - A standalone citation-accuracy evaluator.
 - Authentication/authorization (explicitly out of scope through Phase 21).
-- Real screenshots/walkthrough and a visual architecture diagram in this
-  README (see [Screenshots](#screenshots) and [How It Works](#how-it-works)).
+- Real screenshots/walkthrough in this README (see
+  [Screenshots](#screenshots)).
 
 ## Portfolio Highlights
 
