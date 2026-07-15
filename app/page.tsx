@@ -123,9 +123,23 @@ export default function Home() {
           </section>
 
           {error && (
-            <p role="alert" className="text-sm font-medium text-red-700">
+            <div
+              role="alert"
+              className="animate-fade-in-up flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                className="mt-0.5 h-4 w-4 shrink-0"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                aria-hidden="true"
+              >
+                <circle cx="10" cy="10" r="7.25" />
+                <path d="M10 6.75v4M10 13.25h.01" strokeLinecap="round" />
+              </svg>
               {error}
-            </p>
+            </div>
           )}
 
           <AnswerCard loading={loading} answer={answer} />

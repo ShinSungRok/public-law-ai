@@ -44,7 +44,7 @@ export function SiteHeader() {
 
         <a
           href="#ask"
-          className="hidden shrink-0 items-center gap-1.5 rounded-full border border-gold-600/40 bg-gold-500/10 px-3.5 py-1.5 text-xs font-medium text-navy-800 transition-colors hover:bg-gold-500/20 md:inline-flex"
+          className="hidden shrink-0 items-center gap-1.5 rounded-full border border-gold-600/40 bg-gold-500/10 px-3.5 py-1.5 text-xs font-medium text-navy-800 outline-none transition-colors hover:bg-gold-500/20 focus-visible:ring-2 focus-visible:ring-gold-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-50 md:inline-flex"
         >
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-gold-600" />
           Grounded in retrieved statutes

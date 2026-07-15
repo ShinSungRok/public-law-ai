@@ -94,7 +94,7 @@ export function HeroSection() {
 
           <a
             href="#ask"
-            className="inline-flex items-center gap-2 rounded-full bg-navy-800 px-6 py-3 text-sm font-semibold text-ivory-50 shadow-lg shadow-navy-900/20 transition-all hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-xl"
+            className="inline-flex items-center gap-2 rounded-full bg-navy-800 px-6 py-3 text-sm font-semibold text-ivory-50 shadow-lg shadow-navy-900/20 transition-all outline-none hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-gold-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-50"
           >
             Ask a Question
             <svg
