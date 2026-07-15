@@ -94,13 +94,15 @@ export default function Home() {
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="e.g. 개인정보 보호법 제29조의 안전조치의무는 무엇인가?"
                 rows={3}
-                className="w-full resize-none rounded-2xl border border-navy-900/15 bg-mist-50 px-5 py-4 text-base text-navy-900 outline-none placeholder:text-navy-700/40 focus:border-gold-600/60 focus:bg-white focus:ring-2 focus:ring-gold-500/20"
+                disabled={loading}
+                className="w-full resize-none rounded-2xl border border-navy-900/15 bg-mist-50 px-5 py-4 text-base text-navy-900 outline-none transition-colors placeholder:text-navy-700/40 focus:border-gold-600/60 focus:bg-white focus:ring-2 focus:ring-gold-500/20 disabled:cursor-not-allowed disabled:opacity-60"
               />
               <div className="flex items-center gap-3">
                 <button
                   type="submit"
                   disabled={loading || !question.trim()}
-                  className="inline-flex items-center gap-2 self-start rounded-full bg-navy-800 px-7 py-3.5 text-sm font-semibold text-ivory-50 shadow-md shadow-navy-900/20 transition-all hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
+                  aria-busy={loading}
+                  className="inline-flex items-center gap-2 self-start rounded-full bg-navy-800 px-7 py-3.5 text-sm font-semibold text-ivory-50 shadow-md shadow-navy-900/20 transition-all outline-none hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-gold-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
                 >
                   {loading ? (
                     <>
