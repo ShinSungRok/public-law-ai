@@ -2,7 +2,7 @@
 
 ## 1. Release purpose
 
-This document marks the AI Legal Platform as feature-complete for its
+This document marks Public Law AI as feature-complete for its
 portfolio scope (Phases 0–22): a backend-first, TypeScript RAG platform for
 Korean legal question-answering, built and validated phase by phase with no
 external services required to prove correctness. Phase 23 performs no new

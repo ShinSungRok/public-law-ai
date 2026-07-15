@@ -22,7 +22,7 @@ demonstrate.
 
 - **Hero / landing** — brand, mascot, current legal coverage card
 - **Ask flow** — question input, example questions, streaming answer
-- **Grounded answer** — inline citation highlighting, referenced articles,
+- **Grounded Answer** — inline citation highlighting, referenced articles,
   response time
 
 ## Release Status
@@ -89,13 +89,13 @@ dependency-free validation script proving it.
 db:legal:*`):
 
 ```
-law.go.kr → Search API → Detail API → Article Parser → PostgreSQL (source of truth) → OpenSearch reindex
+law.go.kr → Search API → Detail API → Article Parser → PostgreSQL (Source of Truth) → OpenSearch reindex
 ```
 
 **RAG pipeline** (per question, served by `POST /api/ask`):
 
 ```
-Question → Retriever → BM25 / Vector / Hybrid search → Re-ranking → Prompt assembly → Claude → Grounded answer → Citation extraction
+Question → Retriever → BM25 / Vector / Hybrid search → Re-ranking → Prompt assembly → Claude → Grounded Answer → Citation extraction
 ```
 
 ```mermaid
@@ -105,8 +105,8 @@ flowchart TD
         A["law.go.kr"] --> B["Search API"]
         B --> C["Detail API"]
         C --> D["Article Parser"]
-        D --> E[("PostgreSQL — Source of Truth")]
-        E --> F[("OpenSearch")]
+        D --> E[("PostgreSQL (Source of Truth)")]
+        E --> F[("OpenSearch (Search Index)")]
     end
 
     subgraph RAG["RAG Pipeline"]
@@ -209,9 +209,6 @@ app/legal/
   reliability/       retry, timeout, circuit breaker, error classification
   security/          rate limiting, input validation
   infra/             local Docker infrastructure validation
-
-app/components/      the frontend UI (hero, mascot, question/answer, citations)
-app/api/ask/         the streaming chat endpoint the frontend calls
 ```
 
 ## Development Roadmap

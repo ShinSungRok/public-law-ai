@@ -2,7 +2,7 @@
 
 ## 1. Purpose of Phase 20
 
-Phase 20 introduces Observability for the AI Legal Platform: a consistent
+Phase 20 introduces Observability for Public Law AI: a consistent
 way to emit structured logs and record quality/performance metrics across
 the application, so later phases can add health checks and real monitoring
 integrations on top of a stable foundation.

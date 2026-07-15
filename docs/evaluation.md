@@ -3,7 +3,7 @@
 ## 1. Purpose of Phase 19
 
 Phase 19 introduces an enterprise-level Evaluation & Quality framework for
-the AI Legal Platform: a consistent way to describe evaluation test cases,
+Public Law AI: a consistent way to describe evaluation test cases,
 run them, and report pass/fail quality metrics across the retrieval, search,
 RAG answer, and citation layers — plus a regression target for cross-cutting
 checks.
