@@ -24,3 +24,31 @@ export function extractCitations(text: string): string[] {
 
   return results;
 }
+
+export interface AnswerSegment {
+  text: string;
+  isCitation: boolean;
+}
+
+// Splits answer text into plain/citation segments using the same pattern as
+// extractCitations, so the rendered answer can highlight citations inline
+// without re-deriving what counts as one.
+export function splitAnswerByCitations(text: string): AnswerSegment[] {
+  const segments: AnswerSegment[] = [];
+  let lastIndex = 0;
+
+  for (const match of text.matchAll(CITATION_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > lastIndex) {
+      segments.push({ text: text.slice(lastIndex, start), isCitation: false });
+    }
+    segments.push({ text: match[0], isCitation: true });
+    lastIndex = start + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    segments.push({ text: text.slice(lastIndex), isCitation: false });
+  }
+
+  return segments;
+}

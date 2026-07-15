@@ -1,9 +1,14 @@
+import { useMemo } from "react";
+import { splitAnswerByCitations } from "@/app/lib/citationExtractor";
+
 interface AnswerCardProps {
   loading: boolean;
   answer: string;
 }
 
 export function AnswerCard({ loading, answer }: AnswerCardProps) {
+  const segments = useMemo(() => splitAnswerByCitations(answer), [answer]);
+
   if (!loading && !answer) {
     return null;
   }
@@ -18,7 +23,7 @@ export function AnswerCard({ loading, answer }: AnswerCardProps) {
           >
             AI
           </span>
-          Answer
+          Grounded Answer
         </div>
 
         {loading && !answer ? (
@@ -36,7 +41,18 @@ export function AnswerCard({ loading, answer }: AnswerCardProps) {
             aria-live="polite"
             className="max-w-3xl text-[15px] leading-relaxed whitespace-pre-wrap text-navy-900"
           >
-            {answer}
+            {segments.map((segment, index) =>
+              segment.isCitation ? (
+                <span
+                  key={index}
+                  className="rounded bg-gold-500/15 px-1 py-0.5 font-medium text-navy-900"
+                >
+                  {segment.text}
+                </span>
+              ) : (
+                <span key={index}>{segment.text}</span>
+              ),
+            )}
             {loading && (
               <span aria-hidden="true" className="ml-0.5 inline-block animate-pulse text-gold-600">
                 ▍

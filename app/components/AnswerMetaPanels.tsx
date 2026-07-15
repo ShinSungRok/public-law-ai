@@ -50,6 +50,9 @@ export function AnswerMetaPanels({ citations, responseTimeMs, hasAnswer }: Answe
                 key={citation}
                 className="rounded-md border border-gold-600/30 bg-gold-500/10 px-2 py-1 text-xs font-medium text-navy-800"
               >
+                <span aria-hidden="true" className="mr-1 text-gold-600">
+                  §
+                </span>
                 {citation}
               </li>
             ))}
@@ -68,10 +71,11 @@ export function AnswerMetaPanels({ citations, responseTimeMs, hasAnswer }: Answe
 
       <MetaCard title="Answer Confidence" icon={GaugeIcon} comingSoon>
         <div className="flex items-center gap-2">
-          <div className="h-1.5 flex-1 rounded-full bg-mist-200">
-            <div className="h-1.5 w-1/3 rounded-full bg-mist-300" />
-          </div>
-          <span className="text-xs font-medium text-navy-700/40">—</span>
+          <div
+            aria-hidden="true"
+            className="h-1.5 flex-1 rounded-full bg-mist-200 bg-[repeating-linear-gradient(135deg,#c9ccd2_0,#c9ccd2_4px,transparent_4px,transparent_8px)]"
+          />
+          <span className="text-xs font-medium text-navy-700/40">Not yet available</span>
         </div>
       </MetaCard>
 
