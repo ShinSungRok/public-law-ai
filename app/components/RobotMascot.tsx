@@ -1,8 +1,6 @@
 import Image from "next/image";
 
-// Dedicated image area for the AI law professor mascot. Points at a
-// temporary local placeholder asset — swap MASCOT_SRC for the final
-// illustration path once it exists; nothing else here needs to change.
+// Dedicated image area for the AI law professor mascot.
 const MASCOT_SRC = "/images/ai-law-professor-mascot.svg";
 
 interface FloatingBadgeProps {
@@ -35,7 +33,7 @@ export function RobotMascot({ className = "" }: { className?: string }) {
         />
         <Image
           src={MASCOT_SRC}
-          alt="Friendly robot AI law professor mascot — round face, big eyes, round glasses, a blue and gold graduation cap and academic gown, holding a law book and a glowing digital pointer"
+          alt="Friendly robot AI law professor mascot — round white metallic head with a navy visor, round gold glasses, a warm wink and smile, wearing a navy academic gown with gold trim and a graduation cap, holding a large LAW book and a glowing gold digital pointer"
           fill
           priority
           sizes="(min-width: 768px) 20rem, (min-width: 640px) 18rem, 16rem"
