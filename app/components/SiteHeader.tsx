@@ -25,7 +25,7 @@ export function SiteHeader() {
               Public Law AI
             </span>
             <span className="text-[11px] font-medium tracking-wide text-navy-700/70 uppercase">
-              AI Law Professor
+              AI Lawbot
             </span>
           </span>
         </a>
