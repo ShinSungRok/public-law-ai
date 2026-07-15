@@ -122,9 +122,11 @@ flowchart TD
     L --> M(["Next.js UI"])
 ```
 
-See [`docs/rag-runtime.md`](docs/rag-runtime.md) for the full request trace
-and [`docs/benchmark-report.md`](docs/benchmark-report.md) for how each
-retrieval strategy performs.
+See [`docs/rag-runtime.md`](docs/rag-runtime.md) for the full request trace,
+[`docs/benchmark-report.md`](docs/benchmark-report.md) for how each
+retrieval strategy performs, and
+[`docs/data-flow.md`](docs/data-flow.md) for the end-to-end data flow
+(including how OpenSearch is rebuilt from PostgreSQL if lost).
 
 ## Current Coverage
 
