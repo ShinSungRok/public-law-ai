@@ -1,9 +1,29 @@
-# AI Legal Platform
+# Public Law AI
 
-A backend-first, TypeScript RAG (retrieval-augmented generation) platform
-that answers Korean legal questions with cited, traceable sources — built in
-public, phase by phase, as a portfolio project for AI Backend Engineer
-roles.
+**Ask the AI Lawbot.** A backend-first, TypeScript RAG (retrieval-augmented
+generation) platform that answers Korean legal questions with cited,
+traceable sources — built in public, phase by phase, as a portfolio
+project for AI Backend Engineer roles.
+
+Most public RAG portfolio projects stop at "call an embedding API, stuff a
+vector DB, prompt a model." This project asks a different question: what
+does this look like as a backend an engineering team could actually own —
+and as a product a user could actually trust? It picks a real, non-trivial
+domain (Korean statutes, where an unsourced answer has real consequences)
+and builds both the production-shaped backend and the polished product UI
+around it. See [`docs/portfolio.md`](docs/portfolio.md) for the full
+motivation and the AI Backend Engineer skills this project is built to
+demonstrate.
+
+## Screenshots
+
+> Screenshots and a short product walkthrough are planned for this section
+> (to be added under `docs/screenshots/` once captured).
+
+- **Hero / landing** — brand, mascot, current legal coverage card
+- **Ask flow** — question input, example questions, streaming answer
+- **Grounded answer** — inline citation highlighting, referenced articles,
+  response time
 
 ## Release Status
 
@@ -11,7 +31,9 @@ roles.
 scope out with a final project-wide validation pass; Phases 24–30 extended
 retrieval quality (real production wiring, BM25 optimization, vector +
 hybrid + re-ranked retrieval, and a production benchmark framework with a
-final benchmark report).
+final benchmark report). The Next.js frontend (Hero, mascot, question/answer
+flow, citation UI) has since gone through its own polish pass on top of this
+backend.
 
 Run the full release validation suite with:
 
@@ -27,16 +49,69 @@ for the final retrieval benchmark results and recommended configuration.
 ## Overview
 
 This repository is not a chatbot demo. It is an enterprise-shaped backend
-for a legal question-answering product: a typed domain model for statutes
+for a legal question-answering product — a typed domain model for statutes
 and court cases, pluggable search/retrieval, a provider-agnostic AI layer,
 a REST API surface, and cross-cutting observability, reliability, and
-security foundations — all built so that every layer can be validated
-in-memory, without any external service, API key, or running server.
+security foundations, all built so that every layer can be validated
+in-memory, without any external service, API key, or running server —
+fronted by a real Next.js product UI, not just a curl-able endpoint.
 
 The project is developed in **phases**. Each phase adds one architectural
 capability, ships with its own validation runner(s), and is documented
 before the next phase starts. Nothing is marked "done" without a passing,
 dependency-free validation script proving it.
+
+## Core Features
+
+- **Grounded Q&A** — every answer is generated from retrieved statute text
+  via Claude, not from the model's memory alone, and is traceable back to
+  its source article.
+- **Inline + aggregated citations** — statute/article references (e.g.
+  `제29조`) are highlighted directly inside the streamed answer, and
+  summarized in a "Referenced Articles" panel.
+- **Hybrid retrieval** — BM25 keyword search, vector search, and
+  reciprocal-rank-fusion hybrid retrieval, with an optional re-ranking
+  stage, all behind one `SearchEngine` interface.
+- **Evaluation & benchmarking** — retrieval and grounding quality are
+  measured, not assumed: precision/recall evaluators, a regression runner,
+  and a production benchmark comparing every retrieval strategy on
+  quality, grounding, and latency.
+- **Production-shaped backend** — Clean/Hexagonal architecture, a single
+  composition root, typed configuration, and observability/reliability/
+  security foundations, all validated without external services.
+- **Product-quality frontend** — a Next.js + Tailwind CSS UI (hero
+  section, mascot, streaming answer, citation and confidence panels) —
+  not just an API demo.
+
+## How It Works
+
+**Ingestion pipeline** (offline, run via `pnpm pipeline:*` / `pnpm
+db:legal:*`):
+
+```
+law.go.kr → Search API → Detail API → Article Parser → PostgreSQL (source of truth) → OpenSearch reindex
+```
+
+**RAG pipeline** (per question, served by `POST /api/ask`):
+
+```
+Question → Retriever → BM25 / Vector / Hybrid search → Re-ranking → Prompt assembly → Claude → Grounded answer → Citation extraction
+```
+
+> A visual architecture diagram is planned for this section — see
+> [Screenshots](#screenshots) above.
+
+See [`docs/rag-runtime.md`](docs/rag-runtime.md) for the full request trace
+and [`docs/benchmark-report.md`](docs/benchmark-report.md) for how each
+retrieval strategy performs.
+
+## Current Coverage
+
+This prototype currently answers questions using the **Personal
+Information Protection Act** (개인정보 보호법) and related regulations
+indexed from law.go.kr. The ingestion and retrieval pipeline is
+statute-agnostic — additional Korean statutes can be added through the
+same pipeline without architectural changes.
 
 ## Project goals
 
@@ -58,6 +133,7 @@ dependency-free validation script proving it.
 |---|---|
 | Language | TypeScript (strict mode) |
 | Runtime / framework | Next.js 16 (App Router), Node.js |
+| Frontend | React, Tailwind CSS v4 |
 | Search | OpenSearch (keyword + hybrid + vector search engines) |
 | Database | PostgreSQL (`pg`) |
 | AI providers | OpenAI, Anthropic (`@anthropic-ai/sdk`), plus a deterministic fake provider |
@@ -110,6 +186,9 @@ app/legal/
   reliability/       retry, timeout, circuit breaker, error classification
   security/          rate limiting, input validation
   infra/             local Docker infrastructure validation
+
+app/components/      the frontend UI (hero, mascot, question/answer, citations)
+app/api/ask/         the streaming chat endpoint the frontend calls
 ```
 
 ## Development Roadmap
@@ -202,10 +281,11 @@ environment variable.
 ## Project Structure
 
 ```
-app/legal/*        backend modules (see Module Structure above)
-app/api/ask/       the original walking-skeleton chat API route
-data/sample/legal/ sample statute + court case data
-docs/              one document per phase / architectural concern
+app/legal/*         backend modules (see Module Structure above)
+app/components/*    frontend UI components (hero, mascot, Q&A, citations)
+app/api/ask/        the streaming RAG chat API route the frontend calls
+data/sample/legal/  sample statute + court case data
+docs/               one document per phase / architectural concern
 docker-compose.yml Dockerfile   local infra + application image
 ```
 
@@ -219,6 +299,8 @@ docker-compose.yml Dockerfile   local infra + application image
 - Ranking metrics (MRR, NDCG) for retrieval/search evaluation.
 - A standalone citation-accuracy evaluator.
 - Authentication/authorization (explicitly out of scope through Phase 21).
+- Real screenshots/walkthrough and a visual architecture diagram in this
+  README (see [Screenshots](#screenshots) and [How It Works](#how-it-works)).
 
 ## Portfolio Highlights
 
