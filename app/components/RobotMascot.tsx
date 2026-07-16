@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-// Dedicated image area for the AI Lawbot mascot.
+// Dedicated image area for the Public Law AI mascot illustration.
 const MASCOT_SRC = "/images/ai-law-professor-mascot.svg";
 
 interface FloatingBadgeProps {
@@ -33,7 +33,7 @@ export function RobotMascot({ className = "" }: { className?: string }) {
         />
         <Image
           src={MASCOT_SRC}
-          alt="Friendly AI Lawbot mascot — round white metallic head with a navy visor, round gold glasses, a warm wink and smile, wearing a navy academic gown with gold trim and a graduation cap, holding a large LAW book and a glowing gold digital pointer"
+          alt="Public Law AI mascot — round white metallic head with a navy visor, round gold glasses, a warm wink and smile, wearing a navy academic gown with gold trim and a graduation cap, holding a large LAW book and a glowing gold digital pointer"
           fill
           priority
           sizes="(min-width: 768px) 20rem, (min-width: 640px) 18rem, 16rem"

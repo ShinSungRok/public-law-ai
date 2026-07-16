@@ -12,15 +12,15 @@ export function HeroSection() {
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 px-6 py-16 text-center md:flex-row md:gap-14 md:py-24 md:text-left">
         <div className="animate-fade-in-up flex flex-col items-center gap-6 md:w-3/5 md:items-start">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-navy-900/15 bg-white px-3 py-1 text-xs font-medium tracking-wide text-navy-700 uppercase shadow-sm">
-            Korean Privacy Law Assistant
+            Retrieval-Augmented Legal Assistant
           </span>
 
           <h1 className="max-w-xl font-serif text-4xl leading-[1.1] font-semibold text-balance text-navy-900 sm:text-5xl lg:text-[3.4rem]">
-            Ask the AI Lawbot.
+            Public Law AI
           </h1>
 
           <p className="max-w-lg text-lg text-pretty text-navy-700/80">
-            Grounded legal answers from official Korean statutes. Every
+            Grounded legal answers, built on official Korean statutes. Every
             response is retrieved from law.go.kr and traceable to its source
             article, rather than generated only from a model&apos;s memory.
           </p>

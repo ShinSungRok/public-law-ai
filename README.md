@@ -1,9 +1,9 @@
 # Public Law AI
 
-**Ask the AI Lawbot.** A backend-first, TypeScript RAG (retrieval-augmented
-generation) platform that answers Korean legal questions with cited,
-traceable sources — built in public, phase by phase, as a portfolio
-project for AI Backend Engineer roles.
+**Public Law AI** is a backend-first, TypeScript RAG (retrieval-augmented
+generation) platform that delivers grounded legal answers sourced from
+official Korean statutes, with cited, traceable sources — built in public,
+phase by phase, as a portfolio project for AI Backend Engineer roles.
 
 Most public RAG portfolio projects stop at "call an embedding API, stuff a
 vector DB, prompt a model." This project asks a different question: what

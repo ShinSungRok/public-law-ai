@@ -113,7 +113,7 @@ export default function Home() {
                       Consulting…
                     </>
                   ) : (
-                    "Ask AI Lawbot"
+                    "Ask Public Law AI"
                   )}
                 </button>
               </div>

@@ -18,7 +18,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Public Law AI — Ask the AI Lawbot",
+  title: "Public Law AI — Grounded Korean Legal Answers",
   description:
     "Ask Korean legal questions and get grounded, cited answers from an AI legal assistant backed by real statute retrieval.",
 };
