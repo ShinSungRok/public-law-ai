@@ -48,9 +48,9 @@ export function AnswerMetaPanels({ citations, responseTimeMs, hasAnswer }: Answe
             {citations.map((citation) => (
               <li
                 key={citation}
-                className="rounded-md border border-gold-600/30 bg-gold-500/10 px-2 py-1 text-xs font-medium text-navy-800"
+                className="rounded-md border border-blue-500/25 bg-blue-500/8 px-2 py-1 text-xs font-medium text-navy-800"
               >
-                <span aria-hidden="true" className="mr-1 text-gold-600">
+                <span aria-hidden="true" className="mr-1 text-blue-500">
                   §
                 </span>
                 {citation}

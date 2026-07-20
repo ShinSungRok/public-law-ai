@@ -1,9 +1,9 @@
 export function LegalDisclaimer() {
   return (
-    <p className="flex items-start gap-1.5 text-xs text-navy-700/70">
+    <p className="flex items-start gap-1.5 text-xs text-navy-700/60">
       <svg
         viewBox="0 0 20 20"
-        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold-600"
+        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.6"

@@ -13,7 +13,7 @@ interface ExampleQuestionsProps {
 export function ExampleQuestions({ onSelect, disabled }: ExampleQuestionsProps) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-xs font-medium tracking-wide text-navy-700/70 uppercase">
+      <span className="text-xs font-medium tracking-wide text-navy-700/60 uppercase">
         Try an example
       </span>
       <div role="group" aria-label="Example questions" className="flex flex-wrap gap-2">
@@ -23,7 +23,7 @@ export function ExampleQuestions({ onSelect, disabled }: ExampleQuestionsProps) 
             type="button"
             disabled={disabled}
             onClick={() => onSelect(question)}
-            className="rounded-full border border-navy-900/15 bg-white px-3.5 py-1.5 text-sm text-navy-800 shadow-sm transition-all outline-none hover:-translate-y-0.5 hover:border-gold-600/50 hover:bg-gold-500/10 hover:shadow-md focus-visible:ring-2 focus-visible:ring-gold-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+            className="rounded-full border border-navy-900/10 bg-mist-50 px-3.5 py-1.5 text-sm text-navy-800 transition-all outline-none hover:-translate-y-0.5 hover:border-blue-500/40 hover:bg-blue-500/5 focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           >
             {question}
           </button>

@@ -14,12 +14,12 @@ export function AnswerCard({ loading, answer }: AnswerCardProps) {
   }
 
   return (
-    <div className="animate-fade-in-up overflow-hidden rounded-2xl border border-navy-900/10 border-l-[6px] border-l-gold-600 bg-white shadow-sm shadow-navy-900/5">
+    <div className="animate-fade-in-up overflow-hidden rounded-2xl border border-navy-900/8 border-l-[3px] border-l-blue-500 bg-white shadow-sm shadow-navy-900/[0.03]">
       <div className="px-6 py-6 sm:px-8">
-        <div className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-navy-700 uppercase">
+        <div className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wide text-navy-700/80 uppercase">
           <span
             aria-hidden="true"
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-navy-800 text-[10px] font-bold text-gold-400"
+            className="flex h-5 w-5 items-center justify-center rounded-full bg-navy-900 text-[10px] font-bold text-white"
           >
             AI
           </span>
@@ -45,7 +45,7 @@ export function AnswerCard({ loading, answer }: AnswerCardProps) {
               segment.isCitation ? (
                 <span
                   key={index}
-                  className="rounded bg-gold-500/15 px-1 py-0.5 font-medium text-navy-900"
+                  className="rounded bg-blue-500/10 px-1 py-0.5 font-medium text-navy-900"
                 >
                   {segment.text}
                 </span>
@@ -54,7 +54,7 @@ export function AnswerCard({ loading, answer }: AnswerCardProps) {
               ),
             )}
             {loading && (
-              <span aria-hidden="true" className="ml-0.5 inline-block animate-pulse text-gold-600">
+              <span aria-hidden="true" className="ml-0.5 inline-block animate-pulse text-blue-500">
                 ▍
               </span>
             )}

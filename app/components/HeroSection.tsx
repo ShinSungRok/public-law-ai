@@ -1,102 +1,44 @@
 import { FeatureBadges } from "./FeatureBadges";
-import { RobotMascot } from "./RobotMascot";
 
 export function HeroSection() {
   return (
-    <section id="top" className="relative overflow-hidden bg-ivory-50">
+    <section id="top" className="relative overflow-hidden">
+      <div aria-hidden="true" className="absolute inset-0 -z-20 hero-atmosphere" />
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 -z-10 h-[42rem] bg-gradient-to-b from-mist-100 via-ivory-50 to-ivory-50"
+        className="animate-drift absolute inset-0 -z-10 hero-waves opacity-70"
       />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 px-6 py-16 text-center md:flex-row md:gap-14 md:py-24 md:text-left">
-        <div className="animate-fade-in-up flex flex-col items-center gap-6 md:w-3/5 md:items-start">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-navy-900/15 bg-white px-3 py-1 text-xs font-medium tracking-wide text-navy-700 uppercase shadow-sm">
-            Retrieval-Augmented Legal Assistant
-          </span>
+      <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-8 px-6 pt-20 pb-24 text-center sm:pt-28 sm:pb-32">
+        <span className="animate-fade-in-up inline-flex items-center gap-1.5 rounded-full border border-navy-900/10 bg-white/70 px-3.5 py-1 text-xs font-medium tracking-wide text-navy-700 uppercase shadow-sm backdrop-blur">
+          Retrieval-Augmented Legal Assistant
+        </span>
 
-          <h1 className="max-w-xl font-serif text-4xl leading-[1.1] font-semibold text-balance text-navy-900 sm:text-5xl lg:text-[3.4rem]">
-            Public Law AI
-          </h1>
+        <h1
+          className="animate-fade-in-up max-w-4xl font-sans text-[3.4rem] leading-[0.98] font-extrabold tracking-tight text-balance text-navy-900 sm:text-7xl lg:text-8xl"
+          style={{ animationDelay: "60ms" }}
+        >
+          Public Law AI
+        </h1>
 
-          <p className="max-w-lg text-lg text-pretty text-navy-700/80">
-            Grounded legal answers, built on official Korean statutes. Every
-            response is retrieved from law.go.kr and traceable to its source
-            article, rather than generated only from a model&apos;s memory.
-          </p>
+        <p
+          className="animate-fade-in-up max-w-2xl text-lg text-pretty text-navy-700/75 sm:text-xl"
+          style={{ animationDelay: "120ms" }}
+        >
+          Grounded legal answers, built on official Korean statutes.
+          <br className="hidden sm:block" /> Every response is traceable to
+          its source.
+        </p>
 
-          <FeatureBadges />
-
-          <div className="w-full max-w-lg rounded-2xl border border-navy-900/10 bg-white/80 p-4 text-left shadow-sm backdrop-blur">
-            <div className="flex items-start gap-3">
-              <div
-                aria-hidden="true"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold-500/15 text-gold-700"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                >
-                  <path
-                    d="M5 4.5h10a2 2 0 0 1 2 2V19H7a2 2 0 0 1-2-2V4.5Z"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7 19a2 2 0 0 1 0-4h10"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M9 8h5M9 11h4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-
-              <div>
-                <p className="text-sm font-semibold text-navy-900">
-                  Current Legal Coverage
-                </p>
-
-                <p className="mt-1 text-sm leading-relaxed text-navy-700/75">
-                  This prototype currently answers questions using the
-                  Personal Information Protection Act and related regulations
-                  indexed from law.go.kr.
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {[
-                    "개인정보 보호법",
-                    "시행령",
-                    "시행규칙",
-                    "관련 개인정보 규정",
-                  ].map((coverage) => (
-                    <span
-                      key={coverage}
-                      className="rounded-full border border-navy-900/10 bg-mist-50 px-2.5 py-1 text-xs font-medium text-navy-700"
-                    >
-                      {coverage}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="mt-3 text-xs text-navy-700/55">
-                  Additional Korean statutes can be added through the same
-                  ingestion and retrieval pipeline.
-                </p>
-              </div>
-            </div>
-          </div>
-
+        <div
+          className="animate-fade-in-up flex flex-col items-center gap-3 sm:flex-row"
+          style={{ animationDelay: "180ms" }}
+        >
           <a
             href="#ask"
-            className="inline-flex items-center gap-2 rounded-full bg-navy-800 px-6 py-3 text-sm font-semibold text-ivory-50 shadow-lg shadow-navy-900/20 transition-all outline-none hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-gold-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-50"
+            className="inline-flex items-center gap-2 rounded-full bg-navy-900 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-navy-900/20 transition-all outline-none hover:-translate-y-0.5 hover:bg-navy-800 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
           >
-            Ask a Question
+            Start Searching
             <svg
               viewBox="0 0 20 20"
               className="h-4 w-4"
@@ -104,20 +46,23 @@ export function HeroSection() {
               stroke="currentColor"
               strokeWidth="1.8"
             >
-              <path
-                d="M4 10h12M11 5l5 5-5 5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
+              <path d="M4 10h12M11 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
+          </a>
+
+          <a
+            href="#technology"
+            className="inline-flex items-center gap-2 rounded-full border border-navy-900/15 bg-white/70 px-7 py-3.5 text-sm font-semibold text-navy-800 shadow-sm backdrop-blur transition-all outline-none hover:-translate-y-0.5 hover:border-navy-900/25 hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          >
+            View Architecture
           </a>
         </div>
 
         <div
-          className="animate-fade-in-up md:w-2/5"
-          style={{ animationDelay: "150ms" }}
+          className="animate-fade-in-up mt-2"
+          style={{ animationDelay: "240ms" }}
         >
-          <RobotMascot />
+          <FeatureBadges />
         </div>
       </div>
     </section>

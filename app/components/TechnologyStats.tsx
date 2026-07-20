@@ -60,32 +60,32 @@ const STATS: TechStat[] = [
 
 export function TechnologyStats() {
   return (
-    <section id="technology" className="border-t border-navy-900/10 bg-mist-50 py-16 sm:py-20">
+    <section id="technology" className="border-t border-navy-900/8 bg-white py-20 sm:py-28">
       <div className="mx-auto w-full max-w-6xl px-6">
         <Reveal className="mx-auto max-w-xl text-center">
-          <span className="text-xs font-medium tracking-wide text-gold-700 uppercase">
+          <span className="text-xs font-semibold tracking-widest text-blue-500 uppercase">
             Under the hood
           </span>
-          <h2 className="mt-2 font-serif text-2xl font-semibold text-navy-900 sm:text-3xl">
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-navy-900 sm:text-4xl">
             Built like a production platform
           </h2>
-          <p className="mt-3 text-navy-700/75">
+          <p className="mt-3 text-navy-700/70">
             Not a demo wrapper around a single API call — a full retrieval,
             grounding, and evaluation stack.
           </p>
         </Reveal>
 
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STATS.map((stat, index) => (
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {STATS.map((stat: TechStat, index: number) => (
             <Reveal key={stat.label} delayMs={index * 80}>
-              <div className="flex h-full flex-col gap-3 rounded-2xl border border-navy-900/10 bg-white p-5 shadow-sm shadow-navy-900/5 transition-all hover:-translate-y-1 hover:shadow-lg">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-800 text-gold-400">
+              <div className="flex h-full flex-col gap-3 rounded-2xl border border-navy-900/8 bg-white p-5 shadow-sm shadow-navy-900/[0.03] transition-all hover:-translate-y-1 hover:shadow-lg">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy-900 text-white">
                   <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6">
                     {stat.icon}
                   </svg>
                 </span>
-                <h3 className="font-serif text-base font-semibold text-navy-900">{stat.label}</h3>
-                <p className="text-sm text-navy-700/70">{stat.description}</p>
+                <h3 className="text-base font-semibold tracking-tight text-navy-900">{stat.label}</h3>
+                <p className="text-sm text-navy-700/65">{stat.description}</p>
               </div>
             </Reveal>
           ))}

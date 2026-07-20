@@ -69,17 +69,17 @@ export default function Home() {
       <SiteHeader />
       <HeroSection />
 
-      <main id="ask" className="w-full bg-ivory-50 px-6 py-16 sm:py-20">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+      <main id="ask" className="w-full bg-white px-6 py-16 sm:py-24">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
           <section
             aria-labelledby="ask-heading"
-            className="animate-fade-in-up flex flex-col gap-5 rounded-3xl border border-navy-900/10 bg-white p-6 shadow-md shadow-navy-900/5 sm:p-10"
+            className="animate-fade-in-up flex flex-col gap-5 rounded-3xl border border-navy-900/8 bg-white p-6 shadow-xl shadow-navy-900/[0.04] sm:p-10"
           >
             <div className="text-center sm:text-left">
-              <h2 id="ask-heading" className="font-serif text-2xl font-semibold text-navy-900 sm:text-3xl">
+              <h2 id="ask-heading" className="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
                 Ask a legal question
               </h2>
-              <p className="mt-1.5 text-navy-700/70">
+              <p className="mt-1.5 text-navy-700/65">
                 Answers are grounded in retrieved statute text where available.
               </p>
             </div>
@@ -95,20 +95,20 @@ export default function Home() {
                 placeholder="e.g. 개인정보 보호법 제29조의 안전조치의무는 무엇인가?"
                 rows={3}
                 disabled={loading}
-                className="w-full resize-none rounded-2xl border border-navy-900/15 bg-mist-50 px-5 py-4 text-base text-navy-900 outline-none transition-colors placeholder:text-navy-700/40 focus:border-gold-600/60 focus:bg-white focus:ring-2 focus:ring-gold-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full resize-none rounded-2xl border border-navy-900/10 bg-mist-50 px-5 py-4 text-base text-navy-900 outline-none transition-colors placeholder:text-navy-700/40 focus:border-blue-500/50 focus:bg-white focus:ring-2 focus:ring-blue-500/15 disabled:cursor-not-allowed disabled:opacity-60"
               />
               <div className="flex items-center gap-3">
                 <button
                   type="submit"
                   disabled={loading || !question.trim()}
                   aria-busy={loading}
-                  className="inline-flex items-center gap-2 self-start rounded-full bg-navy-800 px-7 py-3.5 text-sm font-semibold text-ivory-50 shadow-md shadow-navy-900/20 transition-all outline-none hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-gold-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
+                  className="inline-flex items-center gap-2 self-start rounded-full bg-navy-900 px-7 py-3.5 text-sm font-semibold text-white shadow-md shadow-navy-900/20 transition-all outline-none hover:-translate-y-0.5 hover:bg-navy-800 hover:shadow-lg focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-md"
                 >
                   {loading ? (
                     <>
                       <span
                         aria-hidden="true"
-                        className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-ivory-50/40 border-t-ivory-50"
+                        className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white"
                       />
                       Consulting…
                     </>

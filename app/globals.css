@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fffdf9;
-  --foreground: #162447;
+  --background: #fbfbfe;
+  --foreground: #101427;
 }
 
 @theme inline {
@@ -12,30 +12,43 @@
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-lora);
 
-  /* Legal-tech SaaS brand palette: deep navy, warm gold, ivory, soft gray. */
-  --color-navy-950: #0c1730;
-  --color-navy-900: #101d3a;
-  --color-navy-800: #162447;
-  --color-navy-700: #24356b;
-  --color-navy-600: #35497a;
-  --color-navy-500: #4a5f96;
+  /* Premium AI-platform brand palette: deep navy ink, soft blue/purple
+     accents, warm beige glow, restrained neutral surfaces. */
+  --color-navy-950: #05070f;
+  --color-navy-900: #0b0f1f;
+  --color-navy-800: #10142b;
+  --color-navy-700: #1c2340;
+  --color-navy-600: #2b3358;
+  --color-navy-500: #414a78;
+
+  --color-blue-600: #3556d6;
+  --color-blue-500: #4f6df0;
+  --color-blue-400: #7f9bf7;
+
+  --color-purple-600: #6a3fc9;
+  --color-purple-500: #8b5cf6;
+  --color-purple-400: #b39bfa;
 
   --color-gold-700: #96772a;
   --color-gold-600: #c9a227;
   --color-gold-500: #d7b656;
   --color-gold-400: #e6ce8a;
 
+  --color-beige-100: #f7efe1;
+  --color-beige-200: #f0e2c8;
+
   --color-ivory-50: #fffdf9;
   --color-ivory-100: #fbf3e3;
   --color-ivory-200: #f3e4c4;
 
-  --color-mist-50: #f7f7f8;
-  --color-mist-100: #eeeff1;
-  --color-mist-200: #e1e3e7;
-  --color-mist-300: #c9ccd2;
+  --color-mist-50: #f8f8fb;
+  --color-mist-100: #eef0f6;
+  --color-mist-200: #e2e5f0;
+  --color-mist-300: #c9cee0;
 
   --animate-fade-in-up: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-float: float 6s ease-in-out infinite;
+  --animate-drift: drift 22s ease-in-out infinite;
 }
 
 @keyframes fade-in-up {
@@ -59,6 +72,16 @@
   }
 }
 
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.04);
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -66,7 +89,30 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Soft, extremely low-noise blue/purple/beige atmosphere used behind the
+   hero + ask section. Purely decorative, aria-hidden in markup. */
+.hero-atmosphere {
+  background:
+    radial-gradient(60% 50% at 18% 8%, color-mix(in oklab, var(--color-blue-400) 30%, transparent) 0%, transparent 70%),
+    radial-gradient(55% 45% at 85% 12%, color-mix(in oklab, var(--color-purple-400) 26%, transparent) 0%, transparent 70%),
+    radial-gradient(50% 40% at 50% 55%, color-mix(in oklab, var(--color-beige-100) 55%, transparent) 0%, transparent 75%),
+    linear-gradient(180deg, #f9fafe 0%, #fbfbfe 55%, #fefdfb 100%);
+}
+
+.hero-waves {
+  background-image: repeating-linear-gradient(
+    100deg,
+    color-mix(in oklab, var(--color-blue-400) 12%, transparent) 0px,
+    transparent 2px,
+    transparent 48px,
+    color-mix(in oklab, var(--color-purple-400) 10%, transparent) 50px,
+    transparent 52px,
+    transparent 96px
+  );
+  mask-image: radial-gradient(70% 60% at 50% 30%, black 0%, transparent 75%);
 }
 
 @media (prefers-reduced-motion: reduce) {
