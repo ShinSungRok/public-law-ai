@@ -4,6 +4,7 @@ import type { AiProviderFactory } from "./AiProviderFactory";
 import type { AiProviderType } from "./AiProviderType";
 import { AnthropicProvider } from "./AnthropicProvider";
 import { FakeAiProvider } from "./FakeAiProvider";
+import { GeminiProvider } from "./GeminiProvider";
 import type { LlmConfiguration } from "./LlmConfiguration";
 import { OpenAiProvider } from "./OpenAiProvider";
 
@@ -15,22 +16,38 @@ export class DefaultAiProviderFactory implements AiProviderFactory {
     switch (providerType) {
       case "fake":
         return new FakeAiProvider();
+
       case "openai":
         if (!configuration) {
           throw new AiProviderError(
             "LlmConfiguration is required to create an openai provider",
           );
         }
+
         return new OpenAiProvider(configuration);
+
       case "anthropic":
         if (!configuration) {
           throw new AiProviderError(
             "LlmConfiguration is required to create an anthropic provider",
           );
         }
+
         return new AnthropicProvider(configuration);
+
+      case "gemini":
+        if (!configuration) {
+          throw new AiProviderError(
+            "LlmConfiguration is required to create a gemini provider",
+          );
+        }
+
+        return new GeminiProvider(configuration);
+
       default:
-        throw new AiProviderError(`Unsupported AI provider type: ${providerType}`);
+        throw new AiProviderError(
+          `Unsupported AI provider type: ${providerType}`,
+        );
     }
   }
 }

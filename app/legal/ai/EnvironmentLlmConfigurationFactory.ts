@@ -9,7 +9,7 @@ const DEFAULT_API_KEY = "fake-api-key";
 const DEFAULT_TIMEOUT = 30000;
 const DEFAULT_MAX_RETRIES = 3;
 
-const SUPPORTED_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic", "fake"];
+const SUPPORTED_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic", "gemini", "fake"];
 
 function parseProviderType(value: string | undefined): LlmProviderType {
   if (!value) {

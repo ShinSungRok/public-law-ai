@@ -39,7 +39,7 @@ const DEFAULT_AI_API_KEY = "fake-api-key";
 const DEFAULT_AI_TIMEOUT = 30000;
 const DEFAULT_AI_MAX_RETRIES = 3;
 
-const SUPPORTED_AI_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic", "fake"];
+const SUPPORTED_AI_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic", "gemini", "fake"];
 
 function parseNumber(
   name: string,

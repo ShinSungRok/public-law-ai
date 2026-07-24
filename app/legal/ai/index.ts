@@ -3,19 +3,29 @@ export type { AiProviderRequest } from "./AiProviderRequest";
 export type { AiProviderResponse } from "./AiProviderResponse";
 export type { AiProviderMessage } from "./AiProviderMessage";
 export type { AiProviderRole } from "./AiProviderRole";
+
 export { AiProviderError } from "./AiProviderError";
 export { FakeAiProvider } from "./FakeAiProvider";
+
 export type { AiProviderType } from "./AiProviderType";
 export type { AiProviderFactory } from "./AiProviderFactory";
+
 export { DefaultAiProviderFactory } from "./DefaultAiProviderFactory";
+
 export type { AiPromptExecutionRequest } from "./AiPromptExecutionRequest";
 export type { AiPromptExecutionResponse } from "./AiPromptExecutionResponse";
 export type { AiPromptExecutor } from "./AiPromptExecutor";
+
 export { DefaultAiPromptExecutor } from "./DefaultAiPromptExecutor";
+
 export type { LlmProviderType } from "./LlmProviderType";
 export type { LlmConfiguration } from "./LlmConfiguration";
 export type { LlmConfigurationFactory } from "./LlmConfigurationFactory";
+
 export { EnvironmentLlmConfigurationFactory } from "./EnvironmentLlmConfigurationFactory";
+
 export { OpenAiProvider } from "./OpenAiProvider";
 export { AnthropicProvider } from "./AnthropicProvider";
+export { GeminiProvider } from "./GeminiProvider";
+
 export { AiPromptExecutorLlmProviderAdapter } from "./AiPromptExecutorLlmProviderAdapter";

@@ -2,59 +2,156 @@ services:
   postgres:
     image: postgres:16
     container_name: public-ai-postgres
+    restart: unless-stopped
+
     environment:
-      - POSTGRES_DB=${POSTGRES_DATABASE}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
     ports:
       - "5432:5432"
+
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
     networks:
       - public-ai-network
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DATABASE}"
+        ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+
 
   opensearch:
     image: opensearchproject/opensearch:2
     container_name: public-ai-opensearch
+    restart: unless-stopped
+
     environment:
-      - discovery.type=single-node
-      - plugins.security.disabled=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
+      discovery.type: single-node
+      plugins.security.disabled: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_PASSWORD}
+
     ports:
       - "9200:9200"
       - "9600:9600"
+
     volumes:
       - opensearch-data:/usr/share/opensearch/data
+
     networks:
       - public-ai-network
+
     healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:9200/_cluster/health || exit 1"
+        ]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 30s
+
 
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.19.1
     container_name: public-law-ai-opensearch-dashboards
+    restart: unless-stopped
+
     environment:
-      - OPENSEARCH_HOSTS=${OPENSEARCH_NODE}
-      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      OPENSEARCH_HOSTS: '["http://opensearch:9200"]'
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+
     ports:
       - "5601:5601"
+
     depends_on:
-      - opensearch
+      opensearch:
+        condition: service_healthy
+
     networks:
       - public-ai-network
+
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: public-law-ai-app:local
+    container_name: public-law-ai-app
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      NODE_ENV: production
+
+      # Application server
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 3000
+
+      # PostgreSQL: Docker 내부에서는 서비스명 postgres 사용
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_USERNAME: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_SSL: "false"
+
+      # OpenSearch: Docker 내부에서는 서비스명 opensearch 사용
+      OPENSEARCH_NODE: http://opensearch:9200
+      OPENSEARCH_NODE_URL: http://opensearch:9200
+      OPENSEARCH_INDEX_NAME: ${OPENSEARCH_INDEX_NAME}
+      OPENSEARCH_USERNAME: ${OPENSEARCH_USERNAME:-}
+      OPENSEARCH_PASSWORD: ${OPENSEARCH_PASSWORD:-}
+      OPENSEARCH_MODE: ${OPENSEARCH_MODE:-sdk}
+      SEARCH_ENGINE: ${SEARCH_ENGINE:-opensearch}
+
+      # Application configuration
+      APP_ENVIRONMENT: ${APP_ENVIRONMENT:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # LLM configuration
+      LLM_PROVIDER: ${LLM_PROVIDER}
+      LLM_MODEL: ${LLM_MODEL}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-2}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-30000}
+
+      # law.go.kr
+      LAW_GO_KR_BASE_URL: ${LAW_GO_KR_BASE_URL}
+      LAW_GO_KR_OC: ${LAW_GO_KR_OC}
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+
+    networks:
+      - public-ai-network
+
 
 networks:
   public-ai-network:
     driver: bridge
+
 
 volumes:
   postgres-data:

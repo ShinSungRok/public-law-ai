@@ -1,1 +1,1 @@
-export type LlmProviderType = "openai" | "anthropic" | "fake";
+export type LlmProviderType = "openai" | "anthropic" | "gemini" | "fake";

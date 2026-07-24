@@ -4,7 +4,7 @@ import type { ApplicationConfigurationValidator } from "./ApplicationConfigurati
 import type { ApplicationEnvironment } from "./ApplicationEnvironment";
 import type { LogLevel } from "./LogLevel";
 
-const REAL_AI_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic"];
+const REAL_AI_PROVIDER_TYPES: LlmProviderType[] = ["openai", "anthropic", "gemini"];
 
 const SUPPORTED_ENVIRONMENTS: ApplicationEnvironment[] = [
   "development",
