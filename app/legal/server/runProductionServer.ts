@@ -19,10 +19,11 @@ async function main(): Promise<void> {
   const runtime = new ProductionServerRuntime(bootstrap);
 
   await runtime.start();
+  await runtime.listen();
 
   const { host, port } = runtime.getContext().applicationConfiguration.server;
 
-  console.log(`public-law-ai server started on ${host}:${port}`);
+  console.log(`public-law-ai server listening on http://${host}:${port}`);
 
   registerShutdownHandlers(runtime);
 }

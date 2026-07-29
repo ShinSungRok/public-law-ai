@@ -12,6 +12,12 @@ types and in-memory/console implementations every future observability task
 will build on. It intentionally does not wire observability into production
 runtime, implement health checks, or export to Prometheus yet.
 
+**Update:** `ObservabilityService` is now constructed in
+`DefaultApplicationContextFactory` and consumed on every real HTTP request
+handled through `FastifyHttpAdapter` (structured request/response logging,
+request-count and duration metrics) — see §5 and
+[`docs/server-runtime.md`](server-runtime.md) §3 for the current wiring.
+
 ## 2. Logging foundation
 
 `app/legal/observability` defines:
@@ -102,17 +108,29 @@ a lightweight composition object — a plain interface, mirroring
 - `healthCheckService: HealthCheckService`
 
 It only groups these three together for callers that need all of them; it
-adds no behavior of its own and is not yet constructed or consumed anywhere
-in `ApplicationContext`/`ProductionServerRuntime`.
+adds no behavior of its own.
+
+`DefaultApplicationContextFactory` constructs one `ObservabilityService` per
+`ApplicationContext` (`ConsoleLogger` + `InMemoryMetricsCollector` +
+`InMemoryHealthCheckService`, with `ai-provider` and `search-retrieval`
+dependency checks registered) and passes it into `FastifyHttpAdapter`, which
+logs and records metrics for every request routed through it — see
+[`docs/server-runtime.md`](server-runtime.md) §3.
 
 ## 6. Current limitations
 
-- Not wired into production runtime — no controller, use case, retriever,
-  search engine, AI provider, or server runtime file constructs or calls a
-  `Logger`/`MetricsCollector`/`HealthCheckService`/`ObservabilityService` yet.
-- Health checks never perform real network calls — every dependency check in
-  the validation runner is a fake in-memory function.
-- No Prometheus (or any other) metrics export.
+- The `HealthCheckService` dependency checks registered today are
+  structural (e.g. "is an API key configured") rather than live network
+  probes — they deliberately avoid making a real, possibly-costly call to
+  OpenSearch/the AI provider on every health check.
+- The existing `GET /health` endpoint still returns the simple
+  `HealthStatusDto` (`{ status: "UP", service }}`) documented in
+  `docs/rag-runtime.md`; it does not yet surface `HealthCheckService`'s
+  per-dependency breakdown over HTTP (available programmatically via
+  `context.observabilityService.healthCheckService`, but not yet its own
+  route).
+- No Prometheus (or any other) metrics export — `InMemoryMetricsCollector`
+  and `ConsoleLogger` have no external export target.
 - No histogram metric type.
 - No correlation ID and no distributed tracing, no OpenTelemetry.
 - No external logging or metrics library is used — only `console` and
@@ -122,13 +140,16 @@ in `ApplicationContext`/`ProductionServerRuntime`.
   `runObservabilityIntegrationValidation.ts`
   (`pnpm validate:observability:integration`) only exercise these classes
   in-memory — no PostgreSQL, OpenSearch, Docker, OpenAI, or Anthropic is
-  required.
+  required. The real request-path wiring is instead proven by
+  `pnpm validate:server:listen`, which binds a real socket and asserts on
+  the logged output of a real request.
 
 ## 7. Future work
 
-- **Runtime wiring** — construct an `ObservabilityService` from
-  `ApplicationContext`/`ProductionServerRuntime` and have the real
-  `HealthController` delegate to `HealthCheckService` for dependency status.
+- Expose `HealthCheckService`'s full dependency breakdown over a dedicated
+  HTTP route (e.g. `GET /health/detailed`), and consider making the
+  `ai-provider`/`search-retrieval` checks optionally do a real, rate-limited
+  network probe.
 - Prometheus export, OpenTelemetry, and distributed tracing remain explicitly
   out of scope until a dedicated future task introduces them.
 

@@ -99,10 +99,11 @@ secrets.
 ## 6. Current limitation
 
 Validation deliberately never requires a real OpenSearch cluster or a real
-OpenAI/Anthropic API key. `SearchEngineRetriever` and `OpenSearchSearchEngine`
-exist for production use against real OpenSearch (see
-`docs/infrastructure.md`), and `OpenAiProvider`/`AnthropicProvider` exist for
-production use against real providers (see `docs/configuration.md`), but the
+OpenAI/Anthropic/Gemini API key. `SearchEngineRetriever` and
+`OpenSearchSearchEngine` exist for production use against real OpenSearch
+(see `docs/infrastructure.md`), and `OpenAiProvider`/`AnthropicProvider`/
+`GeminiProvider` exist for production use against real providers (see
+`docs/configuration.md`), but the
 RAG runtime validation suite exercises the same code paths through
 in-memory/fake substitutes instead, so it can run anywhere with no network
 access or credentials.

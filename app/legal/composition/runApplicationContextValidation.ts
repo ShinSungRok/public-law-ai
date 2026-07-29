@@ -25,6 +25,11 @@ import type { HttpRequest } from "../http/HttpRequest";
 import { InMemoryHttpRouteRegistry } from "../http/InMemoryHttpRouteRegistry";
 import { OpenApiGenerator } from "../http/OpenApiGenerator";
 import { createRagHttpRoute } from "../http/RagHttpRouteFactory";
+import { ConsoleLogger } from "../observability/ConsoleLogger";
+import { InMemoryHealthCheckService } from "../observability/InMemoryHealthCheckService";
+import { InMemoryMetricsCollector } from "../observability/InMemoryMetricsCollector";
+import type { ObservabilityService } from "../observability/ObservabilityService";
+import { DefaultSecurityReliabilityServiceFactory } from "../reliability/DefaultSecurityReliabilityServiceFactory";
 import type { ApplicationContext } from "./ApplicationContext";
 
 const SAMPLE_DOCUMENTS: LegalDocument[] = [
@@ -123,6 +128,13 @@ function buildApplicationContext(): ApplicationContext {
   );
   const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
+  const observabilityService: ObservabilityService = {
+    logger: new ConsoleLogger("application-context-validation"),
+    metricsCollector: new InMemoryMetricsCollector(),
+    healthCheckService: new InMemoryHealthCheckService(),
+  };
+  const securityReliabilityService = new DefaultSecurityReliabilityServiceFactory().create();
+
   return {
     healthController,
     ragController,
@@ -136,6 +148,8 @@ function buildApplicationContext(): ApplicationContext {
     llmConfiguration,
     llmConfigurationFactory,
     applicationConfiguration,
+    observabilityService,
+    securityReliabilityService,
   };
 }
 

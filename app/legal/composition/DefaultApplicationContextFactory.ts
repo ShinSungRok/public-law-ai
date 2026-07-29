@@ -31,6 +31,13 @@ import { createHealthHttpRoute } from "../http/HealthHttpRouteFactory";
 import { InMemoryHttpRouteRegistry } from "../http/InMemoryHttpRouteRegistry";
 import { OpenApiGenerator } from "../http/OpenApiGenerator";
 import { createRagHttpRoute } from "../http/RagHttpRouteFactory";
+import { ConsoleLogger } from "../observability/ConsoleLogger";
+import { InMemoryHealthCheckService } from "../observability/InMemoryHealthCheckService";
+import { InMemoryMetricsCollector } from "../observability/InMemoryMetricsCollector";
+import type { ObservabilityService } from "../observability/ObservabilityService";
+import { DefaultSecurityReliabilityServiceFactory } from "../reliability/DefaultSecurityReliabilityServiceFactory";
+import { ResilientLlmProviderDecorator } from "../reliability/ResilientLlmProviderDecorator";
+import type { SecurityReliabilityService } from "../reliability/SecurityReliabilityService";
 import type { ApplicationContext } from "./ApplicationContext";
 import type { ApplicationContextFactory } from "./ApplicationContextFactory";
 
@@ -83,10 +90,22 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     );
     const aiPromptExecutor = new DefaultAiPromptExecutor(aiProvider);
 
+    const securityReliabilityService: SecurityReliabilityService =
+      new DefaultSecurityReliabilityServiceFactory().create();
+    const observabilityService: ObservabilityService = this.createObservabilityService(
+      llmConfiguration,
+    );
+
     const retriever = this.createRetriever();
-    const llmProvider = new AiPromptExecutorLlmProviderAdapter(
+    const baseLlmProvider = new AiPromptExecutorLlmProviderAdapter(
       aiPromptExecutor,
       llmConfiguration.model,
+    );
+    const llmProvider = new ResilientLlmProviderDecorator(
+      baseLlmProvider,
+      securityReliabilityService.retryPolicy,
+      securityReliabilityService.timeoutPolicy,
+      securityReliabilityService.circuitBreaker,
     );
     const ragAnswerBuilder = new RagAnswerBuilder(new DefaultCitationExtractor());
     const generateRagAnswerUseCase = new GenerateRagAnswerUseCase(
@@ -109,6 +128,8 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       routeRegistry,
       requestMapper,
       responseMapper,
+      observabilityService,
+      securityReliabilityService,
     );
     const openApiGenerator = new OpenApiGenerator();
 
@@ -125,6 +146,34 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       llmConfiguration,
       llmConfigurationFactory,
       applicationConfiguration,
+      observabilityService,
+      securityReliabilityService,
+    };
+  }
+
+  private createObservabilityService(
+    llmConfiguration: LlmConfiguration,
+  ): ObservabilityService {
+    const healthCheckService = new InMemoryHealthCheckService();
+
+    healthCheckService.registerDependency("ai-provider", () => {
+      const isConfigured =
+        llmConfiguration.provider === "fake" || llmConfiguration.apiKey.trim().length > 0;
+      return {
+        status: isConfigured ? "healthy" : "unhealthy",
+        message: `provider=${llmConfiguration.provider}`,
+      };
+    });
+
+    healthCheckService.registerDependency("search-retrieval", () => ({
+      status: "healthy",
+      message: shouldUseOpenSearchEngine() ? "opensearch" : "keyword (in-memory)",
+    }));
+
+    return {
+      logger: new ConsoleLogger("public-law-ai"),
+      metricsCollector: new InMemoryMetricsCollector(),
+      healthCheckService,
     };
   }
 

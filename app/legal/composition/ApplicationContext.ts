@@ -12,6 +12,8 @@ import type { HttpRequestMapper } from "../http/HttpRequestMapper";
 import type { HttpResponseMapper } from "../http/HttpResponseMapper";
 import type { HttpRouteRegistry } from "../http/HttpRouteRegistry";
 import type { OpenApiGenerator } from "../http/OpenApiGenerator";
+import type { ObservabilityService } from "../observability/ObservabilityService";
+import type { SecurityReliabilityService } from "../reliability/SecurityReliabilityService";
 
 export interface ApplicationContext {
   healthController: HealthController;
@@ -26,4 +28,6 @@ export interface ApplicationContext {
   llmConfiguration: LlmConfiguration;
   llmConfigurationFactory: LlmConfigurationFactory;
   applicationConfiguration: ApplicationConfiguration;
+  observabilityService: ObservabilityService;
+  securityReliabilityService: SecurityReliabilityService;
 }

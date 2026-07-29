@@ -22,6 +22,10 @@ const VALIDATION_STEPS: ServerValidationStep[] = [
     name: "GracefulShutdown",
     scriptPath: "app/legal/server/runGracefulShutdownValidation.ts",
   },
+  {
+    name: "ProductionServerListen",
+    scriptPath: "app/legal/server/runProductionServerListenValidation.ts",
+  },
 ];
 
 const SERVER_RUNTIME_FILES = [
@@ -35,6 +39,7 @@ const REQUIRED_PACKAGE_JSON_SCRIPTS = [
   "validate:server:entrypoint",
   "validate:server:lifecycle",
   "validate:server:shutdown",
+  "validate:server:listen",
   "validate:server",
 ];
 

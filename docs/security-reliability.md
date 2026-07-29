@@ -14,6 +14,10 @@ production runtime, does not add authentication or authorization, and does
 not add exponential backoff, jitter, distributed state, content moderation,
 or prompt-injection detection yet.
 
+**Update:** the production runtime wiring described as a future task in §10
+below has since been done — see §10 and
+[`docs/server-runtime.md`](server-runtime.md) §3 for the current state.
+
 ## 2. Retry policy
 
 `app/legal/reliability` defines:
@@ -136,22 +140,37 @@ mirroring `ObservabilityService`:
 
 ## 10. Integration scope and milestone validation
 
+- **Runtime wiring (now done):**
+  - `DefaultApplicationContextFactory` constructs one
+    `SecurityReliabilityService` per `ApplicationContext`
+    (`DefaultSecurityReliabilityServiceFactory`).
+  - `FastifyHttpAdapter` applies `rateLimiter.consume()` (keyed by
+    `X-Forwarded-For`/`X-Real-Ip`, falling back to `"anonymous"`) and
+    `inputValidator.validate()` on the raw request body to every route it
+    serves, rejecting with `429`/`400` before the request reaches a
+    controller.
+  - `RetryPolicy`/`TimeoutPolicy`/`CircuitBreaker` wrap the AI provider call
+    via `ResilientLlmProviderDecorator`
+    (`app/legal/reliability/ResilientLlmProviderDecorator.ts`), which
+    decorates the `LLMProvider` used by `GenerateRagAnswerUseCase`. This is
+    a second, generic layer on top of each `AiProvider`'s own
+    provider-specific retry/timeout — the decorator adds circuit breaking
+    across requests, which no individual provider does on its own.
+  - `ErrorClassifier` is available on `SecurityReliabilityService` for any
+    caller that needs to categorize a caught error; it is not yet invoked
+    automatically inside the request path.
 - **Integration validation** —
   `runSecurityReliabilityIntegrationValidation.ts` verifies the factory
   constructs all six components, that each is independently usable, and
-  that known production runtime files (`ApplicationContext.ts`,
-  `DefaultApplicationContextFactory.ts`, `FastifyHttpAdapter.ts`) do not yet
-  import from `reliability`/`security` — confirming no production runtime
-  behavior was modified by this task.
+  that the known production runtime files (`ApplicationContext.ts`,
+  `DefaultApplicationContextFactory.ts`, `FastifyHttpAdapter.ts`) do import
+  from `reliability`/`security` and that `FastifyHttpAdapter` applies both
+  `rateLimiter` and `inputValidator`.
 - **Milestone validation** — `runSecurityReliabilityMilestoneValidation.ts`
   (mirroring `runObservabilityMilestoneValidation.ts`) verifies all Phase 21
   source files, scripts, and docs exist, checks no prohibited external
   service is referenced, and sequences the foundation and integration
   validators to confirm Phase 21 completion.
-- Actual runtime wiring — applying `RetryPolicy`/`TimeoutPolicy`/
-  `CircuitBreaker` to AI provider and search calls, applying
-  `RateLimiter`/`InputValidator` to HTTP request handling, and routing
-  caught errors through `ErrorClassifier` — remains a future task.
 - Authentication, authorization, exponential backoff/jitter, distributed
   state, content moderation, and prompt-injection detection remain
   explicitly out of scope until a dedicated future task introduces them.
@@ -161,5 +180,5 @@ mirroring `ObservabilityService`:
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:security-reliability:foundation` | `tsx app/legal/reliability/runSecurityReliabilityFoundationValidation.ts` | Validates `DefaultRetryPolicy`, `DefaultTimeoutPolicy`, `InMemoryCircuitBreaker`, `InMemoryRateLimiter`, `DefaultInputValidator`, and `DefaultErrorClassifier` — in-memory and deterministic only, no external services. |
-| `pnpm validate:security-reliability:integration` | `tsx app/legal/reliability/runSecurityReliabilityIntegrationValidation.ts` | Validates `DefaultSecurityReliabilityServiceFactory` constructs a usable `SecurityReliabilityService`, that its components remain independently usable, and that production runtime files are not yet wired to `reliability`/`security` — in-memory only, no external services. |
+| `pnpm validate:security-reliability:integration` | `tsx app/legal/reliability/runSecurityReliabilityIntegrationValidation.ts` | Validates `DefaultSecurityReliabilityServiceFactory` constructs a usable `SecurityReliabilityService`, that its components remain independently usable, and that production runtime files are wired to `reliability`/`security` on the live request path — in-memory only, no external services. |
 | `pnpm validate:security-reliability` | `tsx app/legal/reliability/runSecurityReliabilityMilestoneValidation.ts` | Milestone runner: verifies every Phase 21 source file, validation runner, and package.json script exists, then sequences the foundation and integration validators — in-memory only, no external services. |

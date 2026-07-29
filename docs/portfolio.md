@@ -20,9 +20,9 @@ documented phase by phase, the way a real team would sequence the work.
   extraction, with each stage behind its own interface and independently
   evaluable (`docs/rag-runtime.md`, `docs/evaluation.md`).
 - **LLM provider integration done right** — a provider-agnostic `AiProvider`
-  interface with real `OpenAiProvider`/`AnthropicProvider` adapters and a
-  deterministic `FakeAiProvider` for zero-cost, zero-network validation;
-  swapping providers touches configuration, not business logic.
+  interface with real `OpenAiProvider`/`AnthropicProvider`/`GeminiProvider`
+  adapters and a deterministic `FakeAiProvider` for zero-cost, zero-network
+  validation; swapping providers touches configuration, not business logic.
 - **Search & retrieval engineering** — a `SearchEngine` abstraction
   spanning keyword, vector, hybrid (reciprocal rank fusion), and re-ranked
   hybrid strategies, with OpenSearch as the production backend and a full
@@ -72,8 +72,8 @@ documented phase by phase, the way a real team would sequence the work.
 ## 4. Technologies used
 
 TypeScript (strict mode), Next.js 16 (App Router), Node.js, OpenSearch,
-PostgreSQL, OpenAI API, Anthropic API, Docker/docker-compose, pnpm, ESLint,
-`tsx`.
+PostgreSQL, OpenAI API, Anthropic API, Google Gemini API,
+Docker/docker-compose, pnpm, ESLint, `tsx`.
 
 ## 5. Interview talking points
 
@@ -90,13 +90,15 @@ PostgreSQL, OpenAI API, Anthropic API, Docker/docker-compose, pnpm, ESLint,
   the `SearchEngine`/`AiProvider` interface, register it in
   `DefaultApplicationContextFactory`/`DefaultAiProviderFactory` — no
   change to `Retriever`, `GenerateRagAnswerUseCase`, or anything downstream.
-- **"What would you do next?"** Bind a real socket-listening server to
-  `ProductionServerRuntime`, wire `SecurityReliabilityService`/
-  `ObservabilityService` into the live request path, add authn/authz, add
+- **"What would you do next?"** Add authn/authz, surface
+  `HealthCheckService`'s per-dependency breakdown over its own route, add
   NDCG to evaluation, and swap the deterministic fake embedding
   model/re-ranker for real ones and re-benchmark — all named explicitly as
   future work rather than silently missing (`README.md` "Future
-  Improvements", `docs/benchmark-report.md` §8).
+  Improvements", `docs/benchmark-report.md` §8). The socket-listening
+  server and observability/security request-path wiring that used to be on
+  this list are done — see `docs/server-runtime.md` §3 and
+  `docs/security-reliability.md` §10.
 - **"Which retrieval strategy would you actually ship?"** Walk through
   `docs/benchmark-report.md` §6–7: the benchmark recommends BM25 today
   because embeddings and re-ranking are deterministic fakes, not because

@@ -88,8 +88,8 @@ in `app/legal/search`.
 
 The AI provider abstraction: `AiProvider`/`AiProviderRequest`/
 `AiProviderResponse` with `FakeAiProvider` (deterministic, no network
-call), `OpenAiProvider`, and `AnthropicProvider`, selected by
-`AiProviderFactory`/`DefaultAiProviderFactory`. `AiPromptExecutor`/
+call), `OpenAiProvider`, `AnthropicProvider`, and `GeminiProvider`, selected
+by `AiProviderFactory`/`DefaultAiProviderFactory`. `AiPromptExecutor`/
 `DefaultAiPromptExecutor` wraps provider calls with prompt-execution
 semantics, and `LlmConfiguration`/`LlmConfigurationFactory` provide the
 typed, environment-driven settings each real provider needs.
@@ -130,8 +130,8 @@ The composition root: `ApplicationContext` is the single object holding
 every wired-up controller, use case, and adapter; `ApplicationContextFactory`/
 `DefaultApplicationContextFactory` is the only file in the codebase that
 imports concrete adapters from every other module (JSON/PostgreSQL
-repositories, keyword/OpenSearch search engines, fake/OpenAI/Anthropic AI
-providers, the Fastify HTTP adapter) and wires them together.
+repositories, keyword/OpenSearch search engines, fake/OpenAI/Anthropic/
+Gemini AI providers, the Fastify HTTP adapter) and wires them together.
 `ApplicationBootstrap` builds and validates configuration before
 constructing the context.
 

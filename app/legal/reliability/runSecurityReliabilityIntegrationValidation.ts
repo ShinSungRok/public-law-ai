@@ -113,27 +113,39 @@ function validateComponentsRemainIndependentlyUsable(): void {
   );
 }
 
-function validateNotWiredIntoProductionRuntime(): void {
+function validateWiredIntoProductionRuntime(): void {
   console.log(
-    "[reliability] Checking production runtime files do not import reliability/security modules yet...",
+    "[reliability] Checking production runtime wires reliability/security modules into the live request path...",
   );
 
+  const contentsByFile = new Map<string, string>();
   for (const relativePath of PRODUCTION_RUNTIME_FILES_TO_CHECK) {
     const fullPath = path.resolve(process.cwd(), relativePath);
-    if (!existsSync(fullPath)) {
-      continue;
-    }
-
-    const contents = readFileSync(fullPath, "utf8");
-    assertTruthy(
-      !/from ["']\.\.\/reliability/.test(contents),
-      `${relativePath} unexpectedly imports from the reliability module`,
-    );
-    assertTruthy(
-      !/from ["']\.\.\/security/.test(contents),
-      `${relativePath} unexpectedly imports from the security module`,
-    );
+    assertTruthy(existsSync(fullPath), `${relativePath} does not exist`);
+    contentsByFile.set(relativePath, readFileSync(fullPath, "utf8"));
   }
+
+  const anyFileImports = (pattern: RegExp) =>
+    [...contentsByFile.values()].some((contents) => pattern.test(contents));
+
+  assertTruthy(
+    anyFileImports(/from ["']\.\.\/reliability/),
+    "no production runtime file imports from the reliability module",
+  );
+  assertTruthy(
+    anyFileImports(/from ["']\.\.\/security/) ||
+      anyFileImports(/SecurityReliabilityService/),
+    "no production runtime file wires in security/rate-limiting behavior",
+  );
+
+  const adapterContents = contentsByFile.get(
+    "app/legal/http/FastifyHttpAdapter.ts",
+  );
+  assertTruthy(
+    Boolean(adapterContents?.includes("rateLimiter")) &&
+      Boolean(adapterContents?.includes("inputValidator")),
+    "FastifyHttpAdapter does not apply rateLimiter/inputValidator on the request path",
+  );
 }
 
 async function main(): Promise<void> {
@@ -143,7 +155,7 @@ async function main(): Promise<void> {
 
   await validateFactoryCreatesAllComponents();
   validateComponentsRemainIndependentlyUsable();
-  validateNotWiredIntoProductionRuntime();
+  validateWiredIntoProductionRuntime();
 
   console.log("Security & reliability integration validation succeeded.");
 }

@@ -35,7 +35,7 @@ See `.env.example` at the project root for a copy-pasteable starting point.
 | `OPENSEARCH_INDEX_NAME` | `search.indexName` | `public-law-ai-local` | No |
 | `LLM_PROVIDER` | `ai.provider` | `fake` | No |
 | `LLM_MODEL` | `ai.model` | `fake-model` | No |
-| `LLM_API_KEY` | `ai.apiKey` | `fake-api-key` | Yes, for `openai`/`anthropic` (see below) |
+| `LLM_API_KEY` | `ai.apiKey` | `fake-api-key` | Yes, for `openai`/`anthropic`/`gemini` (see below) |
 | `LLM_TIMEOUT_MS` | `ai.timeout` | `30000` | No |
 | `LLM_MAX_RETRIES` | `ai.maxRetries` | `3` | No |
 
@@ -49,7 +49,7 @@ secrets required.
 ## 3. Required values and the AI provider `apiKey` rule
 
 Only `LLM_API_KEY` is conditionally required: it must be set when
-`LLM_PROVIDER` is `openai` or `anthropic`. When `LLM_PROVIDER` is `fake` (the
+`LLM_PROVIDER` is `openai`, `anthropic`, or `gemini`. When `LLM_PROVIDER` is `fake` (the
 default), `LLM_API_KEY` is not required — `EnvironmentApplicationConfigurationFactory`
 falls back to a placeholder value (`fake-api-key`), and
 `DefaultApplicationConfigurationValidator` allows the fake provider through
@@ -82,7 +82,8 @@ provider) is constructed. This validation checks:
 - `search.nodeUrl` and `search.indexName` are non-empty.
 - `ai.provider` exists, `ai.model` is non-empty, `ai.timeout` is positive,
   and `ai.maxRetries` is zero or positive.
-- `ai.apiKey` is present when `ai.provider` is `openai` or `anthropic`.
+- `ai.apiKey` is present when `ai.provider` is `openai`, `anthropic`, or
+  `gemini`.
 
 If any check fails, `validate()` throws a single `Error` listing every
 violation, and `create()` fails fast before wiring any runtime component —

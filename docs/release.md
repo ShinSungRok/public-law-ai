@@ -15,7 +15,7 @@ Clean / Hexagonal Architecture with Domain-Driven Design boundaries: a
 framework-independent domain core (`app/legal/domain`), interfaces ("ports")
 for every swappable concern (retrieval, search, repository, AI provider,
 HTTP), concrete adapters (JSON/PostgreSQL, keyword/hybrid/OpenSearch,
-OpenAI/Anthropic/fake, Fastify) plugged in only at the composition root
+OpenAI/Anthropic/Gemini/fake, Fastify) plugged in only at the composition root
 (`DefaultApplicationContextFactory`), and cross-cutting modules
 (evaluation, observability, reliability, security) that depend downward on
 these interfaces without any business-logic module depending back on them.
@@ -67,40 +67,36 @@ runner that sequences the key milestone runners across modules. See
 
 ## 5. Runtime and infrastructure scope
 
-- `docker-compose.yml` provisions local PostgreSQL + OpenSearch (+
-  OpenSearch Dashboards) for development; it does not run the application.
-- `Dockerfile` builds the Next.js application as a standalone image; it is
-  not yet wired into `docker-compose.yml`.
+- `docker-compose.yml` provisions PostgreSQL, OpenSearch (+ OpenSearch
+  Dashboards), and the application itself (`app`, built from `Dockerfile`)
+  on a shared network, gated by healthchecks (see `docs/deployment.md`).
 - `pnpm server:start` boots the production entrypoint
   (`ProductionServerRuntime`): validated configuration →
   `ApplicationContext` → graceful-shutdown signal handling.
 - Every default configuration value is safe for local development with no
   real secrets — the fake AI provider is the default, and the full
   validation suite requires no PostgreSQL, OpenSearch, Docker, OpenAI,
-  Anthropic, Redis, or running server.
+  Anthropic, Gemini, Redis, or running server.
 
 ## 6. Known limitations
 
-- **Production runtime composition exists, but real socket-listening
-  deployment may still require environment-specific integration** —
-  `ProductionServerRuntime` composes and validates the full
-  `ApplicationContext`, but no concrete, network-bound HTTP listener has
-  been wired into the production entrypoint yet (see
-  `docs/server-runtime.md` §3).
-- **Observability abstractions are not yet wired into all production
-  execution paths** — `Logger`, `MetricsCollector`, `HealthCheckService`,
-  and `ObservabilityService` are implemented and independently validated,
-  but no controller, use case, retriever, search engine, AI provider, or
-  server runtime file constructs or calls into them yet (see
-  `docs/observability.md` §9/limitations).
-- **Security/reliability policies are not yet wired into all production
-  request paths** — `RetryPolicy`, `TimeoutPolicy`, `CircuitBreaker`,
-  `RateLimiter`, `InputValidator`, and `SecurityReliabilityService` are
-  implemented and independently validated, but no production request
-  handler applies them yet (see `docs/security-reliability.md`
-  §9/limitations).
+- **`ProductionServerRuntime` binds a real socket-listening HTTP server**
+  (`NodeHttpFastifyLikeServer`, built on Node's `http` module) via an
+  explicit `listen()` step, proven end-to-end by
+  `pnpm validate:server:listen` (real socket, real HTTP request, 404 for
+  unknown routes, idempotent listen, socket released on `stop()`) — see
+  `docs/server-runtime.md` §3.
+- **`ObservabilityService` and `SecurityReliabilityService` are wired into
+  the live request path** — every request through `FastifyHttpAdapter` is
+  logged and measured, and passes through rate limiting and input
+  validation; the AI provider call is wrapped in retry/timeout/circuit
+  breaker via `ResilientLlmProviderDecorator` (see `docs/observability.md`
+  §5 and `docs/security-reliability.md` §10). The existing `GET /health`
+  route does not yet surface `HealthCheckService`'s per-dependency
+  breakdown over HTTP, and health checks are structural rather than live
+  network probes (see `docs/observability.md` §6).
 - **No authentication or authorization** of any kind, anywhere in the
-  system.
+  system. Rate limiting and input validation are not a substitute for this.
 - **No Prometheus, OpenTelemetry, or distributed tracing** — logging and
   metrics are console/in-memory only, with no external export target.
 - **Evaluation uses deterministic in-memory/fake validation, not live
@@ -114,10 +110,9 @@ runner that sequences the key milestone runners across modules. See
 
 ## 7. Future production improvements
 
-- Bind a real socket-listening HTTP server to `ProductionServerRuntime`.
-- Wire `ObservabilityService` and `SecurityReliabilityService` into the
-  live request path (logging/metrics/health checks, retry/timeout/circuit
-  breaker, rate limiting/input validation on real traffic).
+- Surface `HealthCheckService`'s per-dependency breakdown over a dedicated
+  `GET /health/detailed` route.
+- Route caught request-path errors through `ErrorClassifier` automatically.
 - Add authentication/authorization.
 - Add metrics/log export (e.g. Prometheus, OpenTelemetry) and distributed
   tracing.

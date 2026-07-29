@@ -86,7 +86,7 @@ function assertInfrastructureDocs(): void {
   );
 }
 
-function assertApplicationServiceNotWiredYet(): void {
+function assertApplicationServiceWired(): void {
   const composeFilePath = path.resolve(process.cwd(), "docker-compose.yml");
   assertTruthy(
     existsSync(composeFilePath),
@@ -113,24 +113,49 @@ function assertApplicationServiceNotWiredYet(): void {
     }
   }
 
-  const serviceNames: string[] = [];
+  const services: { name: string; startLine: number }[] = [];
   for (let i = servicesStart + 1; i < servicesEnd; i += 1) {
     const line = lines[i];
     const indent = line.length - line.trimStart().length;
     if (indent === 2) {
       const match = line.trim().match(/^([A-Za-z0-9_.-]+):/);
       if (match) {
-        serviceNames.push(match[1]);
+        services.push({ name: match[1], startLine: i });
       }
     }
   }
 
-  for (const name of serviceNames) {
-    assertTruthy(
-      !KNOWN_APPLICATION_SERVICE_NAMES.includes(name),
-      `docker-compose.yml unexpectedly wires an application service already: ${name}`,
-    );
-  }
+  const applicationServices = services.filter((service) =>
+    KNOWN_APPLICATION_SERVICE_NAMES.includes(service.name),
+  );
+  assertTruthy(
+    applicationServices.length === 1,
+    "docker-compose.yml must wire exactly one application service " +
+      `(expected one of: ${KNOWN_APPLICATION_SERVICE_NAMES.join(", ")})`,
+  );
+
+  const appService = applicationServices[0];
+  const appServiceIndex = services.findIndex(
+    (service) => service.name === appService.name,
+  );
+  const blockEnd =
+    appServiceIndex + 1 < services.length
+      ? services[appServiceIndex + 1].startLine
+      : servicesEnd;
+  const blockText = lines.slice(appService.startLine, blockEnd).join("\n");
+
+  assertTruthy(
+    /build:/.test(blockText) && /Dockerfile/.test(blockText),
+    `docker-compose.yml service "${appService.name}" must build from the project Dockerfile`,
+  );
+  assertTruthy(
+    /ports:/.test(blockText),
+    `docker-compose.yml service "${appService.name}" must publish a port`,
+  );
+  assertTruthy(
+    /depends_on:/.test(blockText),
+    `docker-compose.yml service "${appService.name}" must declare depends_on for its infrastructure dependencies`,
+  );
 }
 
 async function main(): Promise<void> {
@@ -150,9 +175,9 @@ async function main(): Promise<void> {
   assertInfrastructureDocs();
 
   console.log(
-    "[infra] Checking docker-compose.yml does not wire an application service yet...",
+    "[infra] Checking docker-compose.yml wires the application service...",
   );
-  assertApplicationServiceNotWiredYet();
+  assertApplicationServiceWired();
 
   console.log("Infra milestone validation succeeded.");
 }

@@ -1,5 +1,8 @@
 # Public Law AI
 
+[![CI](https://github.com/ShinSungRok/public-law-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/ShinSungRok/public-law-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Public Law AI** is a backend-first, TypeScript RAG (retrieval-augmented
 generation) platform that delivers grounded legal answers sourced from
 official Korean statutes, with cited, traceable sources — built in public,
@@ -15,15 +18,56 @@ around it. See [`docs/portfolio.md`](docs/portfolio.md) for the full
 motivation and the AI Backend Engineer skills this project is built to
 demonstrate.
 
+## Architecture at a Glance
+
+**What it does:** a user asks a question in Korean about the Personal
+Information Protection Act; the system retrieves the actual statute
+articles that answer it, and returns a Claude-generated answer with inline
+citations back to those articles — no answer is generated from the model's
+memory alone.
+
+**Core architectural choice:** Clean/Hexagonal Architecture. Every
+swappable concern (search engine, AI provider, persistence) sits behind an
+interface, wired together in exactly one composition root — so retrieval
+strategy, LLM provider, or storage backend can change without touching
+business logic. See [`docs/architecture.md`](docs/architecture.md) for the
+full write-up.
+
+```mermaid
+flowchart TD
+    subgraph Ingestion["Ingestion Pipeline"]
+        direction TB
+        A["law.go.kr"] --> B["Search API"]
+        B --> C["Detail API"]
+        C --> D["Article Parser"]
+        D --> E[("PostgreSQL (Source of Truth)")]
+        E --> F[("OpenSearch (Search Index)")]
+    end
+
+    subgraph RAG["RAG Pipeline"]
+        direction TB
+        G["Retriever"] --> H["Hybrid Retrieval"]
+        H --> I["Re-ranking"]
+        I --> J["Claude"]
+        J --> K["Grounded Answer"]
+        K --> L["Citation"]
+    end
+
+    F --> G
+    L --> M(["Next.js UI"])
+```
+
 ## Screenshots
 
-> Screenshots and a short product walkthrough are planned for this section
-> (to be added under `docs/screenshots/` once captured).
+**Hero / landing** — brand, value proposition, and the platform's tech stack
+at a glance.
 
-- **Hero / landing** — brand, mascot, current legal coverage card
-- **Ask flow** — question input, example questions, streaming answer
-- **Grounded Answer** — inline citation highlighting, referenced articles,
-  response time
+![Landing page](docs/screenshots/image01.png)
+
+**Grounded Answer** — a question answered with inline citation markers back
+to the retrieved statute articles.
+
+![Grounded answer](docs/screenshots/image02.png)
 
 ## Release Status
 
@@ -98,29 +142,8 @@ law.go.kr → Search API → Detail API → Article Parser → PostgreSQL (Sourc
 Question → Retriever → BM25 / Vector / Hybrid search → Re-ranking → Prompt assembly → Claude → Grounded Answer → Citation extraction
 ```
 
-```mermaid
-flowchart TD
-    subgraph Ingestion["Ingestion Pipeline"]
-        direction TB
-        A["law.go.kr"] --> B["Search API"]
-        B --> C["Detail API"]
-        C --> D["Article Parser"]
-        D --> E[("PostgreSQL (Source of Truth)")]
-        E --> F[("OpenSearch (Search Index)")]
-    end
-
-    subgraph RAG["RAG Pipeline"]
-        direction TB
-        G["Retriever"] --> H["Hybrid Retrieval"]
-        H --> I["Re-ranking"]
-        I --> J["Claude"]
-        J --> K["Grounded Answer"]
-        K --> L["Citation"]
-    end
-
-    F --> G
-    L --> M(["Next.js UI"])
-```
+(See the diagram in [Architecture at a Glance](#architecture-at-a-glance)
+above for how both pipelines connect end to end.)
 
 See [`docs/rag-runtime.md`](docs/rag-runtime.md) for the full request trace,
 [`docs/benchmark-report.md`](docs/benchmark-report.md) for how each
@@ -159,7 +182,7 @@ same pipeline without architectural changes.
 | Frontend | React, Tailwind CSS v4 |
 | Search | OpenSearch (keyword + hybrid + vector search engines) |
 | Database | PostgreSQL (`pg`) |
-| AI providers | OpenAI, Anthropic (`@anthropic-ai/sdk`), plus a deterministic fake provider |
+| AI providers | OpenAI, Anthropic (`@anthropic-ai/sdk`), Google Gemini (`@google/genai`), plus a deterministic fake provider |
 | HTTP | A framework-independent HTTP abstraction, adapted to a Fastify-like server interface |
 | Tooling | pnpm, ESLint, `tsx` (validation runners), Docker / docker-compose |
 
@@ -173,8 +196,8 @@ in-memory abstractions (see [Architecture](#architecture)).
 The codebase follows **Clean / Hexagonal Architecture** with **Domain-Driven
 Design** boundaries: a framework-independent domain and application core,
 surrounded by interfaces ("ports"), with concrete adapters (JSON files,
-PostgreSQL, OpenSearch, OpenAI/Anthropic, Fastify) plugged in at the edges
-through composition — never imported directly by the core.
+PostgreSQL, OpenSearch, OpenAI/Anthropic/Gemini, Fastify) plugged in at the
+edges through composition — never imported directly by the core.
 
 See [`docs/architecture.md`](docs/architecture.md) for the full write-up of
 layering, module relationships, runtime flow, and dependency direction.
@@ -273,12 +296,31 @@ validate:security-reliability`). See
 
 ## How to Run
 
+**Full stack via Docker (recommended)** — one command brings up
+PostgreSQL, OpenSearch, OpenSearch Dashboards, and the app itself:
+
+```bash
+cp .env.example .env
+pnpm infra:up          # = docker compose up -d
+```
+
+The app is then live at `http://localhost:3000`. After changing app code,
+rebuild the image before the next `up`:
+
+```bash
+docker compose up -d --build app
+```
+
+**Local frontend dev loop (hot reload)** — keep PostgreSQL/OpenSearch in
+Docker but run Next.js directly on the host for fast iteration:
+
 ```bash
 pnpm install
-
-# Local development (Next.js dev server)
+docker compose up -d postgres opensearch
 pnpm dev
+```
 
+```bash
 # Type-check + lint
 pnpm lint
 pnpm build
@@ -288,10 +330,6 @@ pnpm validate:rag:e2e
 pnpm validate:evaluation
 pnpm validate:observability
 pnpm validate:security-reliability
-
-# Optional: local PostgreSQL + OpenSearch via Docker
-cp .env.example .env
-pnpm infra:up
 ```
 
 See [`docs/deployment.md`](docs/deployment.md) for Docker/production
@@ -311,16 +349,11 @@ docker-compose.yml Dockerfile   local infra + application image
 
 ## Future Improvements
 
-- Bind a real socket-listening HTTP server to `ProductionServerRuntime`
-  (currently composes the full application graph but does not yet listen).
-- Wire `SecurityReliabilityService` and `ObservabilityService` into the
-  actual request path (currently composed but not yet consumed by
-  production runtime).
+- Surface `HealthCheckService`'s per-dependency breakdown over a dedicated
+  `GET /health/detailed` route.
 - Ranking metrics (MRR, NDCG) for retrieval/search evaluation.
 - A standalone citation-accuracy evaluator.
 - Authentication/authorization (explicitly out of scope through Phase 21).
-- Real screenshots/walkthrough in this README (see
-  [Screenshots](#screenshots)).
 
 ## Portfolio Highlights
 

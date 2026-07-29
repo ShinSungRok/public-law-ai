@@ -38,7 +38,7 @@ application core as ports and adapters:
   application services.
 - **Outbound ports/adapters** — `Retriever`, `SearchEngine`,
   `LegalDocumentRepository`, `AiProvider` are all outbound ports; their
-  JSON/PostgreSQL/OpenSearch/OpenAI/Anthropic/fake implementations are
+  JSON/PostgreSQL/OpenSearch/OpenAI/Anthropic/Gemini/fake implementations are
   outbound adapters plugged in by the composition root.
 
 Nothing in `app/legal/application`, `app/legal/rag`, `app/legal/context`, or
@@ -137,8 +137,8 @@ EnvironmentApplicationConfigurationFactory  (app/legal/config)
 - **Composition is the only place allowed to know about every concrete
   adapter.** `DefaultApplicationContextFactory` is intentionally the one
   file in the codebase that imports JSON/PostgreSQL repositories,
-  OpenSearch/keyword search engines, OpenAI/Anthropic/fake AI providers,
-  and the Fastify HTTP adapter all at once.
+  OpenSearch/keyword search engines, OpenAI/Anthropic/Gemini/fake AI
+  providers, and the Fastify HTTP adapter all at once.
 - **Cross-cutting modules stay decoupled from business logic.**
   `evaluation`, `observability`, `reliability`, and `security` depend
   *downward* on the interfaces they exercise or could eventually protect,

@@ -30,29 +30,29 @@ FROM base AS runner
 
 ENV NODE_ENV=production
 
-# Install system CA tools.
-RUN apk add --no-cache ca-certificates
-
-# Add the organization/network root CA to Alpine's trusted CA store.
+# Trust the org root CA before any network call in this stage: apk's own
+# fetch from the Alpine mirror goes through a TLS-inspecting corporate
+# proxy, so the base image's stock CA bundle isn't enough to fetch the
+# ca-certificates package in the first place. Append it to the CA bundle
+# that already ships in the base image ahead of installing the package
+# that will properly manage it afterwards.
 COPY certs/company-root-ca.crt \
   /usr/local/share/ca-certificates/company-root-ca.crt
+RUN cat /usr/local/share/ca-certificates/company-root-ca.crt \
+  >> /etc/ssl/certs/ca-certificates.crt
+
+# Install system CA tools.
+RUN apk add --no-cache ca-certificates
 
 RUN update-ca-certificates
 
 # Explicitly allow Node.js to trust the additional CA.
 ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/company-root-ca.crt
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-
-COPY package.json \
-  pnpm-lock.yaml \
-  pnpm-workspace.yaml \
-  next.config.ts \
-  tsconfig.json \
-  ./
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+CMD ["node", "server.js"]
