@@ -1,9 +1,17 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import type { EmbeddingProvider } from "../embedding/EmbeddingProvider";
+import { EMBEDDING_VECTOR_DIMENSION } from "../embedding/EmbeddingVectorDimension";
 import { FakeOpenSearchClient } from "../search/opensearch/FakeOpenSearchClient";
 import type { OpenSearchClient } from "../search/opensearch/OpenSearchClient";
 import type { OpenSearchLegalDocument } from "../search/opensearch/OpenSearchLegalDocument";
 import { DefaultApplicationContextFactory } from "./DefaultApplicationContextFactory";
+
+class FakeEmbeddingProviderStub implements EmbeddingProvider {
+  async embed(): Promise<number[]> {
+    return new Array(EMBEDDING_VECTOR_DIMENSION).fill(0.1);
+  }
+}
 
 const SAMPLE_QUERY = "개인정보 보호";
 const SAMPLE_IN_MEMORY_DOCUMENT_ID = "fake-statute-article-1";
@@ -71,7 +79,7 @@ function assertSearchSelectionHappensExactlyOnce(): void {
   const source = readFactorySource();
 
   assertEqual(
-    countOccurrences(source, /this\.createRetriever\(\)/g),
+    countOccurrences(source, /this\.createRetriever\(llmConfiguration\)/g),
     1,
     "expected DefaultApplicationContextFactory to select the retriever exactly once via createRetriever()",
   );
@@ -79,6 +87,16 @@ function assertSearchSelectionHappensExactlyOnce(): void {
     countOccurrences(source, /new OpenSearchSearchEngine\(/g),
     1,
     "expected exactly one OpenSearchSearchEngine construction site (only reached for opensearch configuration)",
+  );
+  assertEqual(
+    countOccurrences(source, /new OpenSearchVectorSearchEngine\(/g),
+    1,
+    "expected exactly one OpenSearchVectorSearchEngine construction site (only reached once an EmbeddingProvider is available)",
+  );
+  assertEqual(
+    countOccurrences(source, /new HybridSearchEngine\(/g),
+    1,
+    "expected exactly one HybridSearchEngine construction site (BM25 + vector, fused via RRF)",
   );
   assertEqual(
     countOccurrences(source, /new SearchEngineRetriever\(/g),
@@ -162,6 +180,36 @@ async function validateOpenSearchConfigurationWiresOpenSearchRuntime(): Promise<
   }
 }
 
+async function validateEmbeddingProviderWiresHybridRuntime(): Promise<void> {
+  process.env.SEARCH_ENGINE = "opensearch";
+  process.env.OPENSEARCH_NODE = "http://fake-opensearch:9200";
+  process.env.OPENSEARCH_INDEX_NAME = "public-law-ai-validation";
+
+  try {
+    const recordingClient = new RecordingOpenSearchClient(new FakeOpenSearchClient());
+    const context = new DefaultApplicationContextFactory(
+      recordingClient,
+      new FakeEmbeddingProviderStub(),
+    ).create();
+
+    const ragAnswer = await context.ragController.answer({ query: SAMPLE_QUERY });
+    assertTruthy(
+      typeof ragAnswer.answer === "string" && ragAnswer.answer.length > 0,
+      "expected a well-formed RAG answer when backed by the Hybrid (BM25+vector) runtime",
+    );
+
+    assertEqual(
+      recordingClient.searchCalls.length,
+      2,
+      "expected one BM25 call and one kNN call once an EmbeddingProvider is configured",
+    );
+  } finally {
+    delete process.env.SEARCH_ENGINE;
+    delete process.env.OPENSEARCH_NODE;
+    delete process.env.OPENSEARCH_INDEX_NAME;
+  }
+}
+
 async function main(): Promise<void> {
   console.log(
     "[composition] Checking search implementation selection happens exactly once...",
@@ -177,6 +225,11 @@ async function main(): Promise<void> {
     "[composition] Checking opensearch configuration wires the existing OpenSearch runtime (no live cluster required)...",
   );
   await validateOpenSearchConfigurationWiresOpenSearchRuntime();
+
+  console.log(
+    "[composition] Checking an injected EmbeddingProvider wires the Hybrid (BM25+vector) runtime...",
+  );
+  await validateEmbeddingProviderWiresHybridRuntime();
 
   console.log("Application context search wiring validation succeeded.");
 }

@@ -1,4 +1,5 @@
 import type { LegalDocument } from "../../domain/LegalDocument";
+import type { OpenSearchLegalDocument } from "./OpenSearchLegalDocument";
 import type { OpenSearchBatchIndexOptions } from "./OpenSearchBatchIndexOptions";
 import type { OpenSearchBatchIndexResult } from "./OpenSearchBatchIndexResult";
 import { OpenSearchBulkIndexError } from "./OpenSearchBulkIndexError";
@@ -38,18 +39,40 @@ export class OpenSearchLegalDocumentIndexer {
     documents: LegalDocument[],
     options: OpenSearchBatchIndexOptions = {},
   ): Promise<OpenSearchBatchIndexResult> {
+    return this.indexConverted(
+      documents.map((document) => toOpenSearchLegalDocument(document)),
+      options,
+    );
+  }
+
+  /** Same batching/retry behavior as {@link indexAll}, but each document carries its pre-computed embedding. */
+  async indexAllWithEmbeddings(
+    entries: Array<{ document: LegalDocument; embedding: number[] }>,
+    options: OpenSearchBatchIndexOptions = {},
+  ): Promise<OpenSearchBatchIndexResult> {
+    return this.indexConverted(
+      entries.map(({ document, embedding }) =>
+        toOpenSearchLegalDocument(document, embedding),
+      ),
+      options,
+    );
+  }
+
+  private async indexConverted(
+    converted: OpenSearchLegalDocument[],
+    options: OpenSearchBatchIndexOptions,
+  ): Promise<OpenSearchBatchIndexResult> {
     const { batchSize = 100, maxRetries = 0 } = options;
-    const totalBatchCount = Math.ceil(documents.length / batchSize);
-    console.log(`[indexAll] Total documents: ${documents.length}`);
+    const totalBatchCount = Math.ceil(converted.length / batchSize);
+    console.log(`[indexAll] Total documents: ${converted.length}`);
 
     let indexedCount = 0;
     const failedDocumentIds: string[] = [];
-    for (let offset = 0; offset < documents.length; offset += batchSize) {
+    for (let offset = 0; offset < converted.length; offset += batchSize) {
       const batchNumber = offset / batchSize + 1;
       console.log(`[indexAll] Batch ${batchNumber}/${totalBatchCount}`);
 
-      const chunk = documents.slice(offset, offset + batchSize);
-      let remaining = chunk.map((document) => toOpenSearchLegalDocument(document));
+      let remaining = converted.slice(offset, offset + batchSize);
 
       for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
         if (remaining.length === 0) {
@@ -81,7 +104,7 @@ export class OpenSearchLegalDocumentIndexer {
     }
 
     const result: OpenSearchBatchIndexResult = {
-      totalCount: documents.length,
+      totalCount: converted.length,
       indexedCount,
       failedCount: failedDocumentIds.length,
       failedDocumentIds,

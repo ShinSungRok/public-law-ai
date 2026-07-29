@@ -16,13 +16,20 @@ import { KeywordRetriever } from "../retrieval/KeywordRetriever";
 import { SearchEngineRetriever } from "../retrieval/SearchEngineRetriever";
 import type { Retriever } from "../retrieval/Retriever";
 import type { LegalDocumentRepository } from "../repository/LegalDocumentRepository";
+import { GeminiEmbeddingProvider } from "../embedding/GeminiEmbeddingProvider";
+import type { EmbeddingProvider } from "../embedding/EmbeddingProvider";
+import { HybridSearchEngine } from "../search/HybridSearchEngine";
+import { ReciprocalRankFusionStrategy } from "../search/ReciprocalRankFusionStrategy";
+import type { SearchEngine } from "../search/SearchEngine";
 import type { OpenSearchClient } from "../search/opensearch/OpenSearchClient";
+import type { OpenSearchConfig } from "../search/opensearch/OpenSearchConfig";
 import {
   createOpenSearchConfigFromEnv,
   shouldUseOpenSearchEngine,
 } from "../search/opensearch/OpenSearchConfigFactory";
 import { OpenSearchSdkClient } from "../search/opensearch/OpenSearchSdkClient";
 import { OpenSearchSearchEngine } from "../search/opensearch/OpenSearchSearchEngine";
+import { OpenSearchVectorSearchEngine } from "../search/opensearch/OpenSearchVectorSearchEngine";
 import { DefaultApiConfigurationFactory } from "../server/DefaultApiConfigurationFactory";
 import { DefaultHttpRequestMapper } from "../http/DefaultHttpRequestMapper";
 import { DefaultHttpResponseMapper } from "../http/DefaultHttpResponseMapper";
@@ -73,7 +80,10 @@ class InMemoryLegalDocumentRepository implements LegalDocumentRepository {
 }
 
 export class DefaultApplicationContextFactory implements ApplicationContextFactory {
-  constructor(private readonly openSearchClient?: OpenSearchClient) {}
+  constructor(
+    private readonly openSearchClient?: OpenSearchClient,
+    private readonly embeddingProvider?: EmbeddingProvider,
+  ) {}
 
   create(): ApplicationContext {
     const applicationConfiguration = new EnvironmentApplicationConfigurationFactory().create();
@@ -96,7 +106,7 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       llmConfiguration,
     );
 
-    const retriever = this.createRetriever();
+    const retriever = this.createRetriever(llmConfiguration);
     const baseLlmProvider = new AiPromptExecutorLlmProviderAdapter(
       aiPromptExecutor,
       llmConfiguration.model,
@@ -165,10 +175,16 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
       };
     });
 
-    healthCheckService.registerDependency("search-retrieval", () => ({
-      status: "healthy",
-      message: shouldUseOpenSearchEngine() ? "opensearch" : "keyword (in-memory)",
-    }));
+    healthCheckService.registerDependency("search-retrieval", () => {
+      if (!shouldUseOpenSearchEngine()) {
+        return { status: "healthy", message: "keyword (in-memory)" };
+      }
+      const hasEmbeddingProvider = this.createEmbeddingProvider(llmConfiguration) !== undefined;
+      return {
+        status: "healthy",
+        message: hasEmbeddingProvider ? "opensearch (hybrid: bm25+vector)" : "opensearch (bm25)",
+      };
+    });
 
     return {
       logger: new ConsoleLogger("public-law-ai"),
@@ -177,15 +193,64 @@ export class DefaultApplicationContextFactory implements ApplicationContextFacto
     };
   }
 
-  private createRetriever(): Retriever {
+  private createRetriever(llmConfiguration: LlmConfiguration): Retriever {
     if (shouldUseOpenSearchEngine()) {
       const openSearchConfig = createOpenSearchConfigFromEnv();
       const client = this.openSearchClient ?? new OpenSearchSdkClient(openSearchConfig);
-      const searchEngine = new OpenSearchSearchEngine(client, openSearchConfig);
+      const searchEngine = this.createOpenSearchSearchEngine(client, openSearchConfig, llmConfiguration);
       return new SearchEngineRetriever(searchEngine);
     }
 
     const repository = new InMemoryLegalDocumentRepository(SAMPLE_DOCUMENTS);
     return new KeywordRetriever(repository);
+  }
+
+  /**
+   * BM25-only when no EmbeddingProvider is available; Hybrid (BM25 + kNN
+   * vector, fused via Reciprocal Rank Fusion) once one is — combining exact
+   * keyword/citation matching with semantic recall for paraphrased
+   * questions the BM25-only path cannot reach.
+   */
+  private createOpenSearchSearchEngine(
+    client: OpenSearchClient,
+    openSearchConfig: OpenSearchConfig,
+    llmConfiguration: LlmConfiguration,
+  ): SearchEngine {
+    const keywordEngine = new OpenSearchSearchEngine(client, openSearchConfig);
+
+    const embeddingProvider = this.createEmbeddingProvider(llmConfiguration);
+    if (!embeddingProvider) {
+      return keywordEngine;
+    }
+
+    const vectorEngine = new OpenSearchVectorSearchEngine(client, openSearchConfig, embeddingProvider);
+    return new HybridSearchEngine(
+      [
+        { engine: keywordEngine, source: "opensearch" },
+        { engine: vectorEngine, source: "opensearch" },
+      ],
+      undefined,
+      new ReciprocalRankFusionStrategy(),
+    );
+  }
+
+  /**
+   * this.embeddingProvider (constructor injection) lets validations exercise
+   * the Hybrid path deterministically. Absent that, only Gemini has a real
+   * EmbeddingProvider today (GeminiEmbeddingProvider, reusing the same
+   * LLM_API_KEY as chat completion) — other providers/fake fall back to
+   * keyword-only retrieval rather than silently indexing or querying against
+   * a meaningless embedding.
+   */
+  private createEmbeddingProvider(
+    llmConfiguration: LlmConfiguration,
+  ): EmbeddingProvider | undefined {
+    if (this.embeddingProvider) {
+      return this.embeddingProvider;
+    }
+    if (llmConfiguration.provider !== "gemini" || !llmConfiguration.apiKey.trim()) {
+      return undefined;
+    }
+    return new GeminiEmbeddingProvider(llmConfiguration.apiKey);
   }
 }

@@ -106,14 +106,24 @@ calls `runBm25RetrievalBenchmarkVariant` (unmodified), which calls
 
 ## 6. Benchmark results
 
+Two benchmark runs exist, sharing everything except the embedding provider:
+a CI-safe run with deterministic fake embeddings (§6.1), and a run against
+Google's real `gemini-embedding-001` model (§6.2). Holding every other
+variable fixed (same 29-case dataset, same corpus, same `FakeOpenSearchClient`,
+same `FakeReRanker`, same echo fake LLM) makes any quality difference between
+the two runs attributable to embedding quality, not a second changed variable.
+
+### 6.1 Fake-embedding results (CI validation)
+
 Produced by `pnpm validate:evaluation:final-benchmark-report`
 (`app/legal/evaluation/runFinalBenchmarkReportValidation.ts`) against the 29
 in-memory `RAG_EVALUATION_DATASET` cases and `REAL_ARTICLE_DOCUMENTS` corpus
 (real 개인정보 보호법/형법 statute article text), with
 `FakeOpenSearchClient`/`FakeEmbeddingProvider`/a deterministic echo fake LLM
-provider — no external services. Latency is average/min/max over 3 timed
-passes per variant; re-ranking uses `candidateTopK=20, finalTopN=5` (the
-configuration Phase 29 Task 2's tuning sweep favored).
+provider — no external services, safe to run in CI on every change. Latency
+is average/min/max over 3 timed passes per variant; re-ranking uses
+`candidateTopK=20, finalTopN=5` (the configuration Phase 29 Task 2's tuning
+sweep favored).
 
 | Variant | Hit Rate | Recall@1 | Recall@3 | Recall@5 | MRR | Failures | Context Coverage | Retrieval latency (avg) | End-to-end latency (avg) |
 |---|---|---|---|---|---|---|---|---|---|
@@ -125,70 +135,126 @@ configuration Phase 29 Task 2's tuning sweep favored).
 (Exact figures vary run to run only in latency — see §8; quality/grounding
 figures are deterministic and reproduced verbatim by the validation script.)
 
-**Recommended configuration: `bm25`.**
+**Recommended configuration by this run: `bm25`.** BM25 and Hybrid tie on Hit
+Rate (100%); BM25 wins the tie-break with fewer failures (4 vs. 5). As §6.2
+confirms, this reflects the fake-embedding limitation below, not a claim that
+BM25 outperforms vector/hybrid/re-ranked retrieval in production.
 
-`selectRecommendedProductionVariant` (`app/legal/evaluation/FinalBenchmarkReport.ts`)
-applies the same documented rule as Phase 28's `selectBestHybridRrfCandidate`
-and Phase 29's `selectBestReRankingCandidate`: highest Hit Rate first, then
-fewest retrieval failures, then highest MRR as the final tie-break. BM25 and
-Hybrid tie on Hit Rate (100%); BM25 wins the tie-break with fewer failures
-(4 vs. 5).
+### 6.2 Real-embedding results (Gemini `gemini-embedding-001`, 768-dim)
 
-This is an honest, if perhaps unintuitive, result: it reflects §7's
-limitations, not a claim that BM25 outperforms vector/hybrid/re-ranked
-retrieval in production. See §7 and §8.
+Produced by `pnpm evaluation:real-embedding-benchmark`
+(`app/legal/evaluation/runRealEmbeddingBenchmarkReport.ts`) — the same
+dataset/corpus/`FakeOpenSearchClient`/`FakeReRanker`/echo-fake-LLM as §6.1,
+with `GeminiEmbeddingProvider` in place of `FakeEmbeddingProvider`. This makes
+real, metered Gemini API calls, so it is **not** part of `pnpm validate:*` or
+CI — it's a report generated on demand. `latencyRunCount` is 1, not 3: each
+additional timing pass costs one real Gemini API call per evaluation case per
+vector-backed variant.
+
+| Variant | Hit Rate | Recall@1 | Recall@3 | Recall@5 | MRR | Failures | Context Coverage | Retrieval latency (avg, n=1) | End-to-end latency (avg, n=1) |
+|---|---|---|---|---|---|---|---|---|---|
+| BM25 | 100% | 73% | 85% | 85% | 0.80 | 4 | 100% | 7.5ms | 34.1ms |
+| Vector | 100% | 96% | 100% | 100% | 0.98 | 0 | 100% | 10466ms | 34328ms |
+| Hybrid (RRF) | 100% | 73% | 85% | 96% | 0.81 | 1 | 100% | 11988ms | 35374ms |
+| Re-ranked Hybrid | 96% | 73% | 88% | 96% | 0.82 | 1 | 96% | 11799ms | 34111ms |
+
+**Recommended configuration by this run: `vector`.** Vector wins outright —
+100% Hit Rate, 0 retrieval failures, MRR 0.98 — confirming §6.1's own caveat
+that a real embedding model would close or reverse BM25's apparent lead.
+
+Two results are worth calling out explicitly rather than letting the table
+speak for itself:
+
+- **Hybrid (RRF) underperforms Vector alone once embeddings are real.** With
+  fake embeddings, mixing in BM25 helped (Hybrid beat Vector in §6.1) because
+  Vector's ranking was near-random. With real embeddings, Vector's ranking is
+  already close to perfect, and Reciprocal Rank Fusion gives BM25's weaker
+  ranking equal voting weight — pulling a few correct top-1 results down the
+  fused list (Hybrid's Recall@1 is 73%, the same as BM25's, versus Vector's
+  96%). RRF fusion weighting, not just "add more signals," is itself a tuning
+  question once the underlying signals are this different in quality.
+- **The retrieval latency numbers are a single-process, sequential-call
+  artifact, not a production per-request latency estimate.** Vector's
+  ~10.5s "retrieval latency" is 29 sequential Gemini embedding API calls (one
+  per evaluation case, ~350–400ms each) summed by this benchmark's single
+  timed pass, not one request's latency. A single production query pays one
+  embedding call (~350–400ms) versus BM25's ~4–7ms — a real, meaningful
+  latency cost of vector/hybrid retrieval that should inform capacity
+  planning, but it is not "10 seconds per request."
+
+**Production decision: Hybrid stays the production default, not Vector.**
+`DefaultApplicationContextFactory` wires Hybrid (BM25+vector via RRF)
+whenever an `EmbeddingProvider` is configured, and was **not** switched to
+vector-only despite this table's recommendation. Reasoning: this evaluation
+set is 29 cases against a single
+statute (개인정보 보호법) — real production traffic spans many statutes and
+includes exact citation/article-number lookups where BM25's keyword matching
+is a known strength that a 29-case, single-domain benchmark cannot stress.
+Dropping keyword matching from production on the strength of one narrow
+benchmark would trade a small, well-understood risk (RRF fusion weighting)
+for a large, untested one (no keyword fallback at all). This is a deliberate
+"the benchmark recommends X, we ship Y, here is why" decision, not an
+oversight — and one to revisit once §8's expanded-dataset task is done.
 
 ## 7. Known limitations
 
-Also surfaced programmatically via `KNOWN_BENCHMARK_LIMITATIONS`
-(`app/legal/evaluation/FinalBenchmarkReport.ts`), so every
-`FinalBenchmarkReport` carries these caveats alongside its numbers, not only
-in this document:
+§6.1's limitations are also surfaced programmatically via
+`KNOWN_BENCHMARK_LIMITATIONS` (`app/legal/evaluation/FinalBenchmarkReport.ts`),
+so every `FinalBenchmarkReport` carries these caveats alongside its numbers,
+not only in this document:
 
-- **Deterministic fake embeddings.** `FakeEmbeddingProvider` produces a
-  hash-derived vector per text, not output from a real embedding model
-  (e.g. OpenAI/Cohere `text-embedding-*`). It has no notion of semantic
-  similarity, so Vector/Hybrid/Re-ranked-Hybrid quality numbers measure
-  whether the *retrieval pipeline* (indexing, querying, fusion, re-ranking)
-  is wired correctly — not whether real embeddings would rank documents
-  well. This is the primary reason BM25 (a real, deterministic keyword
-  algorithm) outperforms Vector/Hybrid/Re-ranked Hybrid above: a real
-  embedding model would be expected to close or reverse that gap.
-- **Deterministic fake re-ranking.** `FakeReRanker` scores candidates by
-  exact query-term overlap against title+text, not a real cross-encoder or
-  LLM-based re-ranker. Re-ranked Hybrid numbers above prove
-  `ReRankingSearchEngine`'s `candidateTopK`/`finalTopN` windowing and
-  identity-preservation wiring is correct — they do not predict what a real
-  re-ranking model would score.
-- **Fake grounding.** Grounding metrics run against a deterministic echo
-  fake `LLMProvider` (repeats the retrieved text verbatim), not a real AI
-  Provider call — Grounded Answer / Citation Coverage measure the grounding
-  *pipeline*, not real generation quality.
-- **In-memory OpenSearch, small fixed corpus.** `FakeOpenSearchClient`
-  replaces a real OpenSearch cluster, and the corpus is
-  `REAL_ARTICLE_DOCUMENTS` (real statute text, but a small fixed set, not
-  the full production index). Absolute latency numbers isolate pipeline
-  overhead in a single Node process with no network hop and no concurrent
-  load — they are not production request-latency numbers.
+- **Deterministic fake embeddings (§6.1 only).** `FakeEmbeddingProvider`
+  produces a hash-derived vector per text, not output from a real embedding
+  model. It has no notion of semantic similarity, so §6.1's
+  Vector/Hybrid/Re-ranked-Hybrid quality numbers measure whether the
+  *retrieval pipeline* (indexing, querying, fusion, re-ranking) is wired
+  correctly — not whether real embeddings would rank documents well. This
+  was the working hypothesis for why BM25 outperforms Vector/Hybrid in
+  §6.1; §6.2 confirms it directly — a real embedding model (Gemini) does
+  close and reverse that gap.
+- **Deterministic fake re-ranking (both §6.1 and §6.2).** `FakeReRanker`
+  scores candidates by exact query-term overlap against title+text, not a
+  real cross-encoder or LLM-based re-ranker, in either run. Re-ranked Hybrid
+  numbers prove `ReRankingSearchEngine`'s `candidateTopK`/`finalTopN`
+  windowing and identity-preservation wiring is correct — they do not
+  predict what a real re-ranking model would score, and §6.2's real
+  embeddings make this limitation more visible, not less: Re-ranked Hybrid
+  is now the only variant below 100% Hit Rate specifically because the fake
+  re-ranker demotes some of Vector's already-correct top results.
+- **Fake grounding (both runs).** Grounding metrics run against a
+  deterministic echo fake `LLMProvider` (repeats the retrieved text
+  verbatim), not a real AI Provider call, in either run — Grounded Answer /
+  Citation Coverage measure the grounding *pipeline*, not real generation
+  quality.
+- **In-memory OpenSearch, small single-domain corpus (both runs).**
+  `FakeOpenSearchClient` replaces a real OpenSearch cluster, and the corpus
+  is `REAL_ARTICLE_DOCUMENTS` — 16 real statute articles from a single
+  statute (개인정보 보호법), not the full 372-document production index. §6.2's
+  "Vector beats Hybrid" and "vector should be the production default" signal
+  comes from this same narrow corpus/dataset; see §6.2's production-decision
+  note for why that signal alone isn't treated as sufficient to change the
+  production default. Absolute latency numbers isolate pipeline overhead in
+  a single Node process with no concurrent load — see §6.2's latency note
+  for what the real-run numbers do and do not measure.
 
 ## 8. Future production extensions
 
-- **Swap `FakeEmbeddingProvider` for a real embedding model** (OpenAI
-  `text-embedding-3-*` or similar) behind the same `EmbeddingProvider`
-  interface — no change to `EmbeddingService`, `VectorSearchEngine`, or
-  `HybridSearchEngine` required.
+- ~~Swap `FakeEmbeddingProvider` for a real embedding model~~ — **done**:
+  `GeminiEmbeddingProvider` (`app/legal/embedding/GeminiEmbeddingProvider.ts`),
+  results in §6.2.
 - **Swap `FakeReRanker` for a real re-ranker** (a cross-encoder model, or an
   LLM-as-a-judge prompt) behind the same `ReRanker` interface — no change to
-  `ReRankingSearchEngine` required.
-- **Re-run this benchmark against a real OpenSearch cluster and the full
-  production corpus** once the above two are wired in, to get latency and
-  quality numbers that reflect actual production conditions rather than an
-  in-memory, single-process approximation.
-- **Wire the recommended configuration into `DefaultApplicationContextFactory`**
-  (the composition root) once a real embedding model and re-ranker are in
-  place and re-benchmarked — today's recommendation (`bm25`) is an honest
-  reflection of the *fake* embedding/re-ranking limitation above, not a
-  production recommendation to skip vector/hybrid/re-ranking.
+  `ReRankingSearchEngine` required. Still open; §7 shows this is now the
+  more visible of the two remaining fakes.
+- **Expand the evaluation dataset beyond a single statute domain
+  (개인정보 보호법)** before treating §6.2's vector-over-hybrid result as
+  sufficient evidence to change the production default — a 29-case,
+  single-domain benchmark can't stress BM25's keyword/citation-matching
+  strength the way multi-statute, multi-domain traffic would.
+- **Re-run §6.2 against the real OpenSearch cluster and the full 372-document
+  production index** (rather than `FakeOpenSearchClient` + the 16-article
+  fixture) once the dataset above exists, to get latency and quality numbers
+  that reflect actual production conditions.
 - **Track latency under concurrent load**, not just single-request timing —
   the current latency numbers are useful for spotting pipeline-stage
   regressions (e.g. re-ranking adding meaningfully more end-to-end latency
@@ -201,7 +267,8 @@ in this document:
 | Script | Runs | Purpose |
 |---|---|---|
 | `pnpm validate:evaluation:production-benchmark` | `tsx app/legal/evaluation/runProductionBenchmarkValidation.ts` | Phase 30 Task 1: validates `runProductionBenchmark` across BM25/Vector/Hybrid/Re-ranked Hybrid — quality/grounding match direct benchmark calls, latency is non-negative, repeated runs are deterministic except timing. |
-| `pnpm validate:evaluation:final-benchmark-report` | `tsx app/legal/evaluation/runFinalBenchmarkReportValidation.ts` | Phase 30 Task 2: validates `runFinalBenchmarkReport` — production benchmark results are unchanged from a direct `runProductionBenchmark` call, the recommended configuration selection is deterministic, and the whole report is deterministic except for measured timing values. Prints the report reproduced in §6. |
+| `pnpm validate:evaluation:final-benchmark-report` | `tsx app/legal/evaluation/runFinalBenchmarkReportValidation.ts` | Phase 30 Task 2: validates `runFinalBenchmarkReport` — production benchmark results are unchanged from a direct `runProductionBenchmark` call, the recommended configuration selection is deterministic, and the whole report is deterministic except for measured timing values. Prints the report reproduced in §6.1. |
+| `pnpm evaluation:real-embedding-benchmark` | `tsx app/legal/evaluation/runRealEmbeddingBenchmarkReport.ts` | Not a `validate:*` script — makes real, metered Gemini API calls, so it's run on demand rather than in CI. Same benchmark shape as `runFinalBenchmarkReportValidation.ts` with `GeminiEmbeddingProvider` swapped in for `FakeEmbeddingProvider`. Prints the report reproduced in §6.2. |
 
 Related benchmark scripts from earlier phases (still passing unchanged, and
 exercised by this report's underlying `runProductionBenchmark` call):

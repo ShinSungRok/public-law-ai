@@ -1,5 +1,7 @@
 export type { EmbeddingProvider } from "./EmbeddingProvider";
 export { FakeEmbeddingProvider } from "./FakeEmbeddingProvider";
+export { GeminiEmbeddingProvider } from "./GeminiEmbeddingProvider";
+export { EmbeddingProviderError } from "./EmbeddingProviderError";
 export { EMBEDDING_VECTOR_DIMENSION } from "./EmbeddingVectorDimension";
 export type { EmbeddingVector } from "./EmbeddingVector";
 export { EmbeddingService } from "./EmbeddingService";

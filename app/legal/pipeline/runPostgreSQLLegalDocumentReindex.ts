@@ -1,3 +1,4 @@
+import type { EmbeddingProvider } from "../embedding";
 import type { LegalDocument } from "../domain";
 import type { LegalDocumentRepository } from "../persistence";
 import {
@@ -26,6 +27,8 @@ export interface PostgreSQLLegalDocumentReindexDependencies {
   openSearchClient?: OpenSearchClient;
   openSearchConfig?: OpenSearchConfig;
   query?: string;
+  /** When provided, every document is embedded (title + text) and indexed with its vector attached; omitted, this reindex stays keyword-only. */
+  embeddingProvider?: EmbeddingProvider;
 }
 
 export interface PostgreSQLLegalDocumentReindexSummary {
@@ -68,11 +71,29 @@ export async function runPostgreSQLLegalDocumentReindex(
   const documents = entities.map(
     (entity) => JSON.parse(entity.rawData) as LegalDocument,
   );
-  console.log(`[reindex] Starting batch indexing for ${documents.length} documents`);
-  const batchIndexResult = await indexer.indexAll(documents, {
-    batchSize: 100,
-    maxRetries: 2,
-  });
+
+  const { embeddingProvider } = dependencies;
+  let batchIndexResult;
+  if (embeddingProvider) {
+    console.log(
+      `[reindex] Embedding + indexing ${documents.length} documents (this calls the embedding API once per document)...`,
+    );
+    const entriesWithEmbeddings = [];
+    for (const document of documents) {
+      const embedding = await embeddingProvider.embed(`${document.title}\n\n${document.text}`);
+      entriesWithEmbeddings.push({ document, embedding });
+    }
+    batchIndexResult = await indexer.indexAllWithEmbeddings(entriesWithEmbeddings, {
+      batchSize: 100,
+      maxRetries: 2,
+    });
+  } else {
+    console.log(`[reindex] Starting batch indexing for ${documents.length} documents`);
+    batchIndexResult = await indexer.indexAll(documents, {
+      batchSize: 100,
+      maxRetries: 2,
+    });
+  }
 
   const searchEngine = new OpenSearchSearchEngine(openSearchClient, openSearchConfig);
   const query = dependencies.query ?? DEFAULT_QUERY;
@@ -128,6 +149,21 @@ function stageError(stage: string, error: unknown, secrets: Array<string | undef
  * runLawGoKrStatuteSearchWithPostgreSQLPersistence.ts already do for their
  * own secrets.
  */
+/**
+ * Only Gemini has a real EmbeddingProvider today (GeminiEmbeddingProvider,
+ * reusing the same LLM_API_KEY as chat completion) — real embeddings are
+ * opt-in via LLM_PROVIDER so a plain `pnpm db:legal:reindex` never makes an
+ * unexpected paid API call against, say, a fake/openai/anthropic setup.
+ */
+async function createEmbeddingProviderFromEnv(): Promise<EmbeddingProvider | undefined> {
+  if (process.env.LLM_PROVIDER !== "gemini" || !process.env.LLM_API_KEY?.trim()) {
+    return undefined;
+  }
+
+  const { GeminiEmbeddingProvider } = await import("../embedding/GeminiEmbeddingProvider");
+  return new GeminiEmbeddingProvider(process.env.LLM_API_KEY);
+}
+
 async function main(): Promise<void> {
   const openSearchConfig = createOpenSearchConfigFromEnv();
   const secrets = [openSearchConfig.password];
@@ -139,7 +175,15 @@ async function main(): Promise<void> {
   let summary: PostgreSQLLegalDocumentReindexSummary;
   try {
     const openSearchClient = new OpenSearchSdkClient(openSearchConfig);
-    summary = await runPostgreSQLLegalDocumentReindex({ openSearchClient, openSearchConfig });
+    const embeddingProvider = await createEmbeddingProviderFromEnv();
+    console.log(
+      `[reindex] Embeddings: ${embeddingProvider ? "enabled (Gemini)" : "disabled (keyword-only)"}`,
+    );
+    summary = await runPostgreSQLLegalDocumentReindex({
+      openSearchClient,
+      openSearchConfig,
+      embeddingProvider,
+    });
   } catch (error) {
     throw stageError("reindex", error, secrets);
   }

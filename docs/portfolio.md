@@ -92,19 +92,26 @@ Docker/docker-compose, pnpm, ESLint, `tsx`.
   change to `Retriever`, `GenerateRagAnswerUseCase`, or anything downstream.
 - **"What would you do next?"** Add authn/authz, surface
   `HealthCheckService`'s per-dependency breakdown over its own route, add
-  NDCG to evaluation, and swap the deterministic fake embedding
-  model/re-ranker for real ones and re-benchmark — all named explicitly as
-  future work rather than silently missing (`README.md` "Future
-  Improvements", `docs/benchmark-report.md` §8). The socket-listening
-  server and observability/security request-path wiring that used to be on
-  this list are done — see `docs/server-runtime.md` §3 and
-  `docs/security-reliability.md` §10.
+  NDCG to evaluation, and swap the deterministic fake re-ranker for a real
+  one and re-benchmark — all named explicitly as future work rather than
+  silently missing (`README.md` "Future Improvements", `docs/benchmark-report.md`
+  §8). The socket-listening server, observability/security request-path
+  wiring, and the fake-embedding swap that used to be on this list are done
+  — see `docs/server-runtime.md` §3, `docs/security-reliability.md` §10, and
+  `docs/benchmark-report.md` §6.2.
 - **"Which retrieval strategy would you actually ship?"** Walk through
-  `docs/benchmark-report.md` §6–7: the benchmark recommends BM25 today
-  because embeddings and re-ranking are deterministic fakes, not because
-  BM25 is expected to beat a real embedding model in production — a good
-  benchmark states that limitation next to the numbers instead of letting a
-  misleading headline result stand alone.
+  `docs/benchmark-report.md` §6: with fake embeddings, the benchmark
+  recommends BM25 (§6.1) — a known artifact of the fake embedding provider,
+  documented next to the numbers rather than left as a misleading headline
+  result. With real Gemini embeddings (§6.2), the recommendation flips to
+  Vector outright (100% Hit Rate, 0 failures, MRR 0.98), and — the more
+  interesting finding — Hybrid RRF actually *underperforms* Vector alone
+  once the underlying signals are this uneven in quality. Production still
+  ships Hybrid, not Vector, because the eval set is 29 cases against a
+  single statute — not enough evidence to drop BM25's keyword/citation
+  matching for the traffic this system actually serves. That "benchmark
+  says X, we ship Y, here's the documented reasoning" gap is the real answer
+  to this question, not either number in isolation.
 - **"Why phases instead of one big PR?"** Each phase has an explicit scope
   and non-goal list, its own validation runner(s), and its own doc — the
   same discipline a real team applies to keep large systems reviewable and
